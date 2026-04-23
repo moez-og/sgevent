@@ -26,7 +26,7 @@ services:
 
     App\Service\NotionService:
         arguments:
-            $notionApiKey: '%env(string:NOTION_API_KEY)%'
+            $notionApiKey: '%env(string:NOTION_TOKEN)%'
             $notionDatabaseId: '%env(string:NOTION_DATABASE_ID)%'
 
     App\Service\AiEventService:
