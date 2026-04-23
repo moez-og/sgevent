@@ -117,62 +117,50 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Visuel
             </h3>
-            <div class="ev-grid">
-                <div class="ev-field">
-                    {{ form_label(form.imageFile) }}
-                    {{ form_widget(form.imageFile, {attr: {class: 'ev-control ev-file'}}) }}
-                    {% if form.imageFile.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.imageFile.vars.errors %}{{ e.message }}{% endfor %}</p>
-                    {% endif %}
-                    <p class="ev-help">Formats: JPG, PNG, WEBP, GIF · Max 4 Mo</p>
-                </div>
-                <div class="ev-field">
-                    {{ form_label(form.imageUrl) }}
-                    {{ form_widget(form.imageUrl, {attr: {class: 'ev-control', placeholder: 'https://...', id: 'evenement_imageUrl'}}) }}
-                    {% if form.imageUrl.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.imageUrl.vars.errors %}{{ e.message }}{% endfor %}</p>
-                    {% endif %}
-                    <p class="ev-help">L'upload a la priorité sur l'URL si les deux sont fournis.</p>
-                    <div id="ai-url-used" class="ev-ai-url-used">URL de l'image IA copiée dans le champ.</div>
+
+            {# Aperçu de l'image sélectionnée / générée #}
+            <div id="img-preview-wrap" class="ev-preview-wrap" style="display:none">
+                <img id="img-preview" class="ev-preview-img" src="" alt="Aperçu de l'image">
+                <div class="ev-preview-toolbar">
+                    <button type="button" id="ai-regen-btn" class="ev-preview-btn ev-preview-regen" style="display:none">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Regénérer
+                    </button>
+                    <button type="button" id="img-clear-btn" class="ev-preview-btn ev-preview-clear">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Supprimer
+                    </button>
                 </div>
             </div>
 
-            {# ── Panneau génération IA ── #}
+            {# Upload #}
+            <div class="ev-field ev-field--full" style="margin-bottom:16px">
+                {{ form_label(form.imageFile) }}
+                {{ form_widget(form.imageFile, {attr: {class: 'ev-control ev-file', id: 'evenement_imageFile'}}) }}
+                {% if form.imageFile.vars.errors|length > 0 %}
+                    <p class="ev-error">{% for e in form.imageFile.vars.errors %}{{ e.message }}{% endfor %}</p>
+                {% endif %}
+                <p class="ev-help">Formats: JPG, PNG, WEBP, GIF · Max 4 Mo</p>
+            </div>
+
+            {# Panneau IA #}
             <div class="ev-ai-panel">
                 <div class="ev-ai-panel-header">
                     <div class="ev-ai-panel-title">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                        </svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         Générer une image avec l'IA
                     </div>
                     <button type="button" id="ai-gen-btn" class="ev-ai-btn">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         Générer
                     </button>
                 </div>
-                <p class="ev-help" style="margin-bottom:14px;">
-                    L'IA crée une image basée sur le <strong>titre</strong> et la <strong>description</strong> de l'événement — sans compte, sans clé API.
-                </p>
-
-                <div id="ai-loading" class="ev-ai-loading" style="display:none;">
+                <p class="ev-help">L'IA crée une image basée sur le <strong>titre</strong> et la <strong>description</strong> — sans compte, sans clé API.</p>
+                <div id="ai-loading" class="ev-ai-loading" style="display:none">
                     <div class="ev-ai-spinner"></div>
-                    <span>Génération en cours<span id="ai-dots">.</span> (peut prendre 15 à 30 secondes)</span>
+                    <span>Génération en cours<span id="ai-dots">.</span> (15–30 secondes)</span>
                 </div>
-
-                <div id="ai-result" style="display:none;">
-                    <img id="ai-img" class="ev-ai-img" src="" alt="Image générée par IA">
-                    <div class="ev-ai-result-actions">
-                        <button type="button" id="ai-use-btn" class="cta-btn" style="font-size:13px;padding:9px 18px;">
-                            Utiliser cette image
-                        </button>
-                        <button type="button" id="ai-regen-btn" class="outline-btn" style="font-size:13px;padding:9px 18px;">
-                            Regénérer
-                        </button>
-                    </div>
-                </div>
-
-                <div id="ai-error" class="ev-ai-error" style="display:none;">
+                <div id="ai-error" class="ev-ai-error" style="display:none">
                     La génération a échoué. Vérifiez votre connexion internet et réessayez.
                 </div>
             </div>
@@ -316,9 +304,58 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     margin-top: 24px;
 }
 
+/* ── Image Preview ───────────────────────────────────────────────── */
+.ev-preview-wrap {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid rgba(20,61,113,.12);
+    margin-bottom: 18px;
+    background: rgba(237,242,249,.4);
+}
+.ev-preview-img {
+    display: block;
+    width: 100%;
+    max-height: 340px;
+    object-fit: cover;
+}
+.ev-preview-toolbar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.ev-preview-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+    transition: opacity .2s, transform .1s;
+}
+.ev-preview-regen {
+    background: linear-gradient(135deg, #7c3aed 0%, #3fa8e0 100%);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(124,58,237,.28);
+}
+.ev-preview-clear {
+    background: rgba(15,29,51,.7);
+    color: #fff;
+    backdrop-filter: blur(4px);
+}
+.ev-preview-btn:hover { opacity: .82; transform: translateY(-1px); }
+
 /* ── AI Generation Panel ─────────────────────────────────────────── */
 .ev-ai-panel {
-    margin-top: 20px;
+    margin-top: 16px;
     padding: 16px 18px 18px;
     background: linear-gradient(135deg, rgba(109,40,217,.04) 0%, rgba(63,168,224,.05) 100%);
     border: 1.5px dashed rgba(109,40,217,.22);
@@ -343,8 +380,6 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     color: #6d28d9;
 }
 .ev-ai-panel-title svg { color: #7c3aed; }
-
-/* AI Generate button */
 .ev-ai-btn {
     display: inline-flex;
     align-items: center;
@@ -364,8 +399,6 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
 .ev-ai-btn:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 5px 16px rgba(124,58,237,.38); }
 .ev-ai-btn:active { transform: translateY(0); }
 .ev-ai-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
-
-/* Loading */
 .ev-ai-loading {
     display: flex;
     align-items: center;
@@ -385,20 +418,6 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     flex-shrink: 0;
 }
 @keyframes aiSpin { to { transform: rotate(360deg); } }
-
-/* Result */
-.ev-ai-img {
-    width: 100%;
-    max-height: 320px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 2px solid rgba(109,40,217,.15);
-    display: block;
-    margin-bottom: 12px;
-}
-.ev-ai-result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-/* Error */
 .ev-ai-error {
     padding: 12px 16px;
     background: #fef2f2;
@@ -407,18 +426,7 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     color: #991b1b;
     font-size: 13px;
     font-weight: 600;
-}
-
-/* URL used confirmation */
-.ev-ai-url-used {
-    display: none;
-    font-size: 12px;
-    color: #166534;
-    font-weight: 600;
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    border-radius: 8px;
-    padding: 6px 12px;
+    margin-top: 12px;
 }
 
 @media (max-width: 840px) {
@@ -427,24 +435,24 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     .ev-actions { flex-direction: column-reverse; align-items: stretch; }
     .ev-actions .cta-btn, .ev-actions .outline-btn { text-align: center; }
     .ev-ai-panel-header { flex-direction: column; align-items: flex-start; }
+    .ev-preview-toolbar { flex-direction: column; }
 }
 </style>
 
 <script>
 (function () {
-    const genBtn   = document.getElementById('ai-gen-btn');
-    const regenBtn = document.getElementById('ai-regen-btn');
-    const useBtn   = document.getElementById('ai-use-btn');
-    const loading  = document.getElementById('ai-loading');
-    const resultEl = document.getElementById('ai-result');
-    const errorEl  = document.getElementById('ai-error');
-    const imgEl    = document.getElementById('ai-img');
-    const urlUsed  = document.getElementById('ai-url-used');
-    const dotsEl   = document.getElementById('ai-dots');
-
-    const urlInput   = document.getElementById('evenement_imageUrl');
-    const titreInput = document.getElementById('evenement_titre');
-    const descInput  = document.getElementById('evenement_description');
+    const genBtn      = document.getElementById('ai-gen-btn');
+    const regenBtn    = document.getElementById('ai-regen-btn');
+    const clearBtn    = document.getElementById('img-clear-btn');
+    const loading     = document.getElementById('ai-loading');
+    const errorEl     = document.getElementById('ai-error');
+    const dotsEl      = document.getElementById('ai-dots');
+    const previewWrap = document.getElementById('img-preview-wrap');
+    const previewImg  = document.getElementById('img-preview');
+    const fileInput   = document.getElementById('evenement_imageFile');
+    const urlInput    = document.getElementById('evenement_imageUrl');
+    const titreInput  = document.getElementById('evenement_titre');
+    const descInput   = document.getElementById('evenement_description');
 
     let currentUrl = '';
     let dotsTimer  = null;
@@ -461,23 +469,49 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
         if (dotsEl) dotsEl.textContent = '.';
     }
 
+    function showPreview(src, isAi) {
+        previewImg.src = src;
+        previewWrap.style.display = 'block';
+        regenBtn.style.display = isAi ? 'inline-flex' : 'none';
+    }
+
+    function clearAll() {
+        previewWrap.style.display = 'none';
+        previewImg.src = '';
+        if (fileInput) fileInput.value = '';
+        if (urlInput)  urlInput.value  = '';
+        currentUrl = '';
+        errorEl.style.display = 'none';
+    }
+
+    if (clearBtn) clearBtn.addEventListener('click', clearAll);
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) { clearAll(); return; }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                if (urlInput) urlInput.value = '';
+                currentUrl = '';
+                showPreview(e.target.result, false);
+                errorEl.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     function buildPrompt() {
         const titre = (titreInput ? titreInput.value : '').trim();
         const desc  = (descInput  ? descInput.value  : '').trim();
-
         if (!titre) {
             alert('Veuillez d\'abord renseigner le titre de l\'événement.');
             return null;
         }
-
-        const parts = [
-            'Professional high-quality event poster',
-            'Event: "' + titre + '"'
-        ];
-        if (desc) parts.push(desc.substring(0, 180));
-        parts.push('vivid colors, modern design, sharp photography, no text overlay');
-
-        return parts.join('. ');
+        let prompt = 'Professional event poster photo, event: ' + titre;
+        if (desc) prompt += ', ' + desc.substring(0, 120);
+        prompt += ', vivid colors, modern design, no text overlay';
+        return prompt.substring(0, 350);
     }
 
     function generate() {
@@ -487,52 +521,54 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
         const seed = Math.floor(Math.random() * 999983);
         currentUrl = 'https://image.pollinations.ai/prompt/'
             + encodeURIComponent(prompt)
-            + '?width=1280&height=720&nologo=true&seed=' + seed;
+            + '?model=flux&width=1024&height=576&nologo=true&seed=' + seed;
 
-        loading.style.display  = 'flex';
-        resultEl.style.display = 'none';
-        errorEl.style.display  = 'none';
-        urlUsed.style.display  = 'none';
-        genBtn.disabled        = true;
-        if (regenBtn) regenBtn.disabled = true;
+        loading.style.display     = 'flex';
+        errorEl.style.display     = 'none';
+        previewWrap.style.display = 'none';
+        genBtn.disabled           = true;
+        regenBtn.disabled         = true;
         startDots();
 
-        const newImg = new Image();
-        newImg.onload = function () {
+        let done = false;
+        const timeout = setTimeout(function () {
+            if (done) return;
+            done = true;
             stopDots();
-            imgEl.src              = currentUrl;
-            loading.style.display  = 'none';
-            resultEl.style.display = 'block';
-            genBtn.disabled        = false;
-            if (regenBtn) regenBtn.disabled = false;
-        };
-        newImg.onerror = function () {
+            loading.style.display = 'none';
+            errorEl.style.display = 'block';
+            genBtn.disabled       = false;
+            regenBtn.disabled     = false;
+        }, 60000);
+
+        const img = new Image();
+        img.onload = function () {
+            if (done) return;
+            done = true;
+            clearTimeout(timeout);
             stopDots();
-            loading.style.display  = 'none';
-            errorEl.style.display  = 'block';
-            genBtn.disabled        = false;
-            if (regenBtn) regenBtn.disabled = false;
+            loading.style.display = 'none';
+            if (urlInput)  urlInput.value  = currentUrl;
+            if (fileInput) fileInput.value = '';
+            showPreview(currentUrl, true);
+            genBtn.disabled   = false;
+            regenBtn.disabled = false;
         };
-        newImg.src = currentUrl;
+        img.onerror = function () {
+            if (done) return;
+            done = true;
+            clearTimeout(timeout);
+            stopDots();
+            loading.style.display = 'none';
+            errorEl.style.display = 'block';
+            genBtn.disabled       = false;
+            regenBtn.disabled     = false;
+        };
+        img.src = currentUrl;
     }
 
-    genBtn.addEventListener('click', generate);
+    if (genBtn)   genBtn.addEventListener('click', generate);
     if (regenBtn) regenBtn.addEventListener('click', generate);
-
-    if (useBtn) {
-        useBtn.addEventListener('click', function () {
-            if (!currentUrl || !urlInput) return;
-            urlInput.value = currentUrl;
-            urlUsed.style.display = 'block';
-            urlInput.style.transition = 'border-color .3s, box-shadow .3s';
-            urlInput.style.borderColor = '#16a34a';
-            urlInput.style.boxShadow   = '0 0 0 3px rgba(22,163,74,.15)';
-            setTimeout(function () {
-                urlInput.style.borderColor = '';
-                urlInput.style.boxShadow   = '';
-            }, 2200);
-        });
-    }
 })();
 </script>
 {% endblock %}
