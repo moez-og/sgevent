@@ -1,0 +1,111 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}{{ 'front.search.title'|trans }} | Fin Tokhroj{% endblock %}
+
+{% block front_content %}
+<section>
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">{{ 'front.search.title'|trans }}</h1>
+            <p class="section-subtitle">
+                {% if query is not empty %}
+                    {{ 'front.search.results_for'|trans({'%query%': query}) }}
+                {% else %}
+                    {{ 'front.search.enter_min_chars'|trans }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="btn-row">
+            <a href="{{ path('app_home') }}" class="outline-btn"><span class="btn-icon">&larr;</span>{{ 'front.search.back_home'|trans }}</a>
+        </div>
+    </div>
+
+    {% if query is not empty and query|length >= 2 %}
+        <div class="grid-cards">
+            <div class="card-span-6">
+                <article class="info-card">
+                    <h3>{{ 'nav.outings'|trans }}</h3>
+                    <div class="listing-grid" style="margin-top:12px;">
+                        {% for item in sorties %}
+                            <a class="listing-card" href="{{ path('app_sorties_show', {id: item.id}) }}">
+                                <h3>{{ item.titre }}</h3>
+                                <p>{{ item.ville }} · {{ item.type_activite }}</p>
+                                <div class="meta-row"><span>{{ item.date_sortie ? item.date_sortie|date('d/m/Y H:i') : '-' }}</span><span>{{ item.statut }}</span></div>
+                            </a>
+                        {% else %}
+                            <div class="empty-state">{{ 'front.search.no_outings'|trans }}</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+
+            <div class="card-span-6">
+                <article class="info-card">
+                    <h3>{{ 'nav.places'|trans }}</h3>
+                    <div class="listing-grid" style="margin-top:12px;">
+                        {% for item in lieux %}
+                            <a class="listing-card" href="{{ path('app_lieu_show', {id: item.id}) }}">
+                                <h3>{{ item.nom }}</h3>
+                                <p>{{ item.ville }} · {{ item.categorie|replace({'_':' '})|title }}</p>
+                                <div class="meta-row"><span>{{ item.type }}</span></div>
+                            </a>
+                        {% else %}
+                            <div class="empty-state">{{ 'front.search.no_places'|trans }}</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+
+            <div class="card-span-6">
+                <article class="info-card">
+                    <h3>{{ 'nav.offers'|trans }}</h3>
+                    <div class="listing-grid" style="margin-top:12px;">
+                        {% for item in offres %}
+                            <a class="listing-card" href="{{ path('app_offres_show', {id: item.id}) }}">
+                                <h3>{{ item.titre }}</h3>
+                                <p>{{ item.lieu_nom ?: ('front.search.place_not_defined'|trans) }}</p>
+                                <div class="meta-row"><span>{{ item.type }}</span><span>{{ item.pourcentage }}%</span></div>
+                            </a>
+                        {% else %}
+                            <div class="empty-state">{{ 'front.search.no_offers'|trans }}</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+
+            <div class="card-span-6">
+                <article class="info-card">
+                    <h3>{{ 'nav.events'|trans }}</h3>
+                    <div class="listing-grid" style="margin-top:12px;">
+                        {% for item in evenements %}
+                            <a class="listing-card" href="{{ path('app_evenement_show', {id: item.id}) }}">
+                                <h3>{{ item.titre }}</h3>
+                                <p>{{ item.lieu_nom ?: ('front.search.place_not_defined'|trans) }} · {{ item.ville ?: '-' }}</p>
+                                <div class="meta-row"><span>{{ item.type }}</span><span>{{ item.date_debut ? item.date_debut|date('d/m/Y H:i') : '-' }}</span></div>
+                            </a>
+                        {% else %}
+                            <div class="empty-state">{{ 'front.search.no_events'|trans }}</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+
+            <div class="card-span-12">
+                <article class="info-card">
+                    <h3>{{ 'admin.users'|trans }}</h3>
+                    <div class="listing-grid" style="margin-top:12px;">
+                        {% for item in users %}
+                            <article class="listing-card">
+                                <h3>{{ item.prenom }} {{ item.nom }}</h3>
+                                <p>{{ item.role }}</p>
+                            </article>
+                        {% else %}
+                            <div class="empty-state">{{ 'front.search.no_users'|trans }}</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

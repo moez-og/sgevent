@@ -1,0 +1,120 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Détails lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Détails lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {% include 'admin/lieu/_flashes.html.twig' %}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">{{ lieu.nom }}</h2>
+            <p class="section-subtitle">Fiche détaillée du lieu.</p>
+        </div>
+        <div class="lieu-page-actions">
+            <a href="{{ path('app_admin_lieu_edit', {id: lieu.id}) }}" class="primary-btn">Modifier</a>
+            <a href="{{ path('app_admin_lieu_delete', {id: lieu.id}) }}" class="danger-btn">Supprimer</a>
+            <a href="{{ path('app_admin_lieux') }}" class="secondary-btn">Retour liste</a>
+        </div>
+    </div>
+
+    <div class="lieu-detail-card">
+        {% set rawImage = lieu.imageUrl|default('') %}
+        {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+            {% set imageSrc = rawImage %}
+        {% elseif rawImage %}
+            {% set imageSrc = asset(rawImage) %}
+        {% else %}
+            {% set imageSrc = '' %}
+        {% endif %}
+
+        {% if imageSrc %}
+            <div style="margin-bottom:18px;">
+                <img src="{{ imageSrc }}" alt="{{ lieu.nom }}" style="max-width:100%;border-radius:18px;max-height:320px;object-fit:cover;">
+            </div>
+        {% endif %}
+
+        <div class="lieu-meta-grid">
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">ID</div>
+                <div class="lieu-meta__value">{{ lieu.id }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Offre associée</div>
+                <div class="lieu-meta__value">{{ lieu.offre ? lieu.offre.titre : 'Aucune' }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Nom</div>
+                <div class="lieu-meta__value">{{ lieu.nom }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Ville</div>
+                <div class="lieu-meta__value">{{ lieu.ville }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Adresse</div>
+                <div class="lieu-meta__value">{{ lieu.adresse ?: '—' }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Téléphone</div>
+                <div class="lieu-meta__value">{{ lieu.telephone ?: '—' }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Site web</div>
+                <div class="lieu-meta__value">
+                    {% if lieu.siteWeb %}
+                        <a href="{{ lieu.siteWeb }}" target="_blank" rel="noopener">{{ lieu.siteWeb }}</a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Instagram</div>
+                <div class="lieu-meta__value">{{ lieu.instagram ?: '—' }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Catégorie</div>
+                <div class="lieu-meta__value"><span class="lieu-badge">{{ lieu.categorie ? lieu.categorie.label : '—' }}</span></div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Type</div>
+                <div class="lieu-meta__value"><span class="lieu-badge lieu-badge--neutral">{{ lieu.type ? lieu.type.label : '—' }}</span></div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Budget</div>
+                <div class="lieu-meta__value">
+                    {% if lieu.budgetMin is not null or lieu.budgetMax is not null %}
+                        {{ lieu.budgetMin is not null ? lieu.budgetMin|number_format(2, ',', ' ') : '—' }}
+                        —
+                        {{ lieu.budgetMax is not null ? lieu.budgetMax|number_format(2, ',', ' ') : '—' }}
+                        TND
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Coordonnées</div>
+                <div class="lieu-meta__value">
+                    {{ lieu.latitude is not null ? lieu.latitude : '—' }}
+                    /
+                    {{ lieu.longitude is not null ? lieu.longitude : '—' }}
+                </div>
+            </div>
+            <div class="lieu-meta lieu-field--full">
+                <div class="lieu-meta__label">Description</div>
+                <div class="lieu-meta__value">{{ lieu.description ?: '—' }}</div>
+            </div>
+            <div class="lieu-meta lieu-field--full">
+                <div class="lieu-meta__label">Image URL</div>
+                <div class="lieu-meta__value">{{ lieu.imageUrl ?: '—' }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultat d'analyse - Fin Tokhroj</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #1e293b;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            background: {% if analysis.score >= 70 %}#22c55e{% elseif analysis.score >= 50 %}#eab308{% else %}#ef4444{% endif %};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .evaluation-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+            font-style: italic;
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        .points-list {
+            list-style: none;
+        }
+        
+        .points-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        .points-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 20px;
+            color: #dc2626;
+        }
+        
+        .ameliorations-list li:before {
+            color: #16a34a;
+            content: "✓";
+        }
+        
+        .field-group {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .field-value {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+            word-break: break-word;
+            line-height: 1.6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .field-value:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        .copy-hint {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        
+        .channels-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .channel-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #0ea5e9;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête avec score -->
+        <div class="header">
+            <h1>📊 Analyse Marketing</h1>
+            <div class="score-badge">
+                {{ analysis.score }}/100
+            </div>
+        </div>
+        
+        <!-- Évaluation générale -->
+        {% if analysis.evaluation %}
+            <div class="section">
+                <div class="section-title">💡 Évaluation générale</div>
+                <div class="evaluation-box">
+                    {{ analysis.evaluation }}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Points faibles -->
+        {% if analysis.points_faibles is not empty %}
+            <div class="section">
+                <div class="section-title">⚠️ Points faibles</div>
+                <ul class="points-list">
+                    {% for point in analysis.points_faibles %}
+                        <li>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <!-- Améliorations suggérées -->
+        {% if analysis.ameliorations is not empty %}
+            <div class="section">
+                <div class="section-title">✨ Améliorations suggérées</div>
+                <ul class="points-list ameliorations-list">
+                    {% for amelioration in analysis.ameliorations %}
+                        <li>{{ amelioration }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <!-- Offre optimisée -->
+        {% if analysis.offre_optimisee %}
+            <div class="section">
+                <div class="section-title">🎯 Version optimisée de l'offre</div>
+                
+                {% if analysis.offre_optimisee.titre %}
+                    <div class="field-group">
+                        <label class="field-label">Titre optimisé</label>
+                        <div class="field-value" onclick="copyToClipboard(this)">{{ analysis.offre_optimisee.titre }}</div>
+                        <div class="copy-hint">Cliquez pour copier</div>
+                    </div>
+                {% endif %}
+                
+                {% if analysis.offre_optimisee.description %}
+                    <div class="field-group">
+                        <label class="field-label">Description optimisée</label>
+                        <div class="field-value" onclick="copyToClipboard(this)" style="min-height: 80px;">{{ analysis.offre_optimisee.description }}</div>
+                        <div class="copy-hint">Cliquez pour copier</div>
+                    </div>
+                {% endif %}
+                
+                {% if analysis.offre_optimisee.pourcentage_suggere %}
+                    <div class="field-group">
+                        <label class="field-label">Pourcentage de réduction suggéré</label>
+                        <div class="field-value" onclick="copyToClipboard(this)">{{ analysis.offre_optimisee.pourcentage_suggere }}%</div>
+                        <div class="copy-hint">Cliquez pour copier</div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <!-- Recommandations de diffusion -->
+        {% if analysis.diffusion %}
+            <div class="section">
+                <div class="section-title">📢 Recommandations de diffusion</div>
+                
+                {% if analysis.diffusion.canaux is not empty %}
+                    <div class="field-group">
+                        <label class="field-label">Canaux recommandés</label>
+                        <div class="channels-list">
+                            {% for canal in analysis.diffusion.canaux %}
+                                <div class="channel-badge">{{ canal }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if analysis.diffusion.timing %}
+                    <div class="field-group">
+                        <label class="field-label">Timing optimal</label>
+                        <div class="field-value">📅 {{ analysis.diffusion.timing }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if analysis.diffusion.public_cible %}
+                    <div class="field-group">
+                        <label class="field-label">Public cible</label>
+                        <div class="field-value">👥 {{ analysis.diffusion.public_cible }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <!-- Boutons d'action -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="useOptimizedVersion()">
+                ✨ Utiliser cette version
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                🖨️ Imprimer l'analyse
+            </button>
+            <button class="btn btn-secondary" onclick="window.close()">
+                ✕ Fermer
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(element) {
+            const text = element.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const originalBg = element.style.background;
+                element.style.background = '#86efac';
+                element.style.transition = 'all 0.3s';
+                setTimeout(() => {
+                    element.style.background = originalBg;
+                }, 1500);
+            });
+        }
+        
+        async function useOptimizedVersion() {
+            const analysisId = {{ analysis.id }};
+            try {
+                const response = await fetch(`/api/offres/analysis/${analysisId}/optimized-data`);
+                if (!response.ok) {
+                    alert('Erreur lors de la récupération des données optimisées');
+                    return;
+                }
+                const data = await response.json();
+                localStorage.setItem('prefill_offre_data', JSON.stringify({
+                    titre: data.titre,
+                    description: data.description,
+                    pourcentage: data.pourcentage_suggere
+                }));
+                window.location.href = '/admin/offres';
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de l\'utilisation de cette version');
+            }
+        }
+    </script>
+</body>
+</html>

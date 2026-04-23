@@ -1,0 +1,268 @@
+{# Affiche le résultat d'analyse d'une offre #}
+<div class="analysis-container" style="margin-bottom: 20px;">
+    {% if analyses is not empty %}
+        {% for offreId, analysisData in analyses %}
+            {% set analysis = analysisData.analysis %}
+            <div class="analysis-card" style="
+                border-radius: 14px;
+                background: #f8fafc;
+                border: 2px solid #0ea5e9;
+                padding: 20px;
+                margin-bottom: 20px;
+            ">
+                <!-- En-tête avec score -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; font-size: 18px; color: #1e293b;">📊 Analyse Marketing</h3>
+                    <div style="
+                        display: inline-block;
+                        background: {% if analysis.score >= 70 %}#22c55e{% elseif analysis.score >= 50 %}#eab308{% else %}#ef4444{% endif %};
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 999px;
+                        font-weight: bold;
+                        font-size: 20px;
+                    ">
+                        Score: {{ analysis.score }}/100
+                    </div>
+                </div>
+
+                <!-- Évaluation générale -->
+                {% if analysis.evaluation %}
+                    <div style="
+                        background: white;
+                        border-left: 4px solid #0ea5e9;
+                        padding: 12px;
+                        border-radius: 8px;
+                        margin-bottom: 16px;
+                        font-style: italic;
+                        color: #475569;
+                    ">
+                        💡 {{ analysis.evaluation }}
+                    </div>
+                {% endif %}
+
+                <!-- Points faibles -->
+                {% if analysis.points_faibles is not empty %}
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 8px 0; color: #dc2626; font-weight: 600;">⚠️ Points faibles:</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #475569;">
+                            {% for point in analysis.points_faibles %}
+                                <li style="margin: 4px 0;">{{ point }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <!-- Améliorations suggérées -->
+                {% if analysis.ameliorations is not empty %}
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 8px 0; color: #1670b8; font-weight: 600;">✨ Améliorations suggérées:</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #475569;">
+                            {% for amelioration in analysis.ameliorations %}
+                                <li style="margin: 4px 0;">{{ amelioration }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <!-- Offre optimisée -->
+                {% if analysis.offre_optimisee %}
+                    <div style="
+                        background: white;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 16px;
+                        margin-bottom: 16px;
+                    ">
+                        <h4 style="margin: 0 0 12px 0; color: #1e293b; font-weight: 600;">🎯 Version optimisée:</h4>
+                        
+                        {% if analysis.offre_optimisee.titre %}
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Titre optimisé:</label>
+                                <input type="text" value="{{ analysis.offre_optimisee.titre }}" 
+                                    onclick="this.select()" 
+                                    style="
+                                    width: 100%;
+                                    padding: 8px 12px;
+                                    border: 1px solid #cbd5e1;
+                                    border-radius: 6px;
+                                    font-size: 14px;
+                                    background: #f1f5f9;
+                                    cursor: pointer;
+                                " readonly/>
+                                <small style="color: #94a3b8;">Cliquez pour copier</small>
+                            </div>
+                        {% endif %}
+
+                        {% if analysis.offre_optimisee.description %}
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Description optimisée:</label>
+                                <textarea 
+                                    onclick="this.select()" 
+                                    style="
+                                    width: 100%;
+                                    padding: 8px 12px;
+                                    border: 1px solid #cbd5e1;
+                                    border-radius: 6px;
+                                    font-size: 14px;
+                                    background: #f1f5f9;
+                                    cursor: pointer;
+                                    resize: vertical;
+                                    min-height: 80px;
+                                " readonly>{{ analysis.offre_optimisee.description }}</textarea>
+                                <small style="color: #94a3b8;">Cliquez pour copier</small>
+                            </div>
+                        {% endif %}
+
+                        {% if analysis.offre_optimisee.pourcentage_suggere %}
+                            <div>
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Pourcentage de réduction suggéré:</label>
+                                <input type="text" value="{{ analysis.offre_optimisee.pourcentage_suggere }}%" 
+                                    onclick="this.select()" 
+                                    style="
+                                    width: 100%;
+                                    padding: 8px 12px;
+                                    border: 1px solid #cbd5e1;
+                                    border-radius: 6px;
+                                    font-size: 14px;
+                                    background: #f1f5f9;
+                                    cursor: pointer;
+                                " readonly/>
+                                <small style="color: #94a3b8;">Cliquez pour copier</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Recommandations de diffusion -->
+                {% if analysis.diffusion %}
+                    <div style="
+                        background: white;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 16px;
+                        margin-bottom: 16px;
+                    ">
+                        <h4 style="margin: 0 0 12px 0; color: #1e293b; font-weight: 600;">📢 Recommandations de diffusion:</h4>
+                        
+                        {% if analysis.diffusion.canaux is not empty %}
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Canaux recommandés:</label>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    {% for canal in analysis.diffusion.canaux %}
+                                        <span style="
+                                            background: #dbeafe;
+                                            color: #1e40af;
+                                            padding: 4px 12px;
+                                            border-radius: 16px;
+                                            font-size: 12px;
+                                            font-weight: 500;
+                                        ">{{ canal }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if analysis.diffusion.timing %}
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Timing optimal:</label>
+                                <p style="margin: 4px 0; color: #475569;">📅 {{ analysis.diffusion.timing }}</p>
+                            </div>
+                        {% endif %}
+
+                        {% if analysis.diffusion.public_cible %}
+                            <div>
+                                <label style="display: block; font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Public cible:</label>
+                                <p style="margin: 4px 0; color: #475569;">👥 {{ analysis.diffusion.public_cible }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Boutons d'action -->
+                <div style="display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                    <button type="button" 
+                        class="btn-use-analysis" 
+                        data-offre-id="{{ offreId }}"
+                        style="
+                        flex: 1;
+                        padding: 10px 16px;
+                        background: #0ea5e9;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: background 0.3s;
+                    " onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'">
+                        ✓ Utiliser cette version
+                    </button>
+                    <button type="button" 
+                        class="btn-dismiss-analysis" 
+                        data-offre-id="{{ offreId }}"
+                        style="
+                        flex: 1;
+                        padding: 10px 16px;
+                        background: #94a3b8;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: background 0.3s;
+                    " onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#94a3b8'">
+                        ✕ Fermer
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Boutons pour utiliser l'analyse
+    document.querySelectorAll('.btn-use-analysis').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const offreId = this.dataset.offreId;
+            // TODO: Implémenter l'utilisation des données optimisées
+            alert('Fonctionnalité "Utiliser cette version" à implémenter pour l\'offre ' + offreId);
+        });
+    });
+
+    // Boutons pour fermer l'analyse
+    document.querySelectorAll('.btn-dismiss-analysis').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const offreId = this.dataset.offreId;
+            // Envoyer une requête pour supprimer l'analyse de la session
+            fetch('{{ path('app_admin_offres_dismiss_analysis') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ offre_id: offreId })
+            }).then(response => {
+                if (response.ok) {
+                    // Recharger la page pour voir les changements
+                    location.reload();
+                }
+            });
+        });
+    });
+
+    // Copier au clic sur les champs
+    document.querySelectorAll('input[readonly], textarea[readonly]').forEach(field => {
+        field.addEventListener('click', function() {
+            this.select();
+            document.execCommand('copy');
+            const originalText = this.placeholder || 'Copié!';
+            const originalBg = this.style.background;
+            this.style.background = '#86efac';
+            setTimeout(() => {
+                this.style.background = originalBg;
+            }, 1500);
+        });
+    });
+});
+</script>

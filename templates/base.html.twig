@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+{% set currentLocale = app.request.locale|default('fr') %}
+<html lang="{{ currentLocale }}" dir="{{ currentLocale == 'ar' ? 'rtl' : 'ltr' }}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}Fin Tokhroj{% endblock %}</title>
+        <link rel="icon" type="image/png" href="{{ asset('theme/images/logo.png') }}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('theme/css/fintokhrej.css') }}?v=20260417v1">
+        {% endblock %}
+
+        {% block javascripts %}
+            <script src="{{ asset('theme/js/app.js') }}?v=20260417v1" defer></script>
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}{% endblock %}
+    </body>
+</html>

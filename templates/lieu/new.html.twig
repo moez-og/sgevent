@@ -1,0 +1,25 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Nouveau lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Nouveau lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {{ include('admin/lieu/_flashes.html.twig') }}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Créer un lieu</h2>
+            <p class="section-subtitle">Remplissez les informations du lieu, puis enregistrez la fiche.</p>
+        </div>
+        <div class="lieu-page-actions">
+            <a href="{{ path('app_admin_lieu_index') }}" class="secondary-btn">Retour à la liste</a>
+        </div>
+    </div>
+
+    {% include 'admin/lieu/_form.html.twig' with { button_label: 'Enregistrer', lieu: lieu, horaires: horaires|default({}) } %}
+{% endblock %}

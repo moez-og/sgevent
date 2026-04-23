@@ -1,0 +1,50 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}{{ 'nav.places'|trans }} | Fin Tokhroj{% endblock %}
+
+{% block front_content %}
+<section>
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">{{ 'nav.places'|trans }}</h1>
+            <p class="section-subtitle">{{ 'front.places.subtitle'|trans }}</p>
+        </div>
+        <a href="{{ path('app_home') }}" class="outline-btn">{{ 'front.search.back_home'|trans }}</a>
+    </div>
+    <div class="listing-grid">
+        {% for item in places %}
+            <article class="listing-card">
+                <div class="cover-thumb"><span>{{ attribute(item, 'nom') }}</span></div>
+                <div class="listing-card__top">
+                    <div>
+                        <h3>{{ attribute(item, 'nom') }}</h3>
+                        <p>
+                            {% if item.ville is defined and item.ville %}{{ item.ville }}{% endif %}
+                            {% if item.categorie is defined and item.categorie %} · {{ item.categorie }}{% endif %}
+                        </p>
+                    </div>
+                    {% if item.prix is defined %}<span class="price-pill">{{ item.prix }} TND</span>{% endif %}
+                    {% if item.pourcentage is defined %}<span class="price-pill">{{ item.pourcentage }}%</span>{% endif %}
+                </div>
+                <div class="meta-row">
+                    {% if item.adresse is defined and item.adresse %}<span>📍 {{ item.adresse }}</span>{% endif %}
+                    {% if item.date_sortie is defined %}<span>🗓 {{ item.date_sortie|date('d/m/Y H:i') }}</span>{% endif %}
+                    {% if item.date_debut is defined %}<span>🗓 {{ item.date_debut|date('d/m/Y H:i') }}</span>{% endif %}
+                    {% if item.date_fin is defined %}<span>⏳ {{ item.date_fin|date('d/m/Y') }}</span>{% endif %}
+                    {% if item.budget_min is defined %}<span>💸 {{ item.budget_min ?? 0 }} - {{ item.budget_max ?? 0 }} TND</span>{% endif %}
+                    {% if item.nb_places is defined %}<span>👥 {{ item.nb_places }} places</span>{% endif %}
+                    {% if item.statut is defined %}<span>✅ {{ item.statut }}</span>{% endif %}
+                </div>
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <a href="{{ path('app_lieu_show', {id: item.id}) }}" class="cta-btn" style="text-decoration:none;">{{ 'common.view_details'|trans }}</a>
+                </div>
+                {% if item.description is defined and item.description %}
+                    <p style="margin-top:14px;">{{ item.description }}</p>
+                {% endif %}
+            </article>
+        {% else %}
+            <div class="empty-state">{{ 'common.no_data'|trans }}</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

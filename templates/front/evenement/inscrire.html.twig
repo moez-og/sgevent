@@ -1,0 +1,79 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Inscription | {{ event.titre }}{% endblock %}
+
+{% block front_content %}
+<section style="max-width: 980px; margin: 30px auto; padding: 0 20px;">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Participation</h1>
+            <p class="section-subtitle">Choisir le nombre de tickets</p>
+        </div>
+        <a href="{{ path('app_evenement_show', {id: event.id}) }}" class="outline-btn">Retour à l'événement</a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #e9f9ef; border: 1px solid #9de0b0; color: #156337; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #fdeaea; border: 1px solid #f3b8b8; color: #8a1f1f; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="listing-card" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+        <div>
+            <h3 style="margin: 0 0 10px 0;">{{ event.titre }}</h3>
+            <div class="meta-row" style="margin-top: 6px;">
+                <span>🗓 {{ event.dateDebut|date('d/m/Y H:i') }}</span>
+                <span>📍 {{ event.lieu ? event.lieu.nom : 'Lieu a confirmer' }}</span>
+                <span>👥 {{ places_restantes }} places restantes</span>
+            </div>
+            <div style="margin-top: 12px;">
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 6px;">Prix par ticket</div>
+                <div style="font-weight: 800; color: #143d71;">{% if event.prix > 0 %}{{ event.prix }} TND{% else %}Gratuit{% endif %}</div>
+            </div>
+        </div>
+        <div>
+            {% if max_tickets < 1 %}
+                <div class="empty-state">Plus de places disponibles pour cet événement.</div>
+            {% else %}
+                <form method="POST" action="{{ path('app_evenement_inscrire', {id: event.id}) }}">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700;">Nombre de tickets</label>
+                    <select name="nb_tickets" id="nb_tickets" class="form-control" style="width: 100%; margin-bottom: 12px;">
+                        {% for i in 1..max_tickets %}
+                            <option value="{{ i }}">{{ i }} ticket{{ i > 1 ? 's' : '' }}</option>
+                        {% endfor %}
+                    </select>
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+                        Maximum autorisé: {{ max_tickets }} ticket{{ max_tickets > 1 ? 's' : '' }}.
+                    </div>
+
+                    <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 12px; margin-bottom: 16px;">
+                        <div style="font-size: 13px; color: #4c51bf; margin-bottom: 6px;">Total à payer</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #1e1b4b;" id="total_montant">
+                            {% if event.prix > 0 %}{{ event.prix }} TND{% else %}0 TND{% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="cta-btn" style="width: 100%; padding: 14px; font-weight: 700;">
+                        Confirmer la demande
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<script>
+    const ticketsSelect = document.getElementById('nb_tickets');
+    const totalMontant = document.getElementById('total_montant');
+    const prixUnitaire = {{ event.prix|default(0) }};
+
+    if (ticketsSelect && totalMontant) {
+        ticketsSelect.addEventListener('change', () => {
+            const nb = parseInt(ticketsSelect.value || '1', 10);
+            const total = Math.max(0, nb) * prixUnitaire;
+            totalMontant.textContent = `${total} TND`;
+        });
+    }
+</script>
+{% endblock %}

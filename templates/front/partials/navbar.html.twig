@@ -1,0 +1,143 @@
+<header class="front-header">
+    {% set active = active|default('') %}
+    <div class="brand">
+        <div class="brand__logo">
+            <img src="{{ asset('theme/images/logo.png') }}" alt="Fin Tokhroj">
+        </div>
+        <div>
+            <div class="brand__title">Fin Tokhroj</div>
+            <div class="brand__subtitle">Front Office</div>
+        </div>
+    </div>
+
+    {% set currentLocale = app.request.locale|default('fr') %}
+    {% set currentUrl = app.request.uri %}
+
+    <nav class="front-nav">
+        <a href="{{ path('app_home') }}" class="{{ active == 'home' ? 'active' : '' }}">{{ 'nav.home'|trans }}</a>
+        <a href="{{ path('app_sorties') }}" class="{{ active == 'sorties' ? 'active' : '' }}">{{ 'nav.outings'|trans }}</a>
+        <a href="{{ path('app_lieux') }}" class="{{ active == 'lieux' ? 'active' : '' }}">{{ 'nav.places'|trans }}</a>
+        <a href="{{ path('app_offres') }}" class="{{ active == 'offres' ? 'active' : '' }}">{{ 'nav.offers'|trans }}</a>
+        <a href="{{ path('app_evenements') }}" class="{{ active == 'evenements' ? 'active' : '' }}">{{ 'nav.events'|trans }}</a>
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('app_admin_dashboard') }}">Admin</a>
+        {% endif %}
+    </nav>
+
+    {% set settingsUserKey = app.user ? ('user-' ~ app.user.id) : 'guest' %}
+    <div class="front-tools" data-settings-user-key="{{ settingsUserKey }}">
+        <form id="global-search-form" method="get" action="{{ path('app_global_search') }}" class="search-pill" role="search" aria-label="Recherche globale">
+            <span>🔎</span>
+            <input type="search" name="q" value="{{ app.request.query.get('q') }}" placeholder="Rechercher partout..." minlength="2" required>
+            <input type="hidden" name="from" value="navbar">
+        </form>
+        <button class="cta-btn" type="submit" form="global-search-form">Go</button>
+        <div class="locale-switch" aria-label="{{ 'nav.language'|trans }}">
+            <a href="{{ path('app_set_locale', { locale: 'fr' }) ~ '?redirect=' ~ currentUrl|url_encode }}" class="{{ currentLocale == 'fr' ? 'active' : '' }}">FR</a>
+            <a href="{{ path('app_set_locale', { locale: 'en' }) ~ '?redirect=' ~ currentUrl|url_encode }}" class="{{ currentLocale == 'en' ? 'active' : '' }}">EN</a>
+            <a href="{{ path('app_set_locale', { locale: 'ar' }) ~ '?redirect=' ~ currentUrl|url_encode }}" class="{{ currentLocale == 'ar' ? 'active' : '' }}">AR</a>
+        </div>
+        <button class="icon-btn" aria-label="Mode sombre" data-theme-toggle title="Mode sombre">◐</button>
+        {% if app.user %}
+            {% set chip = app.user %}
+            <div class="settings-panel-root" data-settings-root>
+                <button type="button" class="outline-btn" data-settings-toggle aria-expanded="false" aria-controls="navbar-settings-panel">{{ 'nav.settings'|trans }}</button>
+
+                <aside id="navbar-settings-panel" class="profile-panel settings-panel" data-settings-panel aria-hidden="true" role="dialog" aria-label="Paramètres d'affichage" hidden>
+                    <div class="profile-panel__head">
+                        <div>
+                            <div class="profile-panel__name">{{ 'settings.title'|trans }}</div>
+                            <div class="profile-panel__role">{{ 'settings.display'|trans }}</div>
+                        </div>
+                    </div>
+
+                    <div class="settings-panel__group">
+                        <label class="settings-panel__label" for="settings-font-family">{{ 'settings.font_family'|trans }}</label>
+                        <select id="settings-font-family" class="settings-panel__field" data-setting-font-family>
+                            <option value="'Plus Jakarta Sans','Segoe UI',sans-serif">Plus Jakarta Sans</option>
+                            <option value="'Poppins','Segoe UI',sans-serif">Poppins</option>
+                            <option value="'Nunito Sans','Segoe UI',sans-serif">Nunito Sans</option>
+                            <option value="'Merriweather','Georgia',serif">Merriweather</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-panel__group">
+                        <div class="settings-panel__row">
+                            <label class="settings-panel__label" for="settings-font-size">{{ 'settings.font_size'|trans }}</label>
+                            <strong class="settings-panel__value" data-setting-font-size-value>16px</strong>
+                        </div>
+                        <input id="settings-font-size" type="range" min="14" max="22" step="1" value="16" class="settings-panel__slider" data-setting-font-size>
+                    </div>
+
+                    <div class="settings-panel__group">
+                        <div class="settings-panel__row">
+                            <label class="settings-panel__label" for="settings-brightness">{{ 'settings.brightness'|trans }}</label>
+                            <strong class="settings-panel__value" data-setting-brightness-value>100%</strong>
+                        </div>
+                        <input id="settings-brightness" type="range" min="80" max="120" step="1" value="100" class="settings-panel__slider" data-setting-brightness>
+                    </div>
+
+                    <div class="profile-panel__actions">
+                        <button type="button" class="cta-btn" data-settings-reset>{{ 'settings.reset'|trans }}</button>
+                    </div>
+                </aside>
+            </div>
+            <a href="{{ path('app_logout') }}" class="cta-btn" style="text-decoration:none;display:inline-flex;align-items:center;">{{ 'auth.logout'|trans }}</a>
+        {% else %}
+            <a href="{{ path('app_login') }}" class="cta-btn" style="text-decoration:none;display:inline-flex;align-items:center;">{{ 'auth.login'|trans }}</a>
+            <a href="{{ path('app_register') }}" class="outline-btn" style="text-decoration:none;display:inline-flex;align-items:center;">{{ 'auth.register'|trans }}</a>
+            {% set chip = userChip ?? {'prenom': 'Invité', 'nom': '', 'role': 'visiteur', 'imageUrl': asset('theme/images/logo.png')} %}
+        {% endif %}
+        {% set chipRawImage = chip.imageUrl|default('') %}
+        {% if chipRawImage and (chipRawImage starts with 'http://' or chipRawImage starts with 'https://') %}
+            {% set chipImageSrc = chipRawImage %}
+        {% elseif chipRawImage and (chipRawImage starts with 'theme/' or chipRawImage starts with 'uploads/') %}
+            {% set chipImageSrc = asset(chipRawImage) %}
+        {% elseif chipRawImage and chipRawImage != 'default.png' %}
+            {% set chipImageSrc = asset('uploads/users/' ~ chipRawImage) %}
+        {% else %}
+            {% set chipImageSrc = asset('theme/images/logo.png') %}
+        {% endif %}
+        <div class="user-profile-root" data-profile-root>
+            <div class="user-chip">
+                <img class="avatar-circle" src="{{ chipImageSrc }}" alt="avatar" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                {% if app.user %}
+                    <button type="button" class="user-chip__identity" data-profile-toggle aria-expanded="false" aria-controls="navbar-profile-panel">
+                        <div class="user-chip__name">{{ chip.prenom|default('Invité') }} {{ chip.nom|default('') }}</div>
+                        <div class="user-chip__role">{{ chip.role|default('visiteur') }}</div>
+                    </button>
+                {% else %}
+                    <div>
+                        <div class="user-chip__name">{{ chip.prenom|default('Invité') }} {{ chip.nom|default('') }}</div>
+                        <div class="user-chip__role">{{ chip.role|default('visiteur') }}</div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if app.user %}
+                <aside id="navbar-profile-panel" class="profile-panel" data-profile-panel aria-hidden="true" role="dialog" aria-label="Profil utilisateur" hidden>
+                    <div class="profile-panel__head">
+                        <img class="profile-panel__avatar" src="{{ chipImageSrc }}" alt="avatar" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                        <div>
+                            <div class="profile-panel__name">{{ chip.prenom|default('') }} {{ chip.nom|default('') }}</div>
+                            <div class="profile-panel__role">{{ chip.role|default('visiteur')|upper }}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-panel__meta">
+                        <span>Prénom</span>
+                        <strong>{{ chip.prenom|default('Non défini') }}</strong>
+                        <span>Nom</span>
+                        <strong>{{ chip.nom|default('Non défini') }}</strong>
+                        <span>Email</span>
+                        <strong>{{ chip.email|default('Non défini') }}</strong>
+                    </div>
+
+                    <div class="profile-panel__actions">
+                        <a href="{{ path('app_profile') }}" class="cta-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Modifier mon compte</a>
+                    </div>
+                </aside>
+            {% endif %}
+        </div>
+    </div>
+</header>

@@ -1,0 +1,1123 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Gestion des offres | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Gestion des offres{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-offer-hero {
+            margin-bottom: 18px;
+            padding: 18px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(37, 99, 235, 0.04));
+            border: 1px solid rgba(59, 130, 246, 0.12);
+        }
+
+        .admin-offer-hero__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .admin-offer-hero__badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .mini-kpi {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .offer-feedback {
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+            font-weight: 600;
+        }
+
+        .offer-feedback--success {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .offer-feedback--error {
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .offer-form-card {
+            margin: 18px 0 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+        }
+
+        .offer-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .offer-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .offer-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .offer-field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .offer-input,
+        .offer-select,
+        .offer-textarea {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+            color: #0f172a;
+            outline: none;
+        }
+
+        .offer-textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .offer-input:focus,
+        .offer-select:focus,
+        .offer-textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .offer-input.is-invalid,
+        .offer-select.is-invalid,
+        .offer-textarea.is-invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+        }
+
+        .offer-inline-error {
+            margin-top: 2px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #b91c1c;
+        }
+
+        .offer-submit {
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            font-weight: 700;
+            padding: 11px 18px;
+            cursor: pointer;
+        }
+
+        .offer-toolbar {
+            margin-bottom: 14px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .offer-toolbar form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .promo-toolbar {
+            margin: 14px 0;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .promo-toolbar form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .offer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .data-table tbody tr {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(248, 250, 252, 0.92);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .status-pill--active,
+        .status-pill--actif {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pill--expired,
+        .status-pill--expiree,
+        .status-pill--expire {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-pill--inactive,
+        .status-pill--desactivee,
+        .status-pill--desactive {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .promo-code-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+            color: #0f172a;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .promo-actions-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .promo-inline-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .promo-edit-card {
+            margin-top: 8px;
+            min-width: 360px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .promo-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        @media (max-width: 980px) {
+            .offer-form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 680px) {
+            .offer-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="admin-offer-hero">
+        <div class="admin-offer-hero__row">
+            <div>
+                <h1 class="section-title" style="margin-bottom:6px;">Gestion des offres</h1>
+                <p class="section-subtitle" style="margin-bottom:0;">Une vue plus claire pour créer, filtrer et suivre les offres, les codes promo et les réservations.</p>
+                <div class="admin-offer-hero__badges">
+                    <span class="mini-kpi">{{ stats.total }} offres</span>
+                    <span class="mini-kpi">{{ stats.actives }} actives</span>
+                    <span class="mini-kpi">{{ promoCodes|length }} promos</span>
+                    <span class="mini-kpi">{{ reservations|length }} réservations</span>
+                </div>
+            </div>
+            <a href="{{ path('app_admin_dashboard') }}" class="outline-btn">Retour dashboard</a>
+        </div>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="offer-feedback offer-feedback--success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="offer-feedback offer-feedback--error">{{ message }}</div>
+    {% endfor %}
+
+    <section class="sortie-notification-board notification-root" data-notification-root data-feed-url="{{ path('app_notifications_api_feed') }}" data-read-all-url="{{ path('app_notifications_api_read_all') }}" data-notification-type-prefixes="RESERVATION_" data-notification-inline="true">
+        <div class="sortie-notification-board__head">
+            <div>
+                <h3>Centre notifications offres</h3>
+                <p>Réservations, validations et rappels promo centralisés pour la gestion back-office.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="outline-btn notification-toggle-btn" data-notification-toggle aria-label="Ouvrir ou fermer les notifications" title="Notifications">
+                    <span class="btn-icon" aria-hidden="true">🔔</span>
+                    <span class="notification-badge" data-notification-badge hidden>0</span>
+                </button>
+                <button type="button" class="primary-btn" data-notification-read-all data-notification-token="{{ csrf_token('notifications_read_all') }}">Tout marquer lu</button>
+            </div>
+        </div>
+        <div class="notification-panel notification-panel--inline" data-notification-panel hidden>
+            <div class="notification-panel__list" data-notification-list>
+                <div class="notification-empty">Aucune notification</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-card__label">Total offres</div>
+            <div class="stat-card__value">{{ stats.total }}</div>
+            <div class="stat-card__hint">Toutes catégories</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Actives</div>
+            <div class="stat-card__value">{{ stats.actives }}</div>
+            <div class="stat-card__hint">Statut actif</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Expirées</div>
+            <div class="stat-card__value">{{ stats.expirees }}</div>
+            <div class="stat-card__hint">Date fin dépassée</div>
+        </article>
+    </div>
+
+    <div class="offer-form-card">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Créer une offre</h2>
+                <p class="section-subtitle">Validation backend: pourcentage 0-100, date début <= date fin, lieu obligatoire.</p>
+            </div>
+        </div>
+
+        <form method="post" action="{{ path('app_admin_offres_create') }}" class="offer-form-grid" id="create-offer-form" novalidate>
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_offre_create') }}">
+
+            <div class="offer-field">
+                <label for="create_titre">Titre</label>
+                <input id="create_titre" class="offer-input" type="text" name="titre" minlength="3" maxlength="120" required>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_type">Type</label>
+                <input id="create_type" class="offer-input" type="text" name="type" minlength="2" maxlength="60" required>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_pourcentage">Pourcentage</label>
+                <input id="create_pourcentage" class="offer-input" type="number" name="pourcentage" min="0" max="100" step="0.01" required>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_date_debut">Date début</label>
+                <input id="create_date_debut" class="offer-input" type="date" name="date_debut" required>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_date_fin">Date fin</label>
+                <input id="create_date_fin" class="offer-input" type="date" name="date_fin" required>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_statut">Statut</label>
+                <select id="create_statut" class="offer-select" name="statut" required>
+                    <option value="ACTIVE">Actif</option>
+                    <option value="EXPIREE">Expirée</option>
+                    <option value="DESACTIVEE">Désactivée</option>
+                </select>
+            </div>
+
+            <div class="offer-field">
+                <label for="create_lieu">Lieu</label>
+                <select id="create_lieu" class="offer-select" name="lieu_id" required>
+                    <option value="">Sélectionner...</option>
+                    {% for lieu in lieux %}
+                        <option value="{{ lieu.id }}">{{ lieu.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="offer-field offer-field--full">
+                <label for="create_description">Description</label>
+                <textarea id="create_description" class="offer-textarea" name="description" maxlength="1000" placeholder="Optionnel (max 1000 caractères)"></textarea>
+            </div>
+
+            <div class="offer-field offer-field--full">
+                <div class="offer-actions">
+                    <button type="submit" class="offer-submit">Créer l'offre</button>
+                    <button
+                        type="button"
+                        class="outline-btn analyze-offer-btn"
+                    >📊 Analyser offre</button>
+                </div>
+            </div>
+        </form>
+        
+        <script>
+            // Pré-remplir le formulaire avec les données optimisées depuis la page d'analyse
+            document.addEventListener('DOMContentLoaded', function() {
+                const prefillData = localStorage.getItem('prefill_offre_data');
+                if (prefillData) {
+                    try {
+                        const data = JSON.parse(prefillData);
+                        if (data.titre) {
+                            document.getElementById('create_titre').value = data.titre;
+                        }
+                        if (data.description) {
+                            document.getElementById('create_description').value = data.description;
+                        }
+                        if (data.pourcentage) {
+                            document.getElementById('create_pourcentage').value = data.pourcentage;
+                        }
+                        localStorage.removeItem('prefill_offre_data');
+                    } catch (e) {
+                        console.error('Erreur lors de la lecture des données pré-remplissage:', e);
+                    }
+                }
+            });
+        </script>
+    </div>
+
+    {# Affichage des résultats d'analyse #}
+    {% if analyses is not empty %}
+        <div class="admin-table-card" style="border-top: 3px solid #0ea5e9;">
+            {% include 'admin/offre/analysis-result.html.twig' with {'analyses': analyses} %}
+        </div>
+    {% endif %}
+
+    <div class="admin-table-card">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Gestion des offres</h2>
+                <p class="section-subtitle">Liste, filtrage, modification et suppression.</p>
+            </div>
+        </div>
+
+        <div class="offer-toolbar">
+            <form method="get" action="{{ path('app_admin_offres') }}">
+                <div class="offer-field">
+                    <label for="filter_q">Recherche</label>
+                    <input id="filter_q" class="offer-input" type="text" name="q" value="{{ filters.q }}" placeholder="Titre, type, description">
+                </div>
+                <div class="offer-field">
+                    <label for="filter_status">Statut</label>
+                    <select id="filter_status" class="offer-select" name="status">
+                        <option value="">Tous</option>
+                        <option value="ACTIVE" {{ filters.status|upper == 'ACTIVE' ? 'selected' : '' }}>Actif</option>
+                        <option value="EXPIREE" {{ filters.status|upper == 'EXPIREE' ? 'selected' : '' }}>Expirée</option>
+                        <option value="DESACTIVEE" {{ filters.status|upper == 'DESACTIVEE' ? 'selected' : '' }}>Désactivée</option>
+                    </select>
+                </div>
+                <div class="offer-field">
+                    <label for="filter_sort">Tri</label>
+                    <select id="filter_sort" class="offer-select" name="sort">
+                        <option value="date_fin" {{ filters.sort == 'date_fin' ? 'selected' : '' }}>Date fin</option>
+                        <option value="date_debut" {{ filters.sort == 'date_debut' ? 'selected' : '' }}>Date début</option>
+                        <option value="titre" {{ filters.sort == 'titre' ? 'selected' : '' }}>Titre</option>
+                        <option value="type" {{ filters.sort == 'type' ? 'selected' : '' }}>Type</option>
+                        <option value="pourcentage" {{ filters.sort == 'pourcentage' ? 'selected' : '' }}>Pourcentage</option>
+                        <option value="statut" {{ filters.sort == 'statut' ? 'selected' : '' }}>Statut</option>
+                        <option value="lieu" {{ filters.sort == 'lieu' ? 'selected' : '' }}>Lieu</option>
+                    </select>
+                </div>
+                <div class="offer-field">
+                    <label for="filter_direction">Sens</label>
+                    <select id="filter_direction" class="offer-select" name="direction">
+                        <option value="asc" {{ filters.direction == 'asc' ? 'selected' : '' }}>Asc</option>
+                        <option value="desc" {{ filters.direction == 'desc' ? 'selected' : '' }}>Desc</option>
+                    </select>
+                </div>
+                <button type="submit" class="outline-btn">Filtrer</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Titre</th>
+                        <th>Type</th>
+                        <th>Lieu</th>
+                        <th>Pourcentage</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in offres %}
+                    <tr>
+                        <td>{{ attribute(item, "id") }}</td>
+                        <td>{{ attribute(item, "titre") }}</td>
+                        <td>{{ attribute(item, "type") }}</td>
+                        <td>{{ item.lieu_nom ?? '-' }}</td>
+                        <td>{{ attribute(item, "pourcentage") }}</td>
+                        <td>{{ item.date_debut ? item.date_debut|date("d/m/Y") : "-" }}</td>
+                        <td>{{ item.date_fin ? item.date_fin|date("d/m/Y") : "-" }}</td>
+                        <td>
+                            <span class="status-pill status-pill--{{ item.statut|lower }}">{{ attribute(item, "statut") }}</span>
+                        </td>
+                        <td>
+                            <div class="offer-actions">
+                                <details>
+                                    <summary class="outline-btn" style="cursor:pointer;">Modifier</summary>
+                                    <form method="post" action="{{ path('app_admin_offres_update', {id: item.id}) }}" class="offer-form-card offer-form-grid" style="margin-top:8px; min-width:420px;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_offre_edit_' ~ item.id) }}">
+
+                                        <div class="offer-field">
+                                            <label>Titre</label>
+                                            <input class="offer-input" type="text" name="titre" value="{{ item.titre }}" minlength="3" maxlength="120" required>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Type</label>
+                                            <input class="offer-input" type="text" name="type" value="{{ item.type }}" minlength="2" maxlength="60" required>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Pourcentage</label>
+                                            <input class="offer-input" type="number" min="0" max="100" step="0.01" name="pourcentage" value="{{ item.pourcentage }}" required>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Date début</label>
+                                            <input class="offer-input" type="date" name="date_debut" value="{{ item.date_debut ? item.date_debut|date('Y-m-d') : '' }}" required>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Date fin</label>
+                                            <input class="offer-input" type="date" name="date_fin" value="{{ item.date_fin ? item.date_fin|date('Y-m-d') : '' }}" required>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Statut</label>
+                                            <select class="offer-select" name="statut" required>
+                                                <option value="ACTIVE" {{ item.statut|lower in ['active', 'actif'] ? 'selected' : '' }}>Actif</option>
+                                                <option value="EXPIREE" {{ item.statut|lower in ['expiree', 'expire', 'expired'] ? 'selected' : '' }}>Expirée</option>
+                                                <option value="DESACTIVEE" {{ item.statut|lower in ['desactivee', 'desactive', 'inactive', 'inactif', 'draft', 'brouillon'] ? 'selected' : '' }}>Désactivée</option>
+                                            </select>
+                                        </div>
+                                        <div class="offer-field">
+                                            <label>Lieu</label>
+                                            <select class="offer-select" name="lieu_id" required>
+                                                <option value="">Sélectionner...</option>
+                                                {% for lieu in lieux %}
+                                                    <option value="{{ lieu.id }}" {{ item.lieu_id == lieu.id ? 'selected' : '' }}>{{ lieu.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="offer-field offer-field--full">
+                                            <label>Description</label>
+                                            <textarea class="offer-textarea" name="description" maxlength="1000">{{ item.description ?? '' }}</textarea>
+                                        </div>
+                                        <div class="offer-field offer-field--full">
+                                            <div class="offer-actions">
+                                                <button type="submit" class="offer-submit">Enregistrer</button>
+                                                <button
+                                                    type="button"
+                                                    class="outline-btn analyze-offer-btn"
+                                                >📊 Analyser offre</button>
+                                            </div>
+                                            <input type="hidden" name="offre_id" value="{{ item.id }}">
+                                        </div>
+                                    </form>
+                                </details>
+
+                                <form method="post" action="{{ path('app_admin_offres_delete', {id: item.id}) }}" onsubmit="return confirm('Supprimer cette offre ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_offre_delete_' ~ item.id) }}">
+                                    <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="9">Aucune donnée disponible.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 16px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <span class="section-subtitle">Page {{ pagination.page }} / {{ pagination.totalPages }} ({{ pagination.total }} offres)</span>
+            <div style="display:flex; gap:8px;">
+                {% if pagination.page > 1 %}
+                    <a class="outline-btn" href="{{ path('app_admin_offres', {'page': pagination.page - 1, 'q': filters.q, 'status': filters.status, 'sort': filters.sort, 'direction': filters.direction, 'promo_q': filters.promo_q, 'promo_status': filters.promo_status, 'promo_sort': filters.promo_sort, 'promo_direction': filters.promo_direction}) }}">Précédent</a>
+                {% endif %}
+                {% if pagination.page < pagination.totalPages %}
+                    <a class="outline-btn" href="{{ path('app_admin_offres', {'page': pagination.page + 1, 'q': filters.q, 'status': filters.status, 'sort': filters.sort, 'direction': filters.direction, 'promo_q': filters.promo_q, 'promo_status': filters.promo_status, 'promo_sort': filters.promo_sort, 'promo_direction': filters.promo_direction}) }}">Suivant</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-table-card" style="margin-top: 16px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Codes promo générés</h2>
+                <p class="section-subtitle">Historique des codes promo liés aux offres (stockés en base).</p>
+            </div>
+        </div>
+
+        <div class="promo-toolbar">
+            <form method="get" action="{{ path('app_admin_offres') }}">
+                <input type="hidden" name="q" value="{{ filters.q }}">
+                <input type="hidden" name="status" value="{{ filters.status }}">
+                <input type="hidden" name="sort" value="{{ filters.sort }}">
+                <input type="hidden" name="direction" value="{{ filters.direction }}">
+                <div class="offer-field">
+                    <label for="promo_q">Recherche promo</label>
+                    <input id="promo_q" class="offer-input" type="text" name="promo_q" value="{{ filters.promo_q }}" placeholder="ID, offre, utilisateur, statut">
+                </div>
+                <div class="offer-field">
+                    <label for="promo_status">Statut promo</label>
+                    <select id="promo_status" class="offer-select" name="promo_status">
+                        <option value="">Tous</option>
+                        <option value="ACTIF" {{ filters.promo_status == 'ACTIF' ? 'selected' : '' }}>ACTIF</option>
+                        <option value="EXPIRE" {{ filters.promo_status == 'EXPIRE' ? 'selected' : '' }}>EXPIRE</option>
+                        <option value="DESACTIVE" {{ filters.promo_status == 'DESACTIVE' ? 'selected' : '' }}>DESACTIVE</option>
+                        <option value="UTILISE" {{ filters.promo_status == 'UTILISE' ? 'selected' : '' }}>UTILISE</option>
+                        <option value="BLOQUE_ABUS" {{ filters.promo_status == 'BLOQUE_ABUS' ? 'selected' : '' }}>BLOQUE_ABUS</option>
+                    </select>
+                </div>
+                <div class="offer-field">
+                    <label for="promo_sort">Tri promo</label>
+                    <select id="promo_sort" class="offer-select" name="promo_sort">
+                        <option value="id" {{ filters.promo_sort == 'id' ? 'selected' : '' }}>ID</option>
+                        <option value="offre" {{ filters.promo_sort == 'offre' ? 'selected' : '' }}>Offre</option>
+                        <option value="user" {{ filters.promo_sort == 'user' ? 'selected' : '' }}>Utilisateur</option>
+                        <option value="date_generation" {{ filters.promo_sort == 'date_generation' ? 'selected' : '' }}>Date génération</option>
+                        <option value="date_expiration" {{ filters.promo_sort == 'date_expiration' ? 'selected' : '' }}>Date expiration</option>
+                        <option value="statut" {{ filters.promo_sort == 'statut' ? 'selected' : '' }}>Statut</option>
+                    </select>
+                </div>
+                <div class="offer-field">
+                    <label for="promo_direction">Sens</label>
+                    <select id="promo_direction" class="offer-select" name="promo_direction">
+                        <option value="asc" {{ filters.promo_direction == 'asc' ? 'selected' : '' }}>Asc</option>
+                        <option value="desc" {{ filters.promo_direction == 'desc' ? 'selected' : '' }}>Desc</option>
+                    </select>
+                </div>
+                <button type="submit" class="outline-btn">Filtrer</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Offre</th>
+                    <th>Utilisateur</th>
+                    <th>Code promo</th>
+                    <th>QR</th>
+                    <th>Génération</th>
+                    <th>Expiration</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for promo in promoCodes %}
+                    <tr>
+                        <td>{{ promo.id }}</td>
+                        <td>{{ promo.offre_titre ?? ('#' ~ promo.offre_id) }}</td>
+                        <td>{{ (promo.prenom ?? '') ~ ' ' ~ (promo.nom ?? '') }}</td>
+                        <td><span class="promo-code-pill">CP{{ '%06d'|format(promo.id) }}</span></td>
+                        <td>
+                            <a href="{{ promo.qr_image_url }}" target="_blank" rel="noopener" class="promo-actions-tag">QR</a>
+                        </td>
+                        <td>{{ promo.date_generation ? promo.date_generation|date('d/m/Y') : '-' }}</td>
+                        <td>{{ promo.date_expiration ? promo.date_expiration|date('d/m/Y') : '-' }}</td>
+                        <td><span class="status-pill status-pill--{{ promo.statut|lower|replace({'_':'-'}) }}">{{ promo.statut }}</span></td>
+                        <td>
+                            <div class="promo-inline-actions">
+                                <details>
+                                    <summary class="outline-btn" style="cursor:pointer;">Modifier</summary>
+                                    <form method="post" action="{{ path('app_admin_promo_codes_update', {id: promo.id}) }}" class="promo-edit-card">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_promo_edit_' ~ promo.id) }}">
+
+                                        <div class="promo-edit-grid">
+                                            <div class="offer-field">
+                                                <label>Date expiration</label>
+                                                <input class="offer-input" type="date" name="date_expiration" value="{{ promo.date_expiration ? promo.date_expiration|date('Y-m-d') : '' }}" required>
+                                            </div>
+                                            <div class="offer-field">
+                                                <label>Statut</label>
+                                                <select class="offer-select" name="statut" required>
+                                                    <option value="ACTIF" {{ promo.statut == 'ACTIF' ? 'selected' : '' }}>ACTIF</option>
+                                                    <option value="EXPIRE" {{ promo.statut == 'EXPIRE' ? 'selected' : '' }}>EXPIRE</option>
+                                                    <option value="DESACTIVE" {{ promo.statut == 'DESACTIVE' ? 'selected' : '' }}>DESACTIVE</option>
+                                                    <option value="UTILISE" {{ promo.statut == 'UTILISE' ? 'selected' : '' }}>UTILISE</option>
+                                                    <option value="BLOQUE_ABUS" {{ promo.statut == 'BLOQUE_ABUS' ? 'selected' : '' }}>BLOQUE_ABUS</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="offer-submit">Enregistrer</button>
+                                    </form>
+                                </details>
+
+                                <form method="post" action="{{ path('app_admin_promo_codes_delete', {id: promo.id}) }}" onsubmit="return confirm('Supprimer ce code promo ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin_promo_delete_' ~ promo.id) }}">
+                                    <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9">Aucun code promo enregistré.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="admin-table-card" style="margin-top: 16px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Réservations des offres</h2>
+                <p class="section-subtitle">L'administrateur confirme ou refuse les réservations.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Offre</th>
+                    <th>Lieu</th>
+                    <th>Utilisateur</th>
+                    <th>Date</th>
+                    <th>Personnes</th>
+                    <th>Statut</th>
+                    <th>Note</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for reservation in reservations %}
+                    <tr>
+                        <td>{{ reservation.id }}</td>
+                        <td>{{ reservation.offre_titre ?? '-' }}</td>
+                        <td>{{ reservation.lieu_nom ?? '-' }}</td>
+                        <td>{{ (reservation.prenom ?? '') ~ ' ' ~ (reservation.nom ?? '') }}</td>
+                        <td>{{ reservation.date_reservation ? reservation.date_reservation|date('d/m/Y') : '-' }}</td>
+                        <td>{{ reservation.nombre_personnes }}</td>
+                        <td>{{ reservation.statut }}</td>
+                        <td>{{ reservation.note ?? '-' }}</td>
+                        <td>
+                            <div class="offer-actions">
+                                {% if reservation.statut == 'EN_ATTENTE' %}
+                                    <form method="post" action="{{ path('app_admin_reservation_confirm', {id: reservation.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_reservation_confirm_' ~ reservation.id) }}">
+                                        <button type="submit" class="outline-btn" style="color:#166534;border-color:#86efac;">Confirmer</button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_admin_reservation_refuse', {id: reservation.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin_reservation_refuse_' ~ reservation.id) }}">
+                                        <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">Refuser</button>
+                                    </form>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9">Aucune réservation enregistrée.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('create-offer-form');
+            if (!form) {
+                return;
+            }
+
+            const fields = {
+                titre: document.getElementById('create_titre'),
+                type: document.getElementById('create_type'),
+                pourcentage: document.getElementById('create_pourcentage'),
+                dateDebut: document.getElementById('create_date_debut'),
+                dateFin: document.getElementById('create_date_fin'),
+                statut: document.getElementById('create_statut'),
+                lieu: document.getElementById('create_lieu'),
+                description: document.getElementById('create_description')
+            };
+
+            const validators = {
+                titre: function (value) {
+                    const trimmed = value.trim();
+                    if (trimmed.length === 0) return 'Le titre est obligatoire.';
+                    if (trimmed.length < 3 || trimmed.length > 120) return 'Le titre doit contenir entre 3 et 120 caractères.';
+                    return '';
+                },
+                type: function (value) {
+                    const trimmed = value.trim();
+                    if (trimmed.length === 0) return 'Le type est obligatoire.';
+                    if (trimmed.length < 2 || trimmed.length > 60) return 'Le type doit contenir entre 2 et 60 caractères.';
+                    return '';
+                },
+                pourcentage: function (value) {
+                    const raw = value.trim();
+                    if (raw === '') return 'Le pourcentage est obligatoire.';
+                    const parsed = Number(raw);
+                    if (!Number.isFinite(parsed)) return 'Le pourcentage doit être un nombre.';
+                    if (parsed < 0 || parsed > 100) return 'Le pourcentage doit être entre 0 et 100.';
+                    if (!/^\d+(\.\d{1,2})?$/.test(raw)) return 'Maximum 2 chiffres après la virgule.';
+                    return '';
+                },
+                dateDebut: function (value) {
+                    if (!value) return 'La date de début est obligatoire.';
+                    return '';
+                },
+                dateFin: function (value) {
+                    if (!value) return 'La date de fin est obligatoire.';
+                    if (fields.dateDebut.value && value < fields.dateDebut.value) {
+                        return 'La date de fin doit être supérieure ou égale à la date de début.';
+                    }
+                    return '';
+                },
+                statut: function (value) {
+                    if (!value) return 'Le statut est obligatoire.';
+                    return '';
+                },
+                lieu: function (value) {
+                    if (!value) return 'Le lieu est obligatoire.';
+                    return '';
+                },
+                description: function (value) {
+                    if (value.length > 1000) return 'La description ne doit pas dépasser 1000 caractères.';
+                    return '';
+                }
+            };
+
+            function getErrorElement(input) {
+                const next = input.nextElementSibling;
+                if (next && next.classList.contains('offer-inline-error')) {
+                    return next;
+                }
+
+                const errorEl = document.createElement('div');
+                errorEl.className = 'offer-inline-error';
+                input.insertAdjacentElement('afterend', errorEl);
+                return errorEl;
+            }
+
+            function showError(input, message) {
+                const errorEl = getErrorElement(input);
+                input.classList.add('is-invalid');
+                input.setAttribute('aria-invalid', 'true');
+                errorEl.textContent = message;
+            }
+
+            function clearError(input) {
+                const errorEl = getErrorElement(input);
+                input.classList.remove('is-invalid');
+                input.removeAttribute('aria-invalid');
+                errorEl.textContent = '';
+            }
+
+            function validateField(name) {
+                const input = fields[name];
+                if (!input) return true;
+
+                const message = validators[name](input.value || '');
+                if (message) {
+                    showError(input, message);
+                    return false;
+                }
+
+                clearError(input);
+                return true;
+            }
+
+            Object.entries(fields).forEach(function (entry) {
+                const name = entry[0];
+                const input = entry[1];
+                if (!input) return;
+
+                const eventName = input.tagName === 'SELECT' ? 'change' : 'input';
+                input.addEventListener(eventName, function () {
+                    validateField(name);
+                    if (name === 'dateDebut') {
+                        validateField('dateFin');
+                    }
+                });
+            });
+
+            form.addEventListener('submit', function (event) {
+                let isValid = true;
+                Object.keys(fields).forEach(function (name) {
+                    isValid = validateField(name) && isValid;
+                });
+
+                if (!isValid) {
+                    event.preventDefault();
+                    const firstInvalid = form.querySelector('.is-invalid');
+                    if (firstInvalid) {
+                        firstInvalid.focus();
+                    }
+                }
+            });
+        });
+
+        // Modal de suivi d'analyse
+        const analyzeModal = {
+            open(trackingId) {
+                const modal = document.getElementById('analyze-modal');
+                modal.style.display = 'flex';
+                this.startPolling(trackingId);
+            },
+            close() {
+                const modal = document.getElementById('analyze-modal');
+                modal.style.display = 'none';
+                this.stopPolling();
+            },
+            pollInterval: null,
+            stopPolling() {
+                if (this.pollInterval) clearInterval(this.pollInterval);
+            },
+            async startPolling(trackingId) {
+                console.log('Starting polling for tracking ID:', trackingId);
+                let attempts = 0;
+                const maxAttempts = 120; // 2 minutes
+                
+                this.pollInterval = setInterval(async () => {
+                    attempts++;
+                    document.getElementById('attempt-count').textContent = `Vérification: ${attempts}...`;
+                    
+                    if (attempts > maxAttempts) {
+                        this.showError('Délai d\'attente dépassé. L\'analyse a pris trop de temps.');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`/api/offres/analysis-status/${trackingId}`);
+                        console.log('Status check response:', response.status);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log('Status data:', data);
+                        
+                        if (data.status === 'completed' && data.analysis_id) {
+                            this.showSuccess(data.redirect_url || `/offres/analysis/${data.analysis_id}`);
+                        }
+                    } catch (error) {
+                        console.error('Polling error:', error);
+                    }
+                }, 1000);
+            },
+            showSuccess(redirectUrl) {
+                this.stopPolling();
+                const waitingContent = document.getElementById('waiting-content');
+                const successContent = document.getElementById('success-content');
+                
+                waitingContent.style.display = 'none';
+                successContent.style.display = 'block';
+                
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 2000);
+            },
+            showError(message) {
+                this.stopPolling();
+                const waitingContent = document.getElementById('waiting-content');
+                const errorContent = document.getElementById('error-content');
+                const errorMsg = document.getElementById('error-message');
+                
+                waitingContent.style.display = 'none';
+                errorContent.style.display = 'block';
+                errorMsg.textContent = message;
+                
+                document.getElementById('close-modal').style.display = 'block';
+            }
+        };
+
+        // Gérer les clics sur les boutons "Analyser offre"
+        document.addEventListener('click', async function(e) {
+            if (!e.target.classList.contains('analyze-offer-btn')) return;
+            e.preventDefault();
+            
+            const form = e.target.closest('form');
+            if (!form) return;
+            
+            // Collecter les données du formulaire
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            // Récupérer le token CSRF du formulaire
+            const csrfInput = form.querySelector('input[name="_token"]');
+            if (csrfInput) {
+                data._token = csrfInput.value;
+            }
+            
+            console.log('Sending analyze request with data:', data);
+            
+            try {
+                const response = await fetch('{{ path("app_admin_offres_analyze") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                console.log('Analyze response:', response.status);
+                const result = await response.json();
+                console.log('Analyze result:', result);
+                
+                if (result.success && result.tracking_id) {
+                    analyzeModal.open(result.tracking_id);
+                } else {
+                    alert('Erreur: ' + (result.error || 'Impossible de lancer l\'analyse'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erreur de connexion: ' + error.message);
+            }
+        });
+    </script>
+
+    <!-- Modal d'analyse -->
+    <div id="analyze-modal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    ">
+        <div style="
+            background: white;
+            border-radius: 16px;
+            padding: 60px 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        ">
+            <div id="waiting-content">
+                <div style="
+                    display: inline-block;
+                    width: 50px;
+                    height: 50px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #667eea;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin-bottom: 30px;
+                "></div>
+                <h2 style="font-size: 28px; color: #1e293b; margin-bottom: 16px;">Analyse en cours...</h2>
+                <p style="font-size: 16px; color: #64748b; margin-bottom: 20px;">n8n traite votre offre avec l'intelligence artificielle.</p>
+                <p style="font-size: 13px; color: #cbd5e1;">Cela prend généralement 10-30 secondes.</p>
+                <div style="font-size: 14px; color: #94a3b8; margin-top: 20px;">
+                    <span id="attempt-count">Vérification: 0...</span>
+                </div>
+            </div>
+            
+            <div id="success-content" style="display: none;">
+                <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                <h2 style="font-size: 28px; color: #1e293b; margin-bottom: 16px;">Analyse complétée !</h2>
+                <p style="font-size: 16px; color: #64748b;">Redirection vers les résultats...</p>
+            </div>
+            
+            <div id="error-content" style="display: none;">
+                <h2 style="font-size: 28px; color: #1e293b; margin-bottom: 16px;">Erreur</h2>
+                <div id="error-message" style="
+                    background: #fee2e2;
+                    border: 1px solid #fecaca;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    color: #7f1d1d;
+                    font-size: 14px;
+                "></div>
+                <button id="close-modal" onclick="analyzeModal.close()" style="
+                    padding: 12px 24px;
+                    background: #64748b;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">Fermer</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock %}

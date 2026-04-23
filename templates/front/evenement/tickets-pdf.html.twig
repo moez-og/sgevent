@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tickets - {{ inscription.evenement.titre }}</title>
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color: #0f172a; }
+        .header { margin-bottom: 16px; }
+        .title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .muted { color: #64748b; }
+        .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+        .row { display: flex; justify-content: space-between; gap: 12px; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e2e8f0; font-weight: 700; font-size: 11px; }
+        .tickets { margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Tickets - {{ inscription.evenement.titre }}</div>
+        <div class="muted">Date: {{ inscription.evenement.dateDebut|date('d/m/Y H:i') }}</div>
+        <div class="muted">Lieu: {{ inscription.evenement.lieu ? inscription.evenement.lieu.nom : 'Lieu a confirmer' }}</div>
+        <div class="muted">Participant: {{ inscription.user.prenom }} {{ inscription.user.nom }}</div>
+        <div class="muted">Référence: {{ inscription.getPaiementPrincipal() ? inscription.getPaiementPrincipal().referenceCode : 'N/A' }}</div>
+        <div class="muted">Nombre de tickets: {{ inscription.nbTickets }}</div>
+    </div>
+
+    <div class="tickets">
+        {% for ticket in tickets %}
+            <div class="card">
+                <div class="row">
+                    <div>
+                        <div><strong>{{ ticket.getNumeroTicketFinal() }}</strong></div>
+                        <div class="muted">Emis le {{ ticket.date|date('d/m/Y') }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="muted">Code validation</div>
+                        <div class="badge">{{ ticket.codeValidation }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="muted">Ce document est une preuve de paiement et d'inscription.</div>
+</body>
+</html>

@@ -1,0 +1,355 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Détails Offre | Fin Tokhroj{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .offer-detail-hero {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-detail-hero--urgent {
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.98), #ffffff 72%);
+            box-shadow: 0 22px 50px rgba(239, 68, 68, 0.12);
+        }
+
+        .offer-detail-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 7px 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 800;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .offer-detail-badge--double {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff;
+        }
+
+        .offer-detail-countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #991b1b;
+            border: 1px dashed rgba(239, 68, 68, 0.35);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .offer-detail-countdown.is-expired {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .offer-detail-price-wrap {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-left: 4px;
+        }
+
+        .offer-detail-price-old {
+            text-decoration: line-through;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .offer-detail-price-new {
+            color: #b91c1c;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .offer-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .offer-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .offer-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .offer-field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .offer-input,
+        .offer-textarea {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+            color: #0f172a;
+            outline: none;
+        }
+
+        .offer-textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .offer-submit {
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            font-weight: 700;
+            padding: 11px 18px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 680px) {
+            .offer-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block front_content %}
+<section>
+    {% for message in app.flashes('success') %}
+        <div style="border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background:#ecfdf5; border:1px solid #86efac; color:#166534; font-weight:600;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div style="border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; font-weight:600;">{{ message }}</div>
+    {% endfor %}
+
+    {% set displayPercentage = offre.expiring_soon is defined and offre.expiring_soon ? offre.pourcentage * 2 : offre.pourcentage %}
+
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">{{ offre.titre }}</h1>
+            <p class="section-subtitle">{{ 'front.offer_detail.subtitle'|trans }}</p>
+        </div>
+        <a href="{{ path('app_offres') }}" class="outline-btn">{{ 'front.offer_detail.back_offers'|trans }}</a>
+    </div>
+
+    <article class="listing-card offer-detail-hero {{ offre.expiring_soon is defined and offre.expiring_soon ? 'offer-detail-hero--urgent' : '' }}" style="margin-bottom: 18px;">
+        <div class="listing-card__top">
+            <div>
+                <h3>{{ offre.titre }}</h3>
+                <p>
+                    {{ offre.type }} ·
+                    {% if offre.expiring_soon is defined and offre.expiring_soon %}
+                        <span class="offer-detail-price-wrap">
+                            <span class="offer-detail-price-old">{{ offre.pourcentage }}%</span>
+                            <span class="offer-detail-price-new">{{ displayPercentage }}%</span>
+                        </span>
+                    {% else %}
+                        {{ displayPercentage }}%
+                    {% endif %}
+                </p>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+                <span class="price-pill">{{ offre.statut }}</span>
+                {% if offre.expiring_soon is defined and offre.expiring_soon %}
+                    <span class="offer-detail-badge offer-detail-badge--double">{{ 'front.offer_detail.expiring_double'|trans }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="meta-row">
+            {% if offre.lieu_nom %}<span>📍 {{ offre.lieu_nom }}{% if offre.ville %}, {{ offre.ville }}{% endif %}</span>{% endif %}
+            {% if offre.date_debut %}<span>🗓 {{ 'front.offer_detail.start'|trans }} {{ offre.date_debut|date('d/m/Y') }}</span>{% endif %}
+            {% if offre.date_fin %}<span>⏳ {{ 'front.offer_detail.end'|trans }} {{ offre.date_fin|date('d/m/Y') }}</span>{% endif %}
+        </div>
+
+        {% if offre.description %}
+            <p style="margin-top:14px;">{{ offre.description }}</p>
+        {% endif %}
+
+        {% if offre.expiring_soon is defined and offre.expiring_soon %}
+            <div class="offer-detail-countdown" data-offer-countdown="{{ offre.countdown_target ?? (offre.date_fin|date('Y-m-d') ~ 'T23:59:59') }}">{{ offre.countdown_label ?? ('front.offer_detail.expires_in'|trans) }}</div>
+        {% endif %}
+    </article>
+
+    {% if app.user %}
+        <form method="post" action="{{ path('app_offres_generate_code', {id: offre.id}) }}" style="margin-bottom:18px;">
+            <input type="hidden" name="_token" value="{{ csrf_token('generate_promo_' ~ offre.id) }}">
+            <button type="submit" class="outline-btn" style="font-weight:700;">{{ 'front.offer_detail.generate_qr'|trans }}</button>
+        </form>
+    {% else %}
+        <div class="empty-state" style="margin-bottom:18px;">{{ 'front.offer_detail.login_generate'|trans }}</div>
+    {% endif %}
+
+    <div class="admin-table-card" style="margin-bottom:18px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">{{ 'front.offer_detail.reserve_place'|trans }}</h2>
+                <p class="section-subtitle">{{ 'front.offer_detail.reserve_subtitle'|trans }}</p>
+            </div>
+        </div>
+
+        {% if app.user %}
+            <form method="post" action="{{ path('app_offres_reserve', {id: offre.id}) }}" class="offer-form-grid">
+                <input type="hidden" name="_token" value="{{ csrf_token('reserve_offre_' ~ offre.id) }}">
+
+                <div class="offer-field">
+                    <label for="reserve_nombre_personnes">{{ 'front.offer_detail.people_count'|trans }}</label>
+                    <input id="reserve_nombre_personnes" class="offer-input" type="number" name="nombre_personnes" min="1" value="1" required>
+                </div>
+
+                <div class="offer-field offer-field--full">
+                    <label for="reserve_note">{{ 'front.offer_detail.note'|trans }}</label>
+                    <textarea id="reserve_note" class="offer-textarea" name="note" placeholder="{{ 'front.offer_detail.optional'|trans }}"></textarea>
+                </div>
+
+                <div class="offer-field offer-field--full">
+                    <button type="submit" class="offer-submit">{{ 'front.offer_detail.reserve_now'|trans }}</button>
+                </div>
+            </form>
+        {% else %}
+            <div class="empty-state">{{ 'front.offer_detail.login_reserve'|trans }}</div>
+        {% endif %}
+    </div>
+
+    <div class="admin-table-card">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">{{ 'front.offer_detail.my_promo_codes'|trans }}</h2>
+                <p class="section-subtitle">{{ 'front.offer_detail.promo_subtitle'|trans }}</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ 'front.offer_detail.code'|trans }}</th>
+                    <th>QR</th>
+                    <th>{{ 'front.offer_detail.generated_at'|trans }}</th>
+                    <th>{{ 'front.offer_detail.expires_at'|trans }}</th>
+                    <th>{{ 'front.offer_detail.status'|trans }}</th>
+                    <th>{{ 'front.offer_detail.action'|trans }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for promo in userPromoCodes %}
+                    <tr>
+                        <td>{{ promo.id }}</td>
+                        <td style="font-weight:700; letter-spacing:0.5px;">CP{{ '%06d'|format(promo.id) }}</td>
+                        <td>
+                            <a href="{{ promo.qr_image_url }}" target="_blank" rel="noopener">
+                                <img src="{{ promo.qr_image_url }}" alt="{{ 'front.offer_detail.qr_alt'|trans }}" style="width:68px; height:68px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
+                            </a>
+                        </td>
+                        <td>{{ promo.date_generation ? promo.date_generation|date('d/m/Y') : '-' }}</td>
+                        <td>{{ promo.date_expiration ? promo.date_expiration|date('d/m/Y') : '-' }}</td>
+                        <td>{{ promo.statut }}</td>
+                        <td>
+                            {% if promo.statut == 'ACTIF' %}
+                                <form method="post" action="{{ path('app_offres_use_code', {offreId: offre.id, promoId: promo.id}) }}" onsubmit="return confirm('{{ 'front.offer_detail.confirm_use_code'|trans }}');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('use_promo_' ~ promo.id) }}">
+                                    <button type="submit" class="outline-btn">{{ 'front.offer_detail.use'|trans }}</button>
+                                </form>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">{{ 'front.offer_detail.no_promo_codes'|trans }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="admin-table-card" style="margin-top:18px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">{{ 'front.offer_detail.my_reservations'|trans }}</h2>
+                <p class="section-subtitle">{{ 'front.offer_detail.reservation_subtitle'|trans }}</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{{ 'front.offer_detail.date'|trans }}</th>
+                    <th>{{ 'front.offer_detail.people'|trans }}</th>
+                    <th>{{ 'front.offer_detail.status'|trans }}</th>
+                    <th>{{ 'front.offer_detail.note'|trans }}</th>
+                    <th>{{ 'front.offer_detail.actions'|trans }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for reservation in userReservations %}
+                    <tr>
+                        <td>{{ reservation.id }}</td>
+                        <td>{{ reservation.date_reservation ? reservation.date_reservation|date('d/m/Y') : '-' }}</td>
+                        <td>{{ reservation.nombre_personnes }}</td>
+                        <td>{{ reservation.statut }}</td>
+                        <td>{{ reservation.note ?? '-' }}</td>
+                        <td>
+                            {% if reservation.statut == 'EN_ATTENTE' %}
+                                <details>
+                                    <summary class="outline-btn" style="cursor:pointer;">{{ 'common.edit'|trans }}</summary>
+                                    <form method="post" action="{{ path('app_offres_reservation_update', {offreId: offre.id, reservationId: reservation.id}) }}" class="offer-form-grid" style="margin-top:8px; min-width:330px;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('update_reservation_' ~ reservation.id) }}">
+
+                                        <div class="offer-field">
+                                            <label>{{ 'front.offer_detail.people_count'|trans }}</label>
+                                            <input class="offer-input" type="number" name="nombre_personnes" min="1" max="20" value="{{ reservation.nombre_personnes }}" required>
+                                        </div>
+
+                                        <div class="offer-field offer-field--full">
+                                            <label>{{ 'front.offer_detail.note'|trans }}</label>
+                                            <textarea class="offer-textarea" name="note" maxlength="300">{{ reservation.note ?? '' }}</textarea>
+                                        </div>
+
+                                        <div class="offer-field offer-field--full" style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <button type="submit" class="offer-submit">{{ 'common.save'|trans }}</button>
+                                        </div>
+                                    </form>
+                                </details>
+
+                                <form method="post" action="{{ path('app_offres_reservation_cancel', {offreId: offre.id, reservationId: reservation.id}) }}" onsubmit="return confirm('{{ 'front.offer_detail.confirm_cancel_reservation'|trans }}');" style="margin-top:8px;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel_reservation_' ~ reservation.id) }}">
+                                    <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">{{ 'common.cancel'|trans }}</button>
+                                </form>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">{{ 'front.offer_detail.no_reservations'|trans }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

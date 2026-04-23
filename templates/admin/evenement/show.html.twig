@@ -1,0 +1,466 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Événement | {{ evenement.titre }}{% endblock %}
+{% block admin_page_title %}Événements{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── Admin event show ──────────────────────────── */
+.evs-wrap  { max-width: 1120px; margin: 30px auto; display: grid; gap: 22px; }
+
+/* Header */
+.evs-header {
+    background: linear-gradient(135deg, #091f46 0%, #1a4a8a 60%, #3fa8e0 100%);
+    border-radius: 16px;
+    padding: 24px 28px;
+    color: #fff;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.evs-header-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; margin: 0 0 4px; }
+.evs-header-dates { font-size: 13px; opacity: .82; }
+.evs-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.evs-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 10px; font-size: 13px;
+    font-weight: 700; cursor: pointer; border: none; text-decoration: none;
+    transition: opacity .2s, transform .15s;
+}
+.evs-btn:hover { opacity: .88; transform: translateY(-1px); }
+.evs-btn--outline { background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); }
+.evs-btn--solid   { background: #d4aa23; color: #0f1d33; }
+.evs-btn--ai      { background: rgba(255,255,255,.12); color: #fff; border: 1.5px solid rgba(255,255,255,.28); }
+
+/* 2-col grid */
+.evs-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .evs-grid { grid-template-columns: 1fr; } }
+
+/* Cards */
+.evs-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 22px;
+}
+.evs-card-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #64748b;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.evs-info-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13.5px;
+}
+.evs-info-row:last-child { border-bottom: none; }
+.evs-info-label { color: #64748b; min-width: 120px; font-weight: 600; flex-shrink: 0; }
+.evs-info-val   { color: #0f172a; font-weight: 500; }
+
+/* Badge */
+.evs-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.evs-badge--open     { background: #dcfce7; color: #166534; }
+.evs-badge--closed   { background: #fef3c7; color: #92400e; }
+.evs-badge--canceled { background: #fee2e2; color: #991b1b; }
+.evs-badge--public   { background: #dbeafe; color: #1e40af; }
+.evs-badge--private  { background: #f3e8ff; color: #6b21a8; }
+
+/* Stat items */
+.evs-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.evs-stat {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.evs-stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.evs-stat-val   { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1; }
+.evs-stat-val--blue   { color: #1d4ed8; }
+.evs-stat-val--green  { color: #16a34a; }
+.evs-stat-val--amber  { color: #d97706; }
+.evs-stat-val--red    { color: #dc2626; }
+
+/* Fill bar */
+.evs-fill-bar { height: 8px; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin: 6px 0 2px; }
+.evs-fill-bar__inner { height: 100%; background: linear-gradient(90deg, #3fa8e0, #091f46); border-radius: 8px; transition: width .6s ease; }
+.evs-fill-label { font-size: 12px; color: #64748b; display: flex; justify-content: space-between; }
+
+/* ── AI Insights panel ───────────────────────── */
+.evs-ai-panel {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid rgba(63,168,224,.3);
+}
+.evs-ai-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #0e2d5e, #1a4a8a);
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    font-family: inherit;
+}
+.evs-ai-trigger-left { display: flex; align-items: center; gap: 10px; }
+.evs-ai-trigger-title { font-size: 14px; font-weight: 800; }
+.evs-ai-badge {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+.evs-ai-trigger-hint { font-size: 12px; opacity: .75; }
+.evs-ai-body {
+    display: none;
+    padding: 22px;
+    background: linear-gradient(135deg, #0a1929, #0e2d5e);
+    color: #fff;
+}
+.evs-ai-body.open { display: block; }
+
+/* Loading */
+.evs-ai-loading { display: flex; align-items: center; gap: 12px; padding: 16px 0; font-size: 13px; opacity: .8; }
+.evs-ai-spin {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,.25);
+    border-top-color: #3fa8e0;
+    border-radius: 50%;
+    animation: ai-spin .8s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+/* Score gauge */
+.evs-ai-score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.evs-ai-score-circle {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(#3fa8e0 var(--pct), rgba(255,255,255,.1) 0);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+.evs-ai-score-circle::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    background: #0e2d5e;
+    border-radius: 50%;
+}
+.evs-ai-score-num {
+    position: relative;
+    z-index: 1;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #fff;
+}
+.evs-ai-score-label { font-size: 1.1rem; font-weight: 800; }
+.evs-ai-score-sublabel { font-size: 12px; opacity: .7; margin-top: 3px; }
+
+/* Insights list */
+.evs-ai-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #3fa8e0;
+    margin: 16px 0 8px;
+}
+.evs-ai-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+.evs-ai-list li {
+    padding: 9px 13px;
+    background: rgba(255,255,255,.07);
+    border-radius: 10px;
+    border-left: 3px solid #3fa8e0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.evs-ai-list--rec li { border-left-color: #d4aa23; }
+
+/* Prediction */
+.evs-ai-prediction {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(212,170,35,.12);
+    border: 1px solid rgba(212,170,35,.3);
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.evs-ai-prediction strong { color: #d4aa23; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="evs-wrap">
+
+    {# ── Header ──────────────────────────────────────── #}
+    <div class="evs-header">
+        <div>
+            <h1 class="evs-header-title">{{ evenement.titre }}</h1>
+            <p class="evs-header-dates">
+                📅 {{ evenement.dateDebut|date('d/m/Y H:i') }}
+                {% if evenement.dateFin %}
+                    → {{ evenement.dateFin|date('d/m/Y H:i') }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="evs-header-actions">
+            <a href="{{ path('app_admin_evenements') }}" class="evs-btn evs-btn--outline">← Retour</a>
+            <a href="{{ path('app_admin_evenements_edit', {id: evenement.id}) }}" class="evs-btn evs-btn--outline">✏️ Modifier</a>
+            <a href="{{ path('app_admin_inscriptions', {id: evenement.id}) }}" class="evs-btn evs-btn--solid">👥 Inscriptions</a>
+        </div>
+    </div>
+
+    {# ── Info + Stats ─────────────────────────────────── #}
+    <div class="evs-grid">
+
+        {# Left: Event info #}
+        <div class="evs-card">
+            <p class="evs-card-title">📋 Informations</p>
+
+            <div class="evs-info-row">
+                <span class="evs-info-label">Lieu</span>
+                <span class="evs-info-val">
+                    {% if evenement.lieu %}
+                        {{ evenement.lieu.nom }}{% if evenement.lieu.ville %} · {{ evenement.lieu.ville }}{% endif %}
+                    {% else %}
+                        <em style="color:#94a3b8;">À confirmer</em>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="evs-info-row">
+                <span class="evs-info-label">Type</span>
+                <span class="evs-info-val">
+                    {% if evenement.type == 'PRIVE' %}
+                        <span class="evs-badge evs-badge--private">Privé</span>
+                    {% else %}
+                        <span class="evs-badge evs-badge--public">Public</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="evs-info-row">
+                <span class="evs-info-label">Statut</span>
+                <span class="evs-info-val">
+                    {% if evenement.statut == 'OUVERT' %}
+                        <span class="evs-badge evs-badge--open">Ouvert</span>
+                    {% elseif evenement.statut == 'FERME' %}
+                        <span class="evs-badge evs-badge--closed">Fermé</span>
+                    {% else %}
+                        <span class="evs-badge evs-badge--canceled">Annulé</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="evs-info-row">
+                <span class="evs-info-label">Capacité</span>
+                <span class="evs-info-val">{{ evenement.capaciteMax }} places</span>
+            </div>
+            <div class="evs-info-row">
+                <span class="evs-info-label">Prix</span>
+                <span class="evs-info-val">
+                    {% if evenement.prix > 0 %}
+                        {{ evenement.prix }} TND
+                    {% else %}
+                        <span style="color:#16a34a;font-weight:700;">Gratuit</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="evs-info-row">
+                <span class="evs-info-label">Places restantes</span>
+                <span class="evs-info-val" style="color:{% if stats.places_restantes > 10 %}#16a34a{% elseif stats.places_restantes > 0 %}#d97706{% else %}#dc2626{% endif %}; font-weight:700;">
+                    {{ stats.places_restantes }}
+                </span>
+            </div>
+
+            {% if evenement.description %}
+                <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                    <p class="evs-card-title" style="margin-bottom: 8px;">📝 Description</p>
+                    <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.6;">{{ evenement.description }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Right: Stats #}
+        <div class="evs-card">
+            <p class="evs-card-title">📊 Statistiques des inscriptions</p>
+
+            <div class="evs-stat-grid">
+                <div class="evs-stat">
+                    <span class="evs-stat-label">Total demandes</span>
+                    <span class="evs-stat-val">{{ stats.total_demandes }}</span>
+                </div>
+                <div class="evs-stat">
+                    <span class="evs-stat-label">Payées ✅</span>
+                    <span class="evs-stat-val evs-stat-val--green">{{ stats.payees }}</span>
+                </div>
+                <div class="evs-stat">
+                    <span class="evs-stat-label">En attente ⏳</span>
+                    <span class="evs-stat-val evs-stat-val--amber">{{ stats.en_attente }}</span>
+                </div>
+                <div class="evs-stat">
+                    <span class="evs-stat-label">Confirmées ✔️</span>
+                    <span class="evs-stat-val evs-stat-val--blue">{{ stats.confirmees }}</span>
+                </div>
+                <div class="evs-stat">
+                    <span class="evs-stat-label">Rejetées ❌</span>
+                    <span class="evs-stat-val evs-stat-val--red">{{ stats.rejetees }}</span>
+                </div>
+                <div class="evs-stat">
+                    <span class="evs-stat-label">Annulées 🗑</span>
+                    <span class="evs-stat-val" style="color:#64748b;">{{ stats.annulees }}</span>
+                </div>
+            </div>
+
+            <p class="evs-card-title" style="margin-bottom: 8px;">Taux de remplissage</p>
+            <div class="evs-fill-bar">
+                <div class="evs-fill-bar__inner" style="width: {{ stats.taux_remplissage }}%;"></div>
+            </div>
+            <div class="evs-fill-label">
+                <span>{{ stats.places_restantes }} places libres</span>
+                <span>{{ stats.taux_remplissage }}%</span>
+            </div>
+        </div>
+    </div>
+
+    {# ── AI Insights Panel ──────────────────────────── #}
+    <div class="evs-ai-panel">
+        <button class="evs-ai-trigger" id="ai-trigger" onclick="toggleAiPanel()">
+            <div class="evs-ai-trigger-left">
+                <span style="font-size:1.4rem;">🤖</span>
+                <span class="evs-ai-trigger-title">Analyse Intelligence Artificielle</span>
+                <span class="evs-ai-badge">IA</span>
+            </div>
+            <span class="evs-ai-trigger-hint" id="ai-trigger-hint">Cliquez pour analyser cet événement →</span>
+        </button>
+
+        <div class="evs-ai-body" id="ai-body">
+            <div class="evs-ai-loading" id="ai-loading">
+                <div class="evs-ai-spin"></div>
+                <span>Analyse en cours avec Claude AI… Veuillez patienter.</span>
+            </div>
+            <div id="ai-results" style="display:none;"></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+const AI_URL = '{{ path('app_admin_evenement_ai_insights', {id: evenement.id}) }}';
+let aiLoaded = false;
+
+function toggleAiPanel() {
+    const body    = document.getElementById('ai-body');
+    const hint    = document.getElementById('ai-trigger-hint');
+    const isOpen  = body.classList.contains('open');
+
+    if (isOpen) {
+        body.classList.remove('open');
+        hint.textContent = 'Cliquez pour analyser cet événement →';
+    } else {
+        body.classList.add('open');
+        hint.textContent = '▲ Fermer';
+        if (!aiLoaded) fetchInsights();
+    }
+}
+
+async function fetchInsights() {
+    try {
+        const res  = await fetch(AI_URL);
+        const data = await res.json();
+        renderInsights(data);
+    } catch (e) {
+        document.getElementById('ai-loading').innerHTML =
+            '<span style="color:#f87171;">❌ Erreur de chargement. Vérifiez la configuration ANTHROPIC_API_KEY.</span>';
+    }
+    aiLoaded = true;
+}
+
+function scoreColor(n) {
+    if (n >= 75) return '#4ade80';
+    if (n >= 50) return '#facc15';
+    return '#f87171';
+}
+
+function renderInsights(data) {
+    const loading = document.getElementById('ai-loading');
+    const results = document.getElementById('ai-results');
+
+    if (data.error || !data.performance_score && data.performance_score !== 0) {
+        loading.innerHTML = '<span style="color:#f87171;">❌ ' + (data.error || 'Analyse indisponible.') + '</span>';
+        return;
+    }
+
+    const pct    = Math.min(100, Math.max(0, data.performance_score || 0));
+    const color  = scoreColor(pct);
+    const label  = data.performance_label || '';
+
+    const insightsHtml = (data.insights || []).map(i => `<li>${i}</li>`).join('');
+    const recsHtml     = (data.recommendations || []).map(r => `<li>→ ${r}</li>`).join('');
+    const predHtml     = data.prediction
+        ? `<div class="evs-ai-prediction"><strong>🔮 Prédiction :</strong> ${data.prediction}</div>`
+        : '';
+
+    results.innerHTML = `
+        <div class="evs-ai-score-row">
+            <div class="evs-ai-score-circle" style="--pct: ${pct * 3.6}deg;">
+                <span class="evs-ai-score-num">${pct}</span>
+            </div>
+            <div>
+                <div class="evs-ai-score-label" style="color:${color};">${label}</div>
+                <div class="evs-ai-score-sublabel">Score de performance globale</div>
+            </div>
+        </div>
+
+        ${insightsHtml ? `
+        <p class="evs-ai-section-title">💡 Insights clés</p>
+        <ul class="evs-ai-list">${insightsHtml}</ul>` : ''}
+
+        ${recsHtml ? `
+        <p class="evs-ai-section-title">✅ Recommandations</p>
+        <ul class="evs-ai-list evs-ai-list--rec">${recsHtml}</ul>` : ''}
+
+        ${predHtml}
+    `;
+
+    loading.style.display = 'none';
+    results.style.display = '';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <div class="ft-error-stack" role="alert" aria-live="assertive">
+            {% for error in errors %}
+                <div class="ft-field-error">
+                    <span class="ft-field-error__icon" aria-hidden="true">!</span>
+                    <span>{{ error.message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock form_errors %}

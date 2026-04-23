@@ -1,0 +1,379 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Utilisateurs Admin | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Utilisateurs{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .users-feedback {
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+            font-weight: 600;
+        }
+
+        .users-feedback--success {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .users-feedback--error {
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .users-form-card {
+            margin: 18px 0 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .users-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .users-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .users-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .users-field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .users-input,
+        .users-select {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+            color: #0f172a;
+            outline: none;
+        }
+
+        .users-input:focus,
+        .users-select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .users-submit {
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            font-weight: 700;
+            padding: 11px 18px;
+            cursor: pointer;
+        }
+
+        .users-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .users-edit-toggle {
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .users-edit-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .users-edit-panel {
+            margin-top: 10px;
+            border: 1px solid #dbeafe;
+            background: #f8fbff;
+            border-radius: 14px;
+            padding: 10px;
+        }
+
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
+            gap: 16px;
+            justify-content: start;
+        }
+
+        .user-card {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .user-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+
+        .users-pagination {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .users-page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .users-page-link:hover {
+            border-color: #93c5fd;
+            background: #eff6ff;
+        }
+
+        .users-page-link.is-active {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .users-page-link.is-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 980px) {
+            .users-form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 680px) {
+            .users-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="users-feedback users-feedback--success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="users-feedback users-feedback--error">{{ message }}</div>
+    {% endfor %}
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-card__label">Total utilisateurs</div>
+            <div class="stat-card__value">{{ stats.users }}</div>
+            <div class="stat-card__hint">Nombre total</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Administrateurs</div>
+            <div class="stat-card__value">{{ stats.admins }}</div>
+            <div class="stat-card__hint">Rôle admin</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Abonnés</div>
+            <div class="stat-card__value">{{ stats.abonnes }}</div>
+            <div class="stat-card__hint">Rôle abonné</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Visiteurs</div>
+            <div class="stat-card__value">{{ stats.visiteurs }}</div>
+            <div class="stat-card__hint">Rôle visiteur</div>
+        </article>
+    </div>
+
+    <div class="users-form-card">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Ajouter un utilisateur</h2>
+                <p class="section-subtitle">Création rapide depuis l'espace admin.</p>
+            </div>
+        </div>
+        <form method="post" action="{{ path('app_admin_users_create') }}" class="users-form-grid">
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_user_create') }}">
+
+            <div class="users-field">
+                <label for="add_nom">Nom</label>
+                <input id="add_nom" class="users-input" type="text" name="nom" placeholder="Nom" minlength="2" maxlength="50" pattern="[A-Za-zÀ-ÿ\s\-']+" title="2 à 50 lettres, espaces, tirets ou apostrophes." required>
+            </div>
+
+            <div class="users-field">
+                <label for="add_prenom">Prénom</label>
+                <input id="add_prenom" class="users-input" type="text" name="prenom" placeholder="Prénom" minlength="2" maxlength="50" pattern="[A-Za-zÀ-ÿ\s\-']+" title="2 à 50 lettres, espaces, tirets ou apostrophes." required>
+            </div>
+
+            <div class="users-field">
+                <label for="add_email">Email</label>
+                <input id="add_email" class="users-input" type="email" name="email" placeholder="email@exemple.com" maxlength="180" required>
+            </div>
+
+            <div class="users-field">
+                <label for="add_telephone">Téléphone</label>
+                <input id="add_telephone" class="users-input" type="text" name="telephone" placeholder="Optionnel" pattern="^\+?[0-9\s\-]{8,16}$" title="Ex: +216 12 345 678">
+            </div>
+
+            <div class="users-field">
+                <label for="add_role">Rôle</label>
+                <select id="add_role" class="users-select" name="role" required>
+                    <option value="abonne">Abonné</option>
+                    <option value="visiteur">Visiteur</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <div class="users-field">
+                <label for="add_password">Mot de passe</label>
+                <input id="add_password" class="users-input" type="password" name="password" placeholder="Minimum 8 caractères" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}" title="Min 8 caractères avec majuscule, minuscule, chiffre et caractère spécial." required>
+            </div>
+
+            <div class="users-field users-field--full">
+                <button type="submit" class="users-submit">Ajouter l'utilisateur</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="user-list">
+        {% for user in users %}
+            <article class="user-card">
+                {% set rawImage = user.imageUrl|default('') %}
+                {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+                    {% set imageSrc = rawImage %}
+                {% elseif rawImage and (rawImage starts with '/theme/' or rawImage starts with '/uploads/') %}
+                    {% set imageSrc = asset(rawImage|trim('/')) %}
+                {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+                    {% set imageSrc = asset(rawImage|trim('/')) %}
+                {% elseif rawImage and (rawImage starts with '/public/' or rawImage starts with 'public/') %}
+                    {% set imageSrc = asset(rawImage|replace({'/public/': '', 'public/': ''})|trim('/')) %}
+                {% elseif rawImage and ('uploads/' in rawImage) %}
+                    {% set imageSrc = asset(rawImage|split('uploads/')|last|trim('/')|replace({'users/': 'uploads/users/'}) ) %}
+                {% elseif rawImage and rawImage != 'default.png' %}
+                    {% set imageSrc = asset('uploads/users/' ~ rawImage|trim('/')) %}
+                {% else %}
+                    {% set imageSrc = asset('theme/images/logo.png') %}
+                {% endif %}
+
+                <img src="{{ imageSrc }}" alt="{{ user.prenom }} {{ user.nom }}" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                <h3>{{ user.prenom }} {{ user.nom }}</h3>
+                <p>{{ user.email }}</p>
+                <p>Tél: {{ user.telephone ?: 'Non renseigné' }}</p>
+                <span class="user-role-pill">{{ user.role }}</span>
+
+                <div class="users-card-actions">
+                    <details style="width:100%;">
+                        <summary class="outline-btn users-edit-toggle" style="display:inline-flex;">Modifier</summary>
+                        <form method="post" action="{{ path('app_admin_users_update', {id: user.id}) }}" class="users-edit-panel users-form-grid">
+                            <input type="hidden" name="_token" value="{{ csrf_token('admin_user_edit_' ~ user.id) }}">
+                            <div class="users-field">
+                                <label>Nom</label>
+                                <input class="users-input" type="text" name="nom" value="{{ user.nom }}" minlength="2" maxlength="50" pattern="[A-Za-zÀ-ÿ\s\-']+" title="2 à 50 lettres, espaces, tirets ou apostrophes." required>
+                            </div>
+                            <div class="users-field">
+                                <label>Prénom</label>
+                                <input class="users-input" type="text" name="prenom" value="{{ user.prenom }}" minlength="2" maxlength="50" pattern="[A-Za-zÀ-ÿ\s\-']+" title="2 à 50 lettres, espaces, tirets ou apostrophes." required>
+                            </div>
+                            <div class="users-field">
+                                <label>Email</label>
+                                <input class="users-input" type="email" name="email" value="{{ user.email }}" maxlength="180" required>
+                            </div>
+                            <div class="users-field">
+                                <label>Téléphone</label>
+                                <input class="users-input" type="text" name="telephone" value="{{ user.telephone }}" placeholder="Téléphone" pattern="^\+?[0-9\s\-]{8,16}$" title="Ex: +216 12 345 678">
+                            </div>
+                            <div class="users-field">
+                                <label>Rôle</label>
+                                <select class="users-select" name="role" required>
+                                    <option value="abonne" {{ user.role == 'abonne' ? 'selected' : '' }}>Abonné</option>
+                                    <option value="visiteur" {{ user.role == 'visiteur' ? 'selected' : '' }}>Visiteur</option>
+                                    <option value="admin" {{ user.role == 'admin' ? 'selected' : '' }}>Admin</option>
+                                </select>
+                            </div>
+                            <div class="users-field">
+                                <label>Nouveau mot de passe</label>
+                                <input class="users-input" type="password" name="password" placeholder="Laisser vide pour ne pas changer" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}" title="Min 8 caractères avec majuscule, minuscule, chiffre et caractère spécial.">
+                            </div>
+                            <div class="users-field users-field--full">
+                                <button type="submit" class="users-submit">Enregistrer les modifications</button>
+                            </div>
+                        </form>
+                    </details>
+
+                    <form method="post" action="{{ path('app_admin_users_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin_user_delete_' ~ user.id) }}">
+                        <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">Supprimer</button>
+                    </form>
+                </div>
+            </article>
+        {% else %}
+            <div class="empty-state">
+                {% if searchQuery is defined and searchQuery %}
+                    Aucun utilisateur ne correspond à "{{ searchQuery }}".
+                {% else %}
+                    Aucun utilisateur disponible.
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if pageCount is defined and pageCount > 1 %}
+        <nav class="users-pagination" aria-label="Pagination utilisateurs">
+            {% set prevPage = page > 1 ? page - 1 : 1 %}
+            {% set nextPage = page < pageCount ? page + 1 : pageCount %}
+
+            <a
+                class="users-page-link {{ page <= 1 ? 'is-disabled' : '' }}"
+                href="{{ path('app_admin_users', {q: searchQuery, page: prevPage}) }}"
+                aria-label="Page précédente"
+            >
+                Précédent
+            </a>
+
+            {% for i in 1..pageCount %}
+                <a
+                    class="users-page-link {{ i == page ? 'is-active' : '' }}"
+                    href="{{ path('app_admin_users', {q: searchQuery, page: i}) }}"
+                    aria-current="{{ i == page ? 'page' : 'false' }}"
+                >
+                    {{ i }}
+                </a>
+            {% endfor %}
+
+            <a
+                class="users-page-link {{ page >= pageCount ? 'is-disabled' : '' }}"
+                href="{{ path('app_admin_users', {q: searchQuery, page: nextPage}) }}"
+                aria-label="Page suivante"
+            >
+                Suivant
+            </a>
+        </nav>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Paiement | {{ inscription.evenement.titre }}{% endblock %}
+
+{% block front_content %}
+<section style="max-width: 980px; margin: 30px auto; padding: 0 20px;">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Paiement</h1>
+            <p class="section-subtitle">Simulation sécurisée</p>
+        </div>
+        <a href="{{ path('app_mon_profil_inscriptions') }}" class="outline-btn">Retour à mes inscriptions</a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #e9f9ef; border: 1px solid #9de0b0; color: #156337; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #fdeaea; border: 1px solid #f3b8b8; color: #8a1f1f; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="listing-card" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+        <div>
+            <h3 style="margin: 0 0 10px 0;">{{ inscription.evenement.titre }}</h3>
+            <div class="meta-row" style="margin-top: 6px;">
+                <span>🗓 {{ inscription.evenement.dateDebut|date('d/m/Y H:i') }}</span>
+                <span>📍 {{ inscription.evenement.lieu ? inscription.evenement.lieu.nom : 'Lieu a confirmer' }}</span>
+                <span>🎟 {{ inscription.nbTickets }} ticket{{ inscription.nbTickets > 1 ? 's' : '' }}</span>
+            </div>
+            <div style="margin-top: 12px;">
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 6px;">Montant total</div>
+                <div style="font-weight: 800; color: #143d71;">{{ montant }} TND</div>
+            </div>
+        </div>
+
+        <div>
+            <form method="POST" action="{{ path('app_inscription_paiement', {id: inscription.id}) }}">
+                <label style="display: block; margin-bottom: 6px; font-weight: 700;">Méthode de paiement</label>
+                <div style="display: grid; gap: 8px; margin-bottom: 12px;">
+                    {% for code, label in methodes %}
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="radio" name="methode" value="{{ code }}" {% if loop.first %}checked{% endif %}>
+                            <span>{{ label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <div id="card_fields" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">Informations carte (simulation)</div>
+                    <input type="text" name="nom_carte" class="form-control" placeholder="Nom sur la carte" style="margin-bottom: 8px;">
+                    <input type="text" name="quatre_derniers" class="form-control" placeholder="4 derniers chiffres" maxlength="4">
+                </div>
+
+                <button type="submit" class="cta-btn" style="width: 100%; padding: 14px; font-weight: 700;">Payer</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    const methodInputs = document.querySelectorAll('input[name="methode"]');
+    const cardFields = document.getElementById('card_fields');
+
+    const toggleCardFields = () => {
+        const selected = document.querySelector('input[name="methode"]:checked');
+        const isCard = selected && selected.value === '{{ constant('App\\Entity\\Paiement::METHODE_CARTE') }}';
+        if (cardFields) {
+            cardFields.style.display = isCard ? 'block' : 'none';
+        }
+    };
+
+    methodInputs.forEach((input) => input.addEventListener('change', toggleCardFields));
+    toggleCardFields();
+</script>
+{% endblock %}

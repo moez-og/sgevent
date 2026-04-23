@@ -1,0 +1,20 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Nouveau lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Nouveau lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {% include 'admin/lieu/_flashes.html.twig' %}
+
+    <div class="lieu-cover">
+        <h1 class="lieu-cover__title">Créer un lieu</h1>
+        <p class="lieu-cover__subtitle">Remplir les informations de base, les budgets, le type et la catégorie.</p>
+    </div>
+
+    {% include 'admin/lieu/_form.html.twig' with { button_label: 'Créer le lieu' } %}
+{% endblock %}

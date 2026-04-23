@@ -1,0 +1,192 @@
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.intro-page {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    background: #020617;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.intro-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.82) contrast(1.05);
+}
+
+.intro-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.28) 55%, rgba(2, 6, 23, 0.58) 100%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0.22) 0%, rgba(2, 6, 23, 0.62) 100%);
+}
+
+.intro-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 32px 34px;
+    color: #fff;
+}
+
+.intro-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.intro-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.intro-brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.intro-skip {
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    padding: 13px 22px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.92));
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease;
+    box-shadow: 0 14px 30px rgba(2, 6, 23, 0.35);
+    min-width: 112px;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.intro-skip:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.96));
+}
+
+.intro-hero {
+    max-width: 560px;
+    padding-bottom: 28px;
+}
+
+.intro-kicker {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.86;
+    margin-bottom: 12px;
+}
+
+.intro-hero h1 {
+    margin: 0;
+    font-size: clamp(42px, 7vw, 72px);
+    line-height: 0.95;
+}
+
+.intro-hero p {
+    margin: 18px 0 0;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 520px;
+}
+
+.intro-bottom {
+    position: absolute;
+    left: 32px;
+    right: 32px;
+    bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+}
+
+.intro-progress {
+    flex: 1;
+    max-width: 320px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    overflow: hidden;
+}
+
+.intro-progress span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, #f8fafc 0%, #dbeafe 100%);
+    animation: progressFill var(--intro-duration, 8s) linear forwards;
+}
+
+.intro-hint {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.76);
+}
+
+@keyframes progressFill {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .intro-content {
+        padding: 22px;
+    }
+
+    .intro-top {
+        justify-content: flex-start;
+    }
+
+    .intro-hero {
+        padding-bottom: 18px;
+    }
+
+    .intro-bottom {
+        left: 22px;
+        right: 22px;
+        bottom: 22px;
+        gap: 12px;
+    }
+
+    .intro-progress {
+        width: 100%;
+        max-width: none;
+    }
+}

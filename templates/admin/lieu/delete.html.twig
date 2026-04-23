@@ -1,0 +1,43 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Supprimer lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Supprimer lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {% include 'admin/lieu/_flashes.html.twig' %}
+
+    <div class="lieu-delete-card">
+        <h2 class="section-title" style="margin-top:0;">Supprimer {{ lieu.nom }}</h2>
+        <p class="section-subtitle">Cette action est définitive. Confirmer la suppression du lieu suivant :</p>
+
+        <div class="lieu-meta-grid">
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Nom</div>
+                <div class="lieu-meta__value">{{ lieu.nom }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Ville</div>
+                <div class="lieu-meta__value">{{ lieu.ville }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Catégorie</div>
+                <div class="lieu-meta__value">{{ lieu.categorie ? lieu.categorie.label : '—' }}</div>
+            </div>
+            <div class="lieu-meta">
+                <div class="lieu-meta__label">Type</div>
+                <div class="lieu-meta__value">{{ lieu.type ? lieu.type.label : '—' }}</div>
+            </div>
+        </div>
+
+        <form method="post" class="lieu-actions" style="margin-top:18px;">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_lieu_' ~ lieu.id) }}">
+            <button class="danger-btn" type="submit">Confirmer la suppression</button>
+            <a href="{{ path('app_admin_lieu_show', {id: lieu.id}) }}" class="secondary-btn">Annuler</a>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Gestion des lieux | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Gestion des lieux{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {% include 'admin/lieu/_flashes.html.twig' %}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Gestion des lieux</h2>
+            <p class="section-subtitle">Créer, consulter, modifier et supprimer les lieux depuis l'espace admin.</p>
+        </div>
+        <div class="lieu-page-actions">
+            <a href="{{ path('app_admin_lieu_new') }}" class="primary-btn">Nouveau lieu</a>
+            <a href="{{ path('app_admin_dashboard') }}" class="secondary-btn">Retour dashboard</a>
+        </div>
+    </div>
+
+    <div class="lieu-card">
+        <div class="table-wrap">
+            <table class="lieu-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Ville</th>
+                        <th>Catégorie</th>
+                        <th>Type</th>
+                        <th>Budget</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for lieu in lieux %}
+                    <tr>
+                        <td>{{ lieu.id }}</td>
+                        <td>{{ lieu.nom }}</td>
+                        <td>{{ lieu.ville }}</td>
+                        <td><span class="lieu-badge">{{ lieu.categorie ? lieu.categorie.label : '—' }}</span></td>
+                        <td><span class="lieu-badge lieu-badge--neutral">{{ lieu.type ? lieu.type.label : '—' }}</span></td>
+                        <td>
+                            {% if lieu.budgetMin is not null or lieu.budgetMax is not null %}
+                                {{ lieu.budgetMin is not null ? lieu.budgetMin|number_format(2, ',', ' ') : '—' }}
+                                —
+                                {{ lieu.budgetMax is not null ? lieu.budgetMax|number_format(2, ',', ' ') : '—' }}
+                                TND
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="lieu-toolbar">
+                                <a href="{{ path('app_admin_lieu_show', {id: lieu.id}) }}" class="secondary-btn">Voir</a>
+                                <a href="{{ path('app_admin_lieu_edit', {id: lieu.id}) }}" class="primary-btn">Modifier</a>
+                                <a href="{{ path('app_admin_lieu_delete', {id: lieu.id}) }}" class="danger-btn">Supprimer</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">Aucun lieu enregistré.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

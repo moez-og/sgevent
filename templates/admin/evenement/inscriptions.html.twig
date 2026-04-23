@@ -1,0 +1,86 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Inscriptions | {{ evenement.titre }}{% endblock %}
+{% block admin_page_title %}Événements{% endblock %}
+
+{% block admin_content %}
+<div class="admin-container" style="max-width: 1100px; margin: 30px auto;">
+    <div class="section-head" style="margin-bottom: 20px;">
+        <div>
+            <h1 class="section-title">Inscriptions en attente</h1>
+            <p class="section-subtitle">{{ evenement.titre }}</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ path('app_admin_evenement_show', {id: evenement.id}) }}" class="outline-btn">Retour fiche</a>
+            <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Tous les evenements</a>
+        </div>
+    </div>
+
+    <div style="display: grid; gap: 12px;">
+        {% for inscription in inscriptions_en_attente %}
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                    <div>
+                        <div style="font-weight: 700;">{{ inscription.user.prenom }} {{ inscription.user.nom }}</div>
+                        <div style="font-size: 13px; color: #64748b;">{{ inscription.nbTickets }} ticket{{ inscription.nbTickets > 1 ? 's' : '' }} • {{ inscription.getMontantTotal() }} TND</div>
+                        <div style="font-size: 13px; color: #64748b;">Demande le {{ inscription.dateCreation|date('d/m/Y H:i') }}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <form method="POST" action="{{ path('app_admin_inscription_accepter', {id: inscription.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('accepter' ~ inscription.id) }}">
+                            <button type="submit" class="cta-btn" style="padding: 8px 12px;">Accepter</button>
+                        </form>
+                        <form method="POST" action="{{ path('app_admin_inscription_refuser', {id: inscription.id}) }}" style="display: flex; gap: 6px;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('refuser' ~ inscription.id) }}">
+                            <input type="text" name="motif" placeholder="Motif" class="form-control" style="width: 160px; padding: 6px 8px;">
+                            <button type="submit" class="outline-btn" style="padding: 8px 12px; color: #b91c1c;">Refuser</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">Aucune inscription en attente.</div>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 24px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Toutes les inscriptions</h3>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Tickets</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                        <th>Créée le</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for inscription in inscriptions %}
+                    <tr>
+                        <td>{{ inscription.user.prenom }} {{ inscription.user.nom }}</td>
+                        <td>{{ inscription.nbTickets }}</td>
+                        <td>{{ inscription.getMontantTotal() }} TND</td>
+                        <td>{{ inscription.statut|replace({'_':' '}) }}</td>
+                        <td>{{ inscription.dateCreation|date('d/m/Y H:i') }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucune inscription trouvée.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
+        <div style="font-weight: 600; margin-bottom: 6px;">Resume</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+            <div>En attente: <strong>{{ stats.en_attente }}</strong></div>
+            <div>Confirmees: <strong>{{ stats.confirmees }}</strong></div>
+            <div>Payees: <strong>{{ stats.payees }}</strong></div>
+            <div>Places restantes: <strong>{{ stats.places_restantes }}</strong></div>
+        </div>
+    </div>
+ </div>
+{% endblock %}

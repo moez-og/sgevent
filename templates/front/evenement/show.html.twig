@@ -1,0 +1,566 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}{{ event.titre }} | Fin Tokhroj{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ===== EVENT DETAIL PAGE (mirrors lieu/show design) ===== */
+
+/* Flash messages */
+.evs-flash-ok  { background:#e9f9ef; border:1px solid #9de0b0; color:#156337; border-radius:12px; padding:12px 16px; margin-bottom:12px; font-weight:600; }
+.evs-flash-err { background:#fdeaea; border:1px solid #f3b8b8; color:#8a1f1f; border-radius:12px; padding:12px 16px; margin-bottom:12px; font-weight:600; }
+
+/* Breadcrumb */
+.evs-breadcrumb {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px; font-size: 14px;
+}
+.evs-back {
+    padding: 8px 14px;
+    background: var(--ft-glass, #fff);
+    border: 1px solid var(--ft-border, #cbd5e1);
+    border-radius: 8px; text-decoration: none;
+    color: var(--ft-text, #0f1d33); font-weight: 500;
+    transition: background .2s;
+}
+.evs-back:hover { background: var(--ft-card-alt, #f1f5f9); }
+.evs-crumb { color: var(--ft-muted, #64748b); }
+.evs-crumb strong { color: var(--ft-text, #0f1d33); }
+
+/* Title + badge group */
+.badge-group { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.badge-public    { background:#dbeafe; color:#1e40af; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+.badge-private   { background:#f3e8ff; color:#6b21a8; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+.badge-open      { background:#dcfce7; color:#166534; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+.badge-closed-ev { background:#fef3c7; color:#92400e; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+.badge-canceled  { background:#fee2e2; color:#991b1b; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+
+/* Two-column layout (same as lieu/show) */
+.evs-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: start;
+}
+@media (max-width: 1024px) { .evs-grid { grid-template-columns: 1fr; } }
+
+/* ---- LEFT COLUMN ---- */
+
+/* Hero image */
+.evs-hero {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0e2d5e, #1a4a8a);
+    height: 360px;
+    box-shadow: 0 8px 28px rgba(9,31,70,.14);
+}
+.evs-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: transform .5s ease;
+}
+.evs-hero:hover img { transform: scale(1.03); }
+.evs-hero-letter {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 5rem; font-weight: 900;
+    font-family: 'Playfair Display', serif;
+    color: rgba(255,255,255,.28);
+}
+/* Date ribbon over hero */
+.evs-hero-ribbon {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(9,31,70,.82) 0%, transparent 100%);
+    padding: 20px 20px 16px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+}
+.evs-hero-date { color: #fff; font-size: 14px; font-weight: 600; }
+.evs-hero-price {
+    background: #d4aa23; color: #fff;
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 13px; font-weight: 700;
+}
+.evs-hero-price.free { background: #10b981; }
+
+/* Detail blocks (same design as lieu/show .details-block) */
+.evs-block {
+    background: var(--ft-card-alt, #f8fafc);
+    border: 1px solid var(--ft-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 16px;
+}
+.evs-block h3 {
+    margin: 0 0 14px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ft-text, #0f1d33);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.evs-block h3 span.ic { font-size: 18px; }
+
+/* Timeline rows */
+.evs-timeline { display: grid; gap: 10px; }
+.evs-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    background: var(--ft-glass, #fff);
+    border: 1px solid var(--ft-border, #e2e8f0);
+    border-radius: 10px;
+    font-size: 14px;
+}
+.evs-row-label { color: var(--ft-muted, #64748b); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.evs-row-value { color: var(--ft-text, #0f1d33); font-weight: 700; text-align: right; }
+
+/* ---- RIGHT COLUMN ---- */
+
+/* Reuse lieu/show card base */
+.evs-card {
+    background: var(--ft-glass, #fff);
+    border: 1px solid var(--ft-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+.evs-card:last-child { margin-bottom: 0; }
+
+/* Weather card — identical to lieu/show .weather-card */
+.evs-weather {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+.evs-weather::after {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,.07);
+    border-radius: 50%;
+}
+.wx-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 8px;
+}
+.wx-temp { font-size: 36px; font-weight: 700; line-height: 1; }
+.wx-icon { font-size: 32px; position: relative; z-index: 1; }
+.wx-desc { font-size: 13px; opacity: .85; margin-bottom: 4px; }
+.wx-city { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+.wx-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.2);
+}
+.wx-stat-label { font-size: 11px; opacity: .9; margin-bottom: 3px; }
+.wx-stat-val   { font-size: 16px; font-weight: 700; }
+
+/* Weather loading/error states */
+.wx-loading {
+    text-align: center; padding: 12px 0;
+    font-size: 13px; opacity: .8;
+}
+.wx-spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: wx-spin .7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+}
+@keyframes wx-spin { to { transform: rotate(360deg); } }
+
+/* Registration card */
+.evs-reg-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--ft-text, #0f1d33);
+    margin: 0 0 12px 0;
+    display: flex; align-items: center; gap: 6px;
+}
+.evs-reg-status {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.evs-reg-status.ok   { background:#e3f2fd; border:1px solid #2196F3; color:#1976D2; }
+.evs-reg-status.full { background:#ffebee; border:1px solid #f44336; color:#c62828; }
+.evs-reg-status.auth { background:#fff3cd; border:1px solid #ffc107; color:#856404; }
+
+/* Info card rows */
+.evs-info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ft-border, #e2e8f0);
+    font-size: 14px;
+}
+.evs-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.evs-info-key   { color: var(--ft-muted, #64748b); font-weight: 600; }
+.evs-info-value { color: var(--ft-text, #0f1d33); font-weight: 700; text-align: right; }
+
+/* price pill */
+.evs-price-big {
+    font-size: 22px; font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    color: #d4aa23;
+}
+.evs-price-big.free { color: #10b981; }
+
+@media (max-width: 640px) {
+    .evs-hero { height: 240px; }
+    .evs-grid { gap: 16px; }
+}
+</style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+    /* ===== Live weather via Open-Meteo (free, no API key) ===== */
+    function wmoEmoji(c) {
+        if (c === 0)  return '☀️';
+        if (c <= 3)   return '⛅';
+        if (c <= 48)  return '🌫️';
+        if (c <= 55)  return '🌦️';
+        if (c <= 67)  return '🌧️';
+        if (c <= 77)  return '🌨️';
+        if (c <= 82)  return '🌦️';
+        if (c <= 86)  return '🌨️';
+        if (c <= 99)  return '⛈️';
+        return '🌤️';
+    }
+    function wmoDesc(c) {
+        if (c === 0)  return 'Ciel dégagé';
+        if (c <= 3)   return 'Partiellement nuageux';
+        if (c <= 48)  return 'Brumeux';
+        if (c <= 55)  return 'Bruine';
+        if (c <= 67)  return 'Pluie';
+        if (c <= 77)  return 'Neige';
+        if (c <= 82)  return 'Averses';
+        if (c <= 86)  return 'Chutes de neige';
+        if (c <= 99)  return 'Orage';
+        return 'Variable';
+    }
+
+    async function loadWeather() {
+        const widget = document.getElementById('ev-weather');
+        if (!widget) return;
+        const city = widget.dataset.city || 'Tunis';
+
+        try {
+            /* Step 1: geocode city → lat/lon */
+            const geoResp = await fetch(
+                'https://geocoding-api.open-meteo.com/v1/search?name=' +
+                encodeURIComponent(city) + '&count=1&language=fr&format=json'
+            );
+            const geoData = await geoResp.json();
+            if (!geoData.results?.length) throw new Error('city not found');
+            const { latitude, longitude } = geoData.results[0];
+
+            /* Step 2: get current weather */
+            const wxResp = await fetch(
+                'https://api.open-meteo.com/v1/forecast?latitude=' + latitude +
+                '&longitude=' + longitude +
+                '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code' +
+                '&wind_speed_unit=ms'
+            );
+            const wxData = await wxResp.json();
+            const cur = wxData.current;
+
+            /* Update DOM */
+            document.getElementById('wx-temp').textContent  = Math.round(cur.temperature_2m) + '°C';
+            document.getElementById('wx-icon').textContent  = wmoEmoji(cur.weather_code);
+            document.getElementById('wx-desc').textContent  = wmoDesc(cur.weather_code);
+            document.getElementById('wx-hum').textContent   = cur.relative_humidity_2m + '%';
+            document.getElementById('wx-wind').textContent  = cur.wind_speed_10m.toFixed(1) + ' m/s';
+
+            document.getElementById('wx-loading').style.display = 'none';
+            document.getElementById('wx-data').style.display    = '';
+        } catch (e) {
+            const el = document.getElementById('wx-loading');
+            if (el) { el.innerHTML = '⚠️ Météo indisponible'; el.style.opacity = '.7'; }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadWeather);
+    } else {
+        loadWeather();
+    }
+})();
+</script>
+{% endblock %}
+
+{% block front_content %}
+<section>
+
+    {# Flash messages #}
+    {% for msg in app.flashes('success') %}
+        <div class="evs-flash-ok">{{ msg }}</div>
+    {% endfor %}
+    {% for msg in app.flashes('error') %}
+        <div class="evs-flash-err">{{ msg }}</div>
+    {% endfor %}
+
+    {# Breadcrumb #}
+    <div class="evs-breadcrumb">
+        <a href="{{ path('app_evenements') }}" class="evs-back">← Événements</a>
+        <span class="evs-crumb">Événements / <strong>{{ event.titre }}</strong></span>
+    </div>
+
+    {# Title + badges #}
+    <div class="section-head" style="margin: 20px 0 24px 0;">
+        <div>
+            <h1 class="section-title" style="margin-bottom: 10px;">{{ event.titre }}</h1>
+            <div class="badge-group">
+                {% if event.type == 'PRIVE' %}
+                    <span class="badge-private">Privé</span>
+                {% else %}
+                    <span class="badge-public">Public</span>
+                {% endif %}
+                {% if event.statut == 'OUVERT' %}
+                    <span class="badge-open">Ouvert</span>
+                {% elseif event.statut == 'FERME' %}
+                    <span class="badge-closed-ev">Fermé</span>
+                {% else %}
+                    <span class="badge-canceled">Annulé</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ path('app_evenements') }}" class="outline-btn">← Retour</a>
+    </div>
+
+    {# ===== Two-column grid ===== #}
+    <div class="evs-grid">
+
+        {# ============ LEFT COLUMN ============ #}
+        <div>
+
+            {# Hero image #}
+            {% set rawImg = event.imageUrl|default('') %}
+            {% if rawImg and (rawImg starts with 'http://' or rawImg starts with 'https://') %}
+                {% set imgSrc = rawImg %}
+            {% elseif rawImg and (rawImg starts with 'theme/' or rawImg starts with 'uploads/') %}
+                {% set imgSrc = asset(rawImg) %}
+            {% elseif rawImg %}
+                {% set imgSrc = asset('uploads/evenements/' ~ rawImg) %}
+            {% else %}
+                {% set imgSrc = '' %}
+            {% endif %}
+
+            <div class="evs-hero">
+                {% if imgSrc %}
+                    <img src="{{ imgSrc }}" alt="{{ event.titre }}"
+                         onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                {% else %}
+                    <div class="evs-hero-letter">{{ event.titre|slice(0,1) }}</div>
+                {% endif %}
+                <div class="evs-hero-ribbon">
+                    <div class="evs-hero-date">
+                        🗓 {{ event.dateDebut|date('d/m/Y') }} · {{ event.dateDebut|date('H:i') }}
+                        {% if event.dateFin %} → {{ event.dateFin|date('d/m/Y H:i') }}{% endif %}
+                    </div>
+                    <div class="evs-hero-price {{ event.prix == 0 ? 'free' : '' }}">
+                        {% if event.prix > 0 %}{{ event.prix }} TND{% else %}Gratuit{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# About block #}
+            {% if event.description %}
+                <div class="evs-block">
+                    <h3><span class="ic">📝</span> À propos</h3>
+                    <p style="margin:0; color: var(--ft-text, #475569); line-height: 1.65;">{{ event.description }}</p>
+                </div>
+            {% endif %}
+
+            {# Timeline / details block #}
+            <div class="evs-block">
+                <h3><span class="ic">📋</span> Détails de l'événement</h3>
+                <div class="evs-timeline">
+                    <div class="evs-row">
+                        <span class="evs-row-label">🗓 Début</span>
+                        <span class="evs-row-value">{{ event.dateDebut|date('d/m/Y') }} à {{ event.dateDebut|date('H:i') }}</span>
+                    </div>
+                    <div class="evs-row">
+                        <span class="evs-row-label">🏁 Fin</span>
+                        <span class="evs-row-value">{{ event.dateFin|date('d/m/Y') }} à {{ event.dateFin|date('H:i') }}</span>
+                    </div>
+                    {% if event.lieu %}
+                        <div class="evs-row">
+                            <span class="evs-row-label">📍 Lieu</span>
+                            <span class="evs-row-value">{{ event.lieu.nom }}</span>
+                        </div>
+                        {% if event.lieu.ville %}
+                            <div class="evs-row">
+                                <span class="evs-row-label">🏙 Ville</span>
+                                <span class="evs-row-value">{{ event.lieu.ville }}</span>
+                            </div>
+                        {% endif %}
+                        {% if event.lieu.adresse %}
+                            <div class="evs-row">
+                                <span class="evs-row-label">🗺 Adresse</span>
+                                <span class="evs-row-value" style="max-width: 60%;">{{ event.lieu.adresse }}</span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="evs-row">
+                            <span class="evs-row-label">📍 Lieu</span>
+                            <span class="evs-row-value" style="opacity:.6;">À confirmer</span>
+                        </div>
+                    {% endif %}
+                    <div class="evs-row">
+                        <span class="evs-row-label">👥 Capacité</span>
+                        <span class="evs-row-value">{{ event.capaciteMax }} places · {{ event.placesRestantes }} restantes</span>
+                    </div>
+                    <div class="evs-row">
+                        <span class="evs-row-label">🏷 Type</span>
+                        <span class="evs-row-value">{{ event.type == 'PRIVE' ? 'Privé' : 'Public' }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>{# end left col #}
+
+        {# ============ RIGHT COLUMN ============ #}
+        <div>
+
+            {# ---- Live Weather widget ---- #}
+            <div class="evs-card evs-weather"
+                 id="ev-weather"
+                 data-city="{{ event.lieu and event.lieu.ville ? event.lieu.ville : 'Tunis' }}">
+
+                {# Loading state (shown until JS replaces it) #}
+                <div id="wx-loading" class="wx-loading">
+                    <span class="wx-spinner"></span> Chargement de la météo…
+                </div>
+
+                {# Data state (hidden until JS populates it) #}
+                <div id="wx-data" style="display:none;">
+                    <div class="wx-header">
+                        <div id="wx-temp" class="wx-temp">--°C</div>
+                        <div id="wx-icon" class="wx-icon">🌤️</div>
+                    </div>
+                    <div id="wx-desc" class="wx-desc">--</div>
+                    <div class="wx-city">
+                        📍 {{ event.lieu and event.lieu.ville ? event.lieu.ville : 'Tunis' }}
+                    </div>
+                    <div class="wx-stats">
+                        <div>
+                            <div class="wx-stat-label">💧 Humidité</div>
+                            <div id="wx-hum" class="wx-stat-val">--%</div>
+                        </div>
+                        <div>
+                            <div class="wx-stat-label">💨 Vent</div>
+                            <div id="wx-wind" class="wx-stat-val">-- m/s</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ---- Registration card ---- #}
+            <div class="evs-card">
+                <p class="evs-reg-title">🎟 Participation</p>
+
+                {% if app.user %}
+                    {# Use inscription variable passed by controller #}
+                    {% set isRegistered = inscription is not null and inscription.statut not in ['ANNULEE', 'REJETEE'] %}
+
+                    {% if event.placesRestantes > 0 and not isRegistered %}
+                        <p style="font-size:13px; color: var(--ft-muted,#64748b); margin:0 0 12px 0;">
+                            {{ event.placesRestantes }} place{{ event.placesRestantes > 1 ? 's' : '' }} disponible{{ event.placesRestantes > 1 ? 's' : '' }}
+                        </p>
+                        <a href="{{ path('app_evenement_inscrire_form', {id: event.id}) }}"
+                           class="cta-btn" style="display:flex; justify-content:center; width:100%; box-sizing:border-box;">
+                            ✨ Participer à l'événement
+                        </a>
+
+                    {% elseif isRegistered %}
+                        <div class="evs-reg-status ok">
+                            ✔ Vous êtes inscrit(e)
+                            {% if mon_inscription %}
+                                · Statut : <strong>{{ mon_inscription|replace({'_':' '}) }}</strong>
+                            {% endif %}
+                        </div>
+                        <a href="{{ path('app_mon_profil_inscriptions') }}"
+                           class="outline-btn" style="display:flex; justify-content:center; margin-top:8px;">
+                            Voir mes inscriptions
+                        </a>
+
+                    {% else %}
+                        <div class="evs-reg-status full">
+                            ❌ Événement complet — plus de places disponibles.
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    <div class="evs-reg-status auth">
+                        <a href="{{ path('app_login') }}" style="color:#856404; text-decoration:underline; font-weight:700;">Connectez-vous</a>
+                        pour vous inscrire à cet événement.
+                    </div>
+                {% endif %}
+            </div>
+
+            {# ---- Event metadata card ---- #}
+            <div class="evs-card">
+                <p class="evs-reg-title" style="margin-bottom:14px;">ℹ Informations</p>
+
+                {% if event.prix > 0 %}
+                    <div class="evs-info-row">
+                        <span class="evs-info-key">💰 Prix</span>
+                        <span class="evs-price-big">{{ event.prix }} TND</span>
+                    </div>
+                {% else %}
+                    <div class="evs-info-row">
+                        <span class="evs-info-key">💰 Prix</span>
+                        <span class="evs-price-big free">Gratuit</span>
+                    </div>
+                {% endif %}
+
+                <div class="evs-info-row">
+                    <span class="evs-info-key">🏷 Type</span>
+                    <span class="evs-info-value">{{ event.type == 'PRIVE' ? 'Privé' : 'Public' }}</span>
+                </div>
+                <div class="evs-info-row">
+                    <span class="evs-info-key">📊 Statut</span>
+                    <span class="evs-info-value">{{ event.statut|replace({'_':' '}) }}</span>
+                </div>
+                <div class="evs-info-row">
+                    <span class="evs-info-key">👥 Capacité</span>
+                    <span class="evs-info-value">{{ event.capaciteMax }} places</span>
+                </div>
+                <div class="evs-info-row">
+                    <span class="evs-info-key">🟢 Disponibles</span>
+                    <span class="evs-info-value"
+                          style="{{ event.placesRestantes == 0 ? 'color:#c62828;' : 'color:#166534;' }}">
+                        {{ event.placesRestantes }}
+                    </span>
+                </div>
+
+                {% if event.lieu and event.lieu.latitude is not null and event.lieu.longitude is not null %}
+                    <div class="evs-info-row" style="border-bottom:none; padding-top:14px; margin-top:4px;">
+                        <a href="https://www.google.com/maps?q={{ event.lieu.latitude }},{{ event.lieu.longitude }}"
+                           target="_blank" rel="noopener"
+                           class="cta-btn"
+                           style="width:100%; display:flex; justify-content:center; box-sizing:border-box; text-decoration:none; background:#1e3c72;">
+                            🗺 Voir sur Google Maps
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>{# end right col #}
+
+    </div>{# end grid #}
+
+</section>
+{% endblock %}

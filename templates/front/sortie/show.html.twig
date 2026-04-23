@@ -1,0 +1,357 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}{{ sortie.titre }} | Sortie{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .sortie-detail-shell {
+            width: min(1100px, 100%);
+            margin: 0 auto;
+            padding-inline: clamp(8px, 2vw, 18px);
+        }
+        .sortie-detail-shell .section-head {
+            align-items: center;
+            max-width: 980px;
+            margin: 0 auto 8px;
+        }
+        .sortie-detail-card {
+            width: min(980px, 100%);
+            margin: 0 auto;
+            padding: clamp(16px, 2vw, 22px);
+            border-radius: 22px;
+        }
+        .sortie-detail-hero {
+            height: clamp(200px, 34vh, 320px);
+            margin-bottom: 18px;
+        }
+        .sortie-detail-map {
+            margin-top: 14px;
+            border: 1px solid rgba(20, 61, 113, .14);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #f5f9ff;
+        }
+        .sortie-detail-map iframe {
+            width: 100%;
+            height: clamp(220px, 30vh, 320px);
+            border: 0;
+            display: block;
+        }
+
+        @media (max-width: 760px) {
+            .sortie-detail-shell .section-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .sortie-detail-shell .section-head .btn-row {
+                width: 100%;
+            }
+            .sortie-detail-shell .section-head .btn-row .outline-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block front_content %}
+<section class="sortie-detail-shell">
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">{{ sortie.titre }}</h1>
+            <p class="section-subtitle">{{ sortie.ville }} · {{ sortie.type_activite }}</p>
+        </div>
+        <div class="btn-row">
+            <a href="{{ path('app_sorties') }}" class="outline-btn"><span class="btn-icon">&larr;</span>Retour</a>
+        </div>
+    </div>
+
+    {% for label in ['success', 'error', 'warning', 'info'] %}
+        {% for message in app.flashes(label) %}
+            <div class="sortie-flash sortie-flash-{{ label }}" style="margin: 10px 0 14px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% set heroImage = sortie.image_url ? (sortie.image_url starts with 'http' ? sortie.image_url : '/' ~ sortie.image_url|trim('/')) : null %}
+
+    <article class="listing-card sortie-detail-card">
+        <div class="cover-thumb sortie-detail-hero">
+            {% if heroImage %}
+                <img src="{{ heroImage }}" alt="Image {{ sortie.titre }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+            {% else %}
+                <span>{{ sortie.titre }}</span>
+            {% endif %}
+        </div>
+
+        <div class="meta-row" style="margin-top:0;">
+            <span>📍 Ville: {{ sortie.ville }}</span>
+            <span>📌 Lieu: {{ sortie.lieu_texte }}</span>
+            <span>🗓 Date: {{ sortie.date_sortie|date('d/m/Y H:i') }}</span>
+            <span>💸 Budget max: {{ sortie.budget_max }} TND</span>
+            <span>👥 Places: {{ confirmedCount }}/{{ sortie.nb_places }}</span>
+            <span class="status-pill status-{{ sortie.statut|lower }}">{{ sortie.statut }}</span>
+        </div>
+
+        {% if sortie.point_rencontre is defined and sortie.point_rencontre %}
+            <div class="sortie-detail-map" aria-label="Carte du point de rencontre">
+                <iframe
+                    title="Carte point de rencontre"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://maps.google.com/maps?q={{ sortie.point_rencontre|url_encode }}&z=15&output=embed"
+                ></iframe>
+            </div>
+        {% endif %}
+
+        <p style="margin-top:14px;">{{ sortie.description ?: 'Aucune description.' }}</p>
+
+        {% if questions is not empty and not (canJoin or canEditPending) %}
+            <div class="sortie-modal__questions" style="margin-top: 16px;">
+                <h4>Questions de l'organisateur</h4>
+                <ul>
+                    {% for question in questions %}
+                        <li>{{ question }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <section class="participants-board" id="participation" style="margin-top: 16px;">
+            <h3 style="margin: 0 0 10px; color: #154175;">Participants confirmés</h3>
+            <div class="participants-list">
+                {% for participant in confirmedParticipants %}
+                    <article class="participant-chip {{ participant.is_organizer ? 'participant-chip--organizer' : '' }}">
+                        <div>
+                            <strong>{{ participant.prenom }} {{ participant.nom }}</strong>
+                            <div class="participant-chip__meta">
+                                {% if participant.is_organizer %}
+                                    Organisateur {% if participant.is_admin %}<span class="organizer-admin-badge">👑 Admin</span>{% endif %}
+                                {% else %}
+                                    {{ participant.nb_places }} place{{ participant.nb_places > 1 ? 's' : '' }} confirmée{{ participant.nb_places > 1 ? 's' : '' }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="sortie-flash sortie-flash-info" style="margin: 0;">Aucun participant confirmé pour le moment.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <hr style="margin: 18px 0; border:0; border-top:1px solid rgba(20,61,113,.15);">
+
+        {% if isCreator %}
+            <div class="sortie-flash sortie-flash-info" style="margin: 0;">
+                Vous êtes l'organisateur — {{ pendingCount }} demande(s) en attente.
+            </div>
+        {% elseif myParticipation and myParticipation.statut == 'EN_ATTENTE' %}
+            <div class="sortie-flash sortie-flash-warning" style="margin: 0 0 12px;">
+                Votre demande est en attente de validation.
+            </div>
+        {% elseif myParticipation and myParticipation.statut == 'CONFIRMEE' %}
+            <div class="sortie-flash sortie-flash-success" style="margin: 0 0 12px;">
+                Votre participation est confirmée.
+            </div>
+            <form method="post" action="{{ path('app_sorties_leave', {id: sortie.id}) }}" class="btn-row">
+                <input type="hidden" name="_token" value="{{ csrf_token('leave_sortie_' ~ sortie.id) }}">
+                <button type="submit" class="danger-btn">Annuler ma participation</button>
+            </form>
+        {% elseif myParticipation and myParticipation.statut == 'REFUSEE' %}
+            <div class="sortie-flash sortie-flash-error" style="margin: 0 0 12px;">
+                Votre demande a été refusée.
+            </div>
+            {% if canJoin %}
+                <div class="sortie-flash sortie-flash-info" style="margin: 0;">Vous pouvez soumettre une nouvelle demande.</div>
+            {% endif %}
+        {% elseif myParticipation and myParticipation.statut == 'ANNULEE' %}
+            <div class="sortie-flash sortie-flash-info" style="margin: 0 0 12px;">
+                Vous avez annulé votre participation.
+            </div>
+        {% endif %}
+
+        {% if not app.user %}
+            <div class="sortie-flash sortie-flash-warning" style="margin: 12px 0 0;">
+                Connectez-vous pour demander à rejoindre cette sortie.
+            </div>
+        {% elseif isCreator %}
+            <div class="btn-row" style="margin-top: 12px;">
+                <button type="button" class="outline-btn" disabled title="Vous êtes l'organisateur de cette sortie">
+                    Participer (organisateur)
+                </button>
+            </div>
+        {% elseif participationForm is not null and (canJoin or canEditPending) %}
+            {{ form_start(participationForm, {
+                attr: {
+                    id: 'participation-form-' ~ sortie.id,
+                    class: 'sortie-participation-form neon-participation-form',
+                    'data-participation-form': '',
+                    novalidate: 'novalidate',
+                    style: 'margin-top: 12px; display:grid; gap:12px;'
+                }
+            }) }}
+
+                {% if form_errors(participationForm) %}
+                    <div class="sortie-form-global-errors">{{ form_errors(participationForm) }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="nb_places">Places souhaitées</label>
+                    {{ form_widget(participationForm.nb_places, {
+                        attr: {
+                            id: 'nb_places',
+                            class: 'custom-input',
+                            min: 1,
+                            max: maxPlacesChoice,
+                            'data-nb-places': '',
+                            required: true
+                        }
+                    }) }}
+                    {{ form_errors(participationForm.nb_places) }}
+                    <small class="field-hint">Places restantes disponibles actuellement: {{ remainingPlaces }}</small>
+                </div>
+
+                <div class="form-row two">
+                    <div class="form-group">
+                        <label for="contact_prefer">Contact préféré</label>
+                        {{ form_widget(participationForm.contact_prefer, {
+                            attr: {
+                                id: 'contact_prefer',
+                                class: 'custom-input',
+                                'data-contact-prefer': '',
+                                required: true
+                            }
+                        }) }}
+                        {{ form_errors(participationForm.contact_prefer) }}
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_value">Valeur de contact</label>
+                        {{ form_widget(participationForm.contact_value, {
+                            attr: {
+                                id: 'contact_value',
+                                class: 'custom-input',
+                                'data-contact-value': '',
+                                'data-default-email': defaultContactEmail|default(''),
+                                'data-default-phone': defaultContactPhone|default(''),
+                                placeholder: 'Ex: 55216548 ou email',
+                                required: true
+                            }
+                        }) }}
+                        {{ form_errors(participationForm.contact_value) }}
+                        <small class="field-hint" data-contact-hint></small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="commentaire">Commentaire</label>
+                    {{ form_widget(participationForm.commentaire, {
+                        attr: {
+                            id: 'commentaire',
+                            rows: 3,
+                            class: 'custom-input',
+                            placeholder: 'Votre motivation...'
+                        }
+                    }) }}
+                    {{ form_errors(participationForm.commentaire) }}
+                </div>
+
+                {% if questions is not empty %}
+                    <div class="sortie-modal__questions" style="margin-top: 2px;">
+                        <h4>Vos réponses</h4>
+                        {% for question in questions %}
+                            {% set answerKey = loop.index0 ~ '' %}
+                            <div class="form-group" style="margin-top: 8px;">
+                                <label for="question_{{ loop.index0 }}">{{ question }}</label>
+                                {% if attribute(participationForm.reponses, answerKey) is defined %}
+                                    {{ form_widget(attribute(participationForm.reponses, answerKey), {
+                                        attr: {
+                                            id: 'question_' ~ loop.index0,
+                                            class: 'custom-input',
+                                            required: true
+                                        }
+                                    }) }}
+                                    {{ form_errors(attribute(participationForm.reponses, answerKey)) }}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        {{ form_errors(participationForm.reponses) }}
+                    </div>
+                {% endif %}
+
+                {% if participationForm._token is defined %}
+                    {{ form_widget(participationForm._token) }}
+                {% endif %}
+            {{ form_end(participationForm, { render_rest: false }) }}
+
+            <div class="btn-row participation-actions-row" style="margin-top: 8px;">
+                <button type="submit" form="participation-form-{{ sortie.id }}" class="primary-btn">{{ canEditPending ? 'Modifier ma demande' : 'Demander à rejoindre' }}</button>
+                {% if canEditPending %}
+                    <form method="post" action="{{ path('app_sorties_leave', {id: sortie.id}) }}" class="btn-inline-form participation-cancel-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('leave_sortie_' ~ sortie.id) }}">
+                        <button type="submit" class="danger-btn">Annuler ma participation</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% elseif app.user and not isCreator and remainingPlaces <= 0 %}
+            <div class="sortie-flash sortie-flash-info" style="margin: 12px 0 0;">
+                Cette sortie est complète — aucune place disponible.
+            </div>
+        {% endif %}
+
+        {% if isCreator %}
+            <section id="demandes-attente" class="pending-requests-board" style="margin-top: 18px;">
+                <h3 style="margin: 0 0 10px; color: #154175;">Demandes en attente</h3>
+                <div class="pending-requests-list">
+                    {% for demande in pendingRequests %}
+                        <article class="pending-request-card">
+                            <div class="listing-card__top" style="margin-bottom: 10px;">
+                                <div>
+                                    <h4 style="margin: 0 0 4px;">{{ demande.prenom }} {{ demande.nom }}</h4>
+                                    <p style="margin: 0; color: #5a7190;">Demandée le {{ demande.date_demande|date('d/m/Y H:i') }}</p>
+                                </div>
+                                <span class="status-pill status-en_attente">EN_ATTENTE</span>
+                            </div>
+
+                            <div class="meta-row" style="margin-top: 0;">
+                                <span>👥 Places: {{ demande.nb_places }}</span>
+                                <span>📞 {{ demande.contact_prefer }}: {{ demande.contact_value ?: '-' }}</span>
+                            </div>
+
+                            {% if demande.commentaire %}
+                                <p style="margin-top: 10px;">💬 "{{ demande.commentaire }}"</p>
+                            {% endif %}
+
+                            {% if questions is not empty %}
+                                <div class="sortie-modal__questions" style="margin-top: 10px;">
+                                    <h4>Réponses du participant</h4>
+                                    <ul>
+                                        {% for question in questions %}
+                                            <li>
+                                                <strong>{{ question }}</strong><br>
+                                                {{ demande.answers[loop.index0]|default('-') }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <div class="btn-row" style="margin-top: 12px;">
+                                <form method="post" action="{{ path('app_sorties_demandes_accept', {id: sortie.id, participationId: demande.id}) }}" class="btn-inline-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('accept_pending_' ~ sortie.id ~ '_' ~ demande.id) }}">
+                                    <button type="submit" class="primary-btn">✅ Accepter</button>
+                                </form>
+                                <form method="post" action="{{ path('app_sorties_demandes_refuse', {id: sortie.id, participationId: demande.id}) }}" class="btn-inline-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('refuse_pending_' ~ sortie.id ~ '_' ~ demande.id) }}">
+                                    <button type="submit" class="outline-btn">❌ Refuser</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% else %}
+                        <div class="sortie-flash sortie-flash-info" style="margin: 0;">Aucune demande en attente.</div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

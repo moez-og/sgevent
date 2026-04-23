@@ -1,0 +1,99 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Dashboard Admin | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+    {% set total = stats.users > 0 ? stats.users : 1 %}
+    {% set pAdmins = (stats.admins / total * 100)|round(1) %}
+    {% set pAbonnes = (stats.abonnes / total * 100)|round(1) %}
+    {% set pVisiteurs = (stats.visiteurs / total * 100)|round(1) %}
+
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+            <h2 class="section-title" style="margin:0;">Dashboard Utilisateurs</h2>
+            <p class="section-subtitle" style="margin:4px 0 0;">Page 1/2: statistiques des utilisateurs (vue existante conservée).</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <span class="outline-btn" style="background:#0f172a;color:#fff;border-color:#0f172a;cursor:default;">Page 1 · Utilisateurs</span>
+            <a href="{{ path('app_admin_dashboard_offres') }}" class="outline-btn">Page 2 · Offres & Promos</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-card__label">Total utilisateurs</div>
+            <div class="stat-card__value">{{ stats.users }}</div>
+            <div class="stat-card__hint">Nombre total</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Administrateurs</div>
+            <div class="stat-card__value">{{ stats.admins }}</div>
+            <div class="stat-card__hint">Rôle admin</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Abonnés</div>
+            <div class="stat-card__value">{{ stats.abonnes }}</div>
+            <div class="stat-card__hint">Rôle abonné</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Visiteurs</div>
+            <div class="stat-card__value">{{ stats.visiteurs }}</div>
+            <div class="stat-card__hint">Rôle visiteur</div>
+        </article>
+    </div>
+
+    <div class="admin-table-card" style="margin-top:22px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Schéma de répartition des utilisateurs</h2>
+                <p class="section-subtitle">Visualisation des rôles principaux dans la base.</p>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:center;">
+            <div style="display:grid;gap:16px;">
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px;">
+                        <span>Administrateurs</span><span>{{ stats.admins }} ({{ pAdmins }}%)</span>
+                    </div>
+                    <div style="height:12px;background:#e6eef8;border-radius:999px;overflow:hidden;">
+                        <div style="height:100%;width:{{ pAdmins }}%;background:linear-gradient(90deg,#0ea5e9,#2563eb);"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px;">
+                        <span>Abonnés</span><span>{{ stats.abonnes }} ({{ pAbonnes }}%)</span>
+                    </div>
+                    <div style="height:12px;background:#e6eef8;border-radius:999px;overflow:hidden;">
+                        <div style="height:100%;width:{{ pAbonnes }}%;background:linear-gradient(90deg,#06b6d4,#0ea5e9);"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px;">
+                        <span>Visiteurs</span><span>{{ stats.visiteurs }} ({{ pVisiteurs }}%)</span>
+                    </div>
+                    <div style="height:12px;background:#e6eef8;border-radius:999px;overflow:hidden;">
+                        <div style="height:100%;width:{{ pVisiteurs }}%;background:linear-gradient(90deg,#38bdf8,#22d3ee);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:center;">
+                <div style="width:220px;height:220px;border-radius:50%;background:
+                    conic-gradient(
+                        #2563eb 0 {{ pAdmins }}%,
+                        #06b6d4 {{ pAdmins }}% {{ (pAdmins + pAbonnes)|round(1) }}%,
+                        #38bdf8 {{ (pAdmins + pAbonnes)|round(1) }}% 100%
+                    );display:grid;place-items:center;position:relative;">
+                    <div style="width:128px;height:128px;border-radius:50%;background:white;display:grid;place-items:center;text-align:center;">
+                        <div>
+                            <div style="font-size:12px;color:#64748b;">Total</div>
+                            <div style="font-size:30px;font-weight:900;color:#0f172a;line-height:1;">{{ stats.users }}</div>
+                            <div style="font-size:11px;color:#64748b;">utilisateurs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

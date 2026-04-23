@@ -1,0 +1,27 @@
+<aside class="admin-sidebar" style="display:flex;flex-direction:column;">
+    <div>
+        <div class="admin-brand">
+            <div class="brand__logo">
+                <img src="{{ asset('theme/images/logo.png') }}" alt="Fin Tokhroj">
+            </div>
+            <div>
+                <div class="brand__title">Fin Tokhroj</div>
+                <div class="brand__subtitle">{{ 'admin.brand_subtitle'|trans }}</div>
+            </div>
+        </div>
+
+        <div class="admin-menu-label">{{ 'admin.menu'|trans }}</div>
+        <nav>
+            <a href="{{ path('app_admin_dashboard') }}" class="{{ active == 'dashboard' ? 'active' : '' }}">📊 {{ 'admin.dashboard'|trans }}</a>
+            <a href="{{ path('app_admin_users') }}" class="{{ active == 'users' ? 'active' : '' }}">👤 {{ 'admin.users'|trans }}</a>
+            <a href="{{ path('app_admin_sorties') }}" class="{{ active == 'sorties' ? 'active' : '' }}">🧭 {{ 'admin.outings'|trans }}</a>
+            <a href="{{ path('app_admin_lieux') }}" class="{{ active == 'lieux' ? 'active' : '' }}">📍 {{ 'admin.places'|trans }}</a>
+            <a href="{{ path('app_admin_offres') }}" class="{{ active == 'offres' ? 'active' : '' }}">🏷 {{ 'admin.offers'|trans }}</a>
+            <a href="{{ path('app_admin_evenements') }}" class="{{ active == 'evenements' ? 'active' : '' }}">🎫 {{ 'admin.events'|trans }}</a>
+        </nav>
+    </div>
+
+    <div class="logout-box">
+        <a href="{{ path('app_logout') }}">{{ 'auth.logout'|trans }}</a>
+    </div>
+</aside>

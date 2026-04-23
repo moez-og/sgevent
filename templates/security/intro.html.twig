@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'intro.title'|trans }}{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('styles/intro.css') }}">
+{% endblock %}
+
+{% block body %}
+    {% set introDuration = 12000 %}
+    <div class="intro-page" data-intro-page data-login-url="{{ path('app_login') }}" data-duration="{{ introDuration }}">
+        <video class="intro-video" autoplay muted playsinline preload="auto" data-intro-video>
+            <source src="{{ asset('videos/intro.mp4') }}" type="video/mp4">
+        </video>
+        <div class="intro-overlay"></div>
+
+        <div class="intro-content">
+            <div class="intro-top">
+                <a class="intro-skip" href="{{ path('app_login') }}" data-intro-skip>{{ 'intro.skip'|trans }}</a>
+            </div>
+
+            <div class="intro-hero">
+                <div class="intro-kicker">{{ 'intro.kicker'|trans }}</div>
+                <h1>{{ 'intro.heading'|trans }}</h1>
+                <p>{{ 'intro.description'|trans }}</p>
+            </div>
+
+            <div class="intro-bottom">
+                <div class="intro-progress" aria-hidden="true"><span></span></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (() => {
+            const page = document.querySelector('[data-intro-page]');
+            if (!page) {
+                return;
+            }
+
+            const loginUrl = page.dataset.loginUrl;
+            const duration = Number(page.dataset.duration || 8000);
+            const video = page.querySelector('[data-intro-video]');
+            const skip = page.querySelector('[data-intro-skip]');
+            let redirected = false;
+            let timerId = null;
+
+            const redirectToLogin = () => {
+                if (redirected) {
+                    return;
+                }
+                redirected = true;
+                window.location.href = loginUrl;
+            };
+
+            skip?.addEventListener('click', (event) => {
+                event.preventDefault();
+                redirectToLogin();
+            });
+
+            if (video) {
+                video.addEventListener('ended', redirectToLogin, { once: true });
+                video.addEventListener('error', () => {
+                    clearTimeout(timerId);
+                    timerId = window.setTimeout(redirectToLogin, 1200);
+                }, { once: true });
+            }
+
+            timerId = window.setTimeout(redirectToLogin, duration);
+        })();
+    </script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Participations | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Gestion des participations{% endblock %}
+
+{% block admin_content %}
+<div class="admin-table-card">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Participations</h2>
+            <p class="section-subtitle">Validation des demandes pour les sorties.</p>
+            {% if selectedAnnonce %}
+                <p class="section-subtitle" style="margin-top: 6px;">
+                    Filtre annonce: <strong>{{ selectedAnnonce.titre }}</strong>
+                    {% if selectedAnnonce.ville %} ({{ selectedAnnonce.ville }}){% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% for label in ['success', 'error', 'warning', 'info'] %}
+        {% for message in app.flashes(label) %}
+            <div class="sortie-flash sortie-flash-{{ label }}" style="margin: 10px 0 14px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="btn-row" style="margin-bottom: 14px; flex-wrap: wrap;">
+        <a href="{{ path('app_admin_participations', annonceFilter > 0 ? {annonce: annonceFilter} : {}) }}" class="outline-btn {{ statusFilter == '' ? 'active-filter' : '' }}">Toutes</a>
+        <a href="{{ path('app_admin_participations', {statut: 'EN_ATTENTE'}|merge(annonceFilter > 0 ? {annonce: annonceFilter} : {})) }}" class="outline-btn {{ statusFilter == 'EN_ATTENTE' ? 'active-filter' : '' }}">🟡 EN_ATTENTE ({{ counts.EN_ATTENTE }})</a>
+        <a href="{{ path('app_admin_participations', {statut: 'CONFIRMEE'}|merge(annonceFilter > 0 ? {annonce: annonceFilter} : {})) }}" class="outline-btn {{ statusFilter == 'CONFIRMEE' ? 'active-filter' : '' }}">🟢 CONFIRMEE ({{ counts.CONFIRMEE }})</a>
+        <a href="{{ path('app_admin_participations', {statut: 'REFUSEE'}|merge(annonceFilter > 0 ? {annonce: annonceFilter} : {})) }}" class="outline-btn {{ statusFilter == 'REFUSEE' ? 'active-filter' : '' }}">🔴 REFUSEE ({{ counts.REFUSEE }})</a>
+        <a href="{{ path('app_admin_participations', {statut: 'ANNULEE'}|merge(annonceFilter > 0 ? {annonce: annonceFilter} : {})) }}" class="outline-btn {{ statusFilter == 'ANNULEE' ? 'active-filter' : '' }}">⚫ ANNULEE ({{ counts.ANNULEE }})</a>
+        {% if annonceFilter > 0 %}
+            <a href="{{ path('app_admin_participations') }}" class="danger-btn">Retirer filtre annonce</a>
+        {% endif %}
+    </div>
+
+    <section class="pending-requests-board" style="margin-top: 10px;">
+        <div class="pending-requests-list">
+        {% for item in participations %}
+            <article class="pending-request-card">
+                <div class="listing-card__top">
+                    <div>
+                        <h3 style="margin: 0 0 4px;">👤 {{ item.prenom }} {{ item.nom }}</h3>
+                        <p style="margin: 0; color: #5a7190;">📍 {{ item.titre }} — {{ item.ville }}</p>
+                    </div>
+                    <span class="status-pill status-{{ item.statut|lower }}">{{ item.statut }}</span>
+                </div>
+
+                <div class="meta-row" style="margin-top: 8px;">
+                    <span>🗓 Demande le: {{ item.date_demande|date('d/m/Y H:i') }}</span>
+                    <span>📞 {{ item.contact_prefer }}: {{ item.contact_value ?: '-' }}</span>
+                    <span>👥 Organisateur: {{ item.organisateur_prenom ?: '-' }} {{ item.organisateur_nom ?: '' }}</span>
+                </div>
+
+                {% if item.commentaire %}
+                    <p style="margin-top: 10px;">💬 "{{ item.commentaire }}"</p>
+                {% endif %}
+
+                <details style="margin-top: 10px;">
+                    <summary class="outline-btn" style="display:inline-flex;">Voir les réponses</summary>
+                    <div class="sortie-modal__questions" style="margin-top:8px;">
+                        {% if item.answers is iterable and item.answers|length > 0 %}
+                            <ul>
+                                {% for qa in item.answers %}
+                                    <li>
+                                        <strong>Q:</strong> {{ qa.question|default('-') }}
+                                        <br>
+                                        <strong>R:</strong> {{ qa.reponse|default('-') }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>Aucune réponse enregistrée.</p>
+                        {% endif %}
+                    </div>
+                </details>
+
+                <div class="btn-row" style="margin-top: 14px;">
+                    {% if item.statut != 'CONFIRMEE' %}
+                        <form method="post" class="btn-inline-form" action="{{ path('app_admin_participations_accept', {id: item.id}) ~ (annonceFilter > 0 or statusFilter ? '?' ~ (annonceFilter > 0 ? 'annonce=' ~ annonceFilter ~ '&' : '') ~ (statusFilter ? 'statut=' ~ statusFilter : '') : '') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('accept_participation_' ~ item.id) }}">
+                            <button type="submit" class="primary-btn">✅ Accepter</button>
+                        </form>
+                    {% endif %}
+
+                    {% if item.statut != 'REFUSEE' %}
+                        <form method="post" class="btn-inline-form" action="{{ path('app_admin_participations_refuse', {id: item.id}) ~ (annonceFilter > 0 or statusFilter ? '?' ~ (annonceFilter > 0 ? 'annonce=' ~ annonceFilter ~ '&' : '') ~ (statusFilter ? 'statut=' ~ statusFilter : '') : '') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('refuse_participation_' ~ item.id) }}">
+                            <button type="submit" class="outline-btn">❌ Refuser</button>
+                        </form>
+                    {% endif %}
+
+                    <form method="post" class="btn-inline-form" action="{{ path('app_admin_participations_delete', {id: item.id}) ~ (annonceFilter > 0 or statusFilter ? '?' ~ (annonceFilter > 0 ? 'annonce=' ~ annonceFilter ~ '&' : '') ~ (statusFilter ? 'statut=' ~ statusFilter : '') : '') }}" onsubmit="return confirm('Supprimer cette participation ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_participation_' ~ item.id) }}">
+                        <button type="submit" class="danger-btn">🗑 Supprimer</button>
+                    </form>
+                </div>
+            </article>
+        {% else %}
+            <div class="sortie-flash sortie-flash-info" style="margin: 0;">Aucune participation pour ce filtre.</div>
+        {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% for message in app.flashes('success') %}
+    <div class="lieu-feedback lieu-feedback--success">{{ message }}</div>
+{% endfor %}
+{% for message in app.flashes('error') %}
+    <div class="lieu-feedback lieu-feedback--error">{{ message }}</div>
+{% endfor %}

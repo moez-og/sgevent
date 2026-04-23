@@ -1,0 +1,25 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Modifier lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Modifier lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {{ include('admin/lieu/_flashes.html.twig') }}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Modifier {{ lieu.nom }}</h2>
+            <p class="section-subtitle">Mettez à jour les informations du lieu et son image.</p>
+        </div>
+        <div class="lieu-page-actions">
+            <a href="{{ path('app_admin_lieu_show', {id: lieu.id}) }}" class="secondary-btn">Retour au détail</a>
+        </div>
+    </div>
+
+    {% include 'admin/lieu/_form.html.twig' with { button_label: 'Enregistrer les modifications', lieu: lieu, horaires: horaires|default({}) } %}
+{% endblock %}

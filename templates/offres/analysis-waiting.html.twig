@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse en cours - Fin Tokhroj</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+        
+        p {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .status-text {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 20px;
+        }
+        
+        .success-message {
+            display: none;
+            text-align: left;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .error-message {
+            display: none;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #7f1d1d;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .btn:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="waiting-content">
+            <div class="spinner"></div>
+            <h1>Analyse en cours...</h1>
+            <p>n8n traite votre offre avec l'intelligence artificielle.</p>
+            <p style="font-size: 13px; color: #cbd5e1;">Cela prend généralement 10-30 secondes.</p>
+            <div class="status-text">
+                <span id="attempt-count">Vérification: 1...</span>
+            </div>
+        </div>
+        
+        <div id="success-content" class="success-message">
+            <div class="success-icon">✅</div>
+            <h1>Analyse complétée !</h1>
+            <p>Redirection vers les résultats...</p>
+        </div>
+        
+        <div id="error-content">
+            <div class="error-message" id="error-message" style="display: none;"></div>
+            <h1>Erreur</h1>
+            <p>L'analyse n'a pas pu être complétée. Veuillez réessayer.</p>
+            <button class="btn" id="retry-btn" onclick="location.reload()">
+                🔄 Réessayer
+            </button>
+            <button class="btn" id="back-btn" onclick="history.back()" style="display: block; margin-left: 10px; background: #64748b;">
+                ← Retour
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        const trackingId = '{{ trackingId }}';
+        let attemptCount = 0;
+        const maxAttempts = 120; // 2 minutes max
+        const pollInterval = 1000; // 1 seconde
+        
+        function checkStatus() {
+            attemptCount++;
+            document.getElementById('attempt-count').textContent = `Vérification: ${attemptCount}...`;
+            
+            if (attemptCount > maxAttempts) {
+                showError('Délai d\'attente dépassé. L\'analyse a pris trop de temps.');
+                return;
+            }
+            
+            fetch(`/api/offres/analysis-status/${trackingId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'completed' && data.redirect_url) {
+                        showSuccess();
+                        // Attendre 2 secondes avant redirection pour afficher le message
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
+                    } else {
+                        // Continuer à vérifier
+                        setTimeout(checkStatus, pollInterval);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la vérification:', error);
+                    // Continuer même en cas d'erreur de vérification
+                    setTimeout(checkStatus, pollInterval);
+                });
+        }
+        
+        function showSuccess() {
+            document.getElementById('waiting-content').style.display = 'none';
+            document.getElementById('success-content').style.display = 'block';
+        }
+        
+        function showError(message) {
+            document.getElementById('waiting-content').style.display = 'none';
+            document.getElementById('error-content').style.display = 'block';
+            if (message) {
+                const errorMsg = document.getElementById('error-message');
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+            }
+            document.getElementById('retry-btn').style.display = 'block';
+            document.getElementById('back-btn').style.display = 'block';
+        }
+        
+        // Démarrer la vérification immédiatement
+        checkStatus();
+    </script>
+</body>
+</html>

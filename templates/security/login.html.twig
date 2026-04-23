@@ -1,0 +1,263 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'auth.login'|trans }}{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('styles/auth.css') }}?v=20260418v2">
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('theme/js/auth-wow.js') }}?v=20260410c" defer></script>
+    <script src="{{ asset('theme/js/tunisia-map-gis.js') }}?v=20260411a" defer></script>
+    {% if recaptcha_site_key is not empty %}
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const faceRoot = document.querySelector('[data-face-login]');
+            if (!faceRoot) {
+                return;
+            }
+
+            const emailInput = document.getElementById('username');
+            const video = faceRoot.querySelector('[data-face-video]');
+            const canvas = faceRoot.querySelector('[data-face-canvas]');
+            const actionBtn = faceRoot.querySelector('[data-face-auto]');
+            const status = faceRoot.querySelector('[data-face-status]');
+            const csrfToken = faceRoot.getAttribute('data-csrf') || '';
+            const endpoint = faceRoot.getAttribute('data-endpoint') || '';
+            let mediaStream = null;
+            let captureTimeout = null;
+            let countdownInterval = null;
+
+            const setStatus = (message, isError = false) => {
+                if (!status) {
+                    return;
+                }
+                status.textContent = message;
+                status.classList.toggle('is-face-error', isError);
+            };
+
+            const stopCamera = () => {
+                if (captureTimeout) {
+                    clearTimeout(captureTimeout);
+                    captureTimeout = null;
+                }
+
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach((track) => track.stop());
+                    mediaStream = null;
+                }
+
+                if (video) {
+                    video.srcObject = null;
+                    video.hidden = true;
+                }
+            };
+
+            const sendCapture = async () => {
+                const email = (emailInput?.value || '').trim();
+                if (!email) {
+                    setStatus('{{ 'auth.face_status_email_required'|trans }}', true);
+                    stopCamera();
+                    if (actionBtn) {
+                        actionBtn.disabled = false;
+                    }
+                    return;
+                }
+
+                if (!video?.videoWidth || !video.videoHeight) {
+                    setStatus('{{ 'auth.face_status_camera_not_ready'|trans }}', true);
+                    stopCamera();
+                    if (actionBtn) {
+                        actionBtn.disabled = false;
+                    }
+                    return;
+                }
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const image = canvas.toDataURL('image/jpeg', 0.92);
+
+                stopCamera();
+                setStatus('{{ 'auth.face_status_verifying'|trans }}', false);
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email,
+                            image,
+                            _csrf_token: csrfToken
+                        })
+                    });
+
+                    const payload = await response.json();
+                    if (!response.ok || !payload.success) {
+                        setStatus(payload.message || '{{ 'auth.face_status_failed'|trans }}', true);
+                        if (actionBtn) {
+                            actionBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    setStatus('{{ 'auth.face_status_success'|trans }}', false);
+                    if (payload.redirect) {
+                        window.location.href = payload.redirect;
+                        return;
+                    }
+
+                    window.location.reload();
+                } catch (error) {
+                    setStatus('{{ 'auth.face_status_service_down'|trans }}', true);
+                    if (actionBtn) {
+                        actionBtn.disabled = false;
+                    }
+                }
+            };
+
+            actionBtn?.addEventListener('click', async () => {
+                try {
+                    if (actionBtn) {
+                        actionBtn.disabled = true;
+                    }
+
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
+                    video.srcObject = mediaStream;
+                    video.hidden = false;
+                    setStatus('{{ 'auth.face_status_camera_on'|trans }}', false);
+
+                    let secondsLeft = 5;
+                    setStatus(`{{ 'auth.face_status_camera_on'|trans }}` + ' (' + secondsLeft + 's)', false);
+
+                    countdownInterval = window.setInterval(() => {
+                        secondsLeft -= 1;
+                        if (secondsLeft > 0) {
+                            setStatus(`{{ 'auth.face_status_camera_on'|trans }}` + ' (' + secondsLeft + 's)', false);
+                        }
+                    }, 1000);
+
+                    captureTimeout = window.setTimeout(() => {
+                        sendCapture();
+                    }, 5000);
+                } catch (error) {
+                    setStatus('{{ 'auth.face_status_camera_error'|trans }}', true);
+                    if (actionBtn) {
+                        actionBtn.disabled = false;
+                    }
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                stopCamera();
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="auth-page auth-page--login">
+        <div class="auth-ambient" aria-hidden="true">
+            <span class="auth-orb auth-orb--one"></span>
+            <span class="auth-orb auth-orb--two"></span>
+            <span class="auth-orb auth-orb--three"></span>
+            <span class="auth-grid-glow"></span>
+        </div>
+        <div class="auth-layout">
+            <aside class="auth-visual">
+                {% include 'security/_tunisia_map_panel.html.twig' %}
+                <div class="auth-visual-overlay"></div>
+                <div class="auth-brand">FinTokhroj Experience</div>
+                <div class="auth-tagline">
+                    <h2>Trouve ta sortie ideale</h2>
+                    <p>Planifie tes sorties et gere ton compte en quelques clics.</p>
+                </div>
+            </aside>
+
+            <section class="auth-form-wrap">
+                <div class="auth-switch"><a href="{{ path('app_register') }}">{{ 'auth.register'|trans }}</a></div>
+
+                <div class="auth-card">
+                    <p class="auth-kicker">{{ 'auth.secure_access'|trans }}</p>
+                    <h1 class="auth-title">{{ 'auth.login_heading'|trans }}</h1>
+                    <p class="auth-subtitle">{{ 'auth.login_subtitle'|trans }}</p>
+
+                    <a href="{{ path('app_connect_google_start') }}" class="auth-google-btn" style="text-decoration:none;">
+                        <span class="auth-google-btn__icon">G</span>
+                        <span>{{ 'auth.google_login_register'|trans }}</span>
+                    </a>
+                    <div class="auth-google-sep"><span>{{ 'auth.or_email_password'|trans }}</span></div>
+
+                    {% for message in app.flashes('success') %}
+                        <div class="auth-success">{{ message }}</div>
+                    {% endfor %}
+
+                    {% if error %}
+                        <div class="auth-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    {% endif %}
+
+                    <form method="post" novalidate data-login-form data-auth-morph>
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                        <div class="auth-field">
+                            <label for="username">{{ 'auth.your_email'|trans }}</label>
+                            <input id="username" type="email" name="email" value="{{ last_username }}" required data-login-email>
+                            <div class="auth-field-error" data-login-error-for="email"></div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="password">{{ 'auth.password'|trans }}</label>
+                            <input id="password" type="password" name="password" required data-login-password>
+                            <div class="auth-field-error" data-login-error-for="password"></div>
+                            <div style="margin-top:8px;text-align:right;">
+                                <a href="{{ path('app_forgot_password_request') }}" style="font-size:.88rem;text-decoration:underline;">{{ 'auth.forgot_password_link'|trans }}</a>
+                            </div>
+                        </div>
+
+                        {% if recaptcha_site_key is not empty %}
+                            <div class="auth-field">
+                                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+                            </div>
+                        {% endif %}
+
+                        <button class="auth-submit" type="submit">
+                            <span class="auth-submit__label">Connexion</span>
+                            <span class="auth-submit__spinner" aria-hidden="true"></span>
+                        </button>
+
+                        {% if recaptcha_site_key is empty %}
+                            <div class="auth-field-error" style="margin-top:10px;display:block;">{{ 'auth.recaptcha_missing'|trans }}</div>
+                        {% endif %}
+                    </form>
+
+                    <div class="auth-face" data-face-login data-endpoint="{{ path('app_login_face') }}" data-csrf="{{ csrf_token('face_login') }}">
+                        <div class="auth-face__head">
+                            <strong>{{ 'auth.face_login_title'|trans }}</strong>
+                            <span>{{ 'auth.face_login_subtitle'|trans }}</span>
+                        </div>
+                        <video class="auth-face__video" data-face-video autoplay muted playsinline hidden></video>
+                        <canvas data-face-canvas hidden></canvas>
+                        <div class="auth-face__actions">
+                            <button type="button" class="auth-face__btn auth-face__btn--primary" data-face-auto>{{ 'auth.face_login_action'|trans }}</button>
+                        </div>
+                        <div class="auth-face__status" data-face-status></div>
+                    </div>
+
+                    <p class="auth-footer">{{ 'auth.no_account'|trans }} <a href="{{ path('app_register') }}">{{ 'auth.signup_now'|trans }}</a></p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+{% endblock %}

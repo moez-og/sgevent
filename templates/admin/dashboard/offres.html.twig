@@ -1,0 +1,379 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Dashboard Offres | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Dashboard Offres{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .dash2-hero {
+            padding: 18px;
+            border-radius: 18px;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.11), rgba(37, 99, 235, 0.06));
+            border: 1px solid rgba(59, 130, 246, 0.14);
+        }
+
+        .dash2-hero__top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dash2-cards-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .dash2-ring-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px;
+            background: linear-gradient(180deg, #ffffff, #f8fafc);
+            display: grid;
+            gap: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dash2-ring-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .dash2-ring-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .dash2-ring-title {
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .dash2-ring {
+            --value: 0;
+            --ring-color: #0ea5e9;
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            margin: 2px auto;
+            background: conic-gradient(var(--ring-color) calc(var(--value) * 1%), #e2e8f0 0);
+            display: grid;
+            place-items: center;
+        }
+
+        .dash2-ring::after {
+            content: '';
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #e2e8f0;
+            grid-area: 1 / 1;
+        }
+
+        .dash2-ring-value {
+            grid-area: 1 / 1;
+            z-index: 1;
+            font-weight: 900;
+            color: #0f172a;
+            font-size: 18px;
+        }
+
+        .dash2-legend {
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .dash2-legend strong {
+            color: #0f172a;
+        }
+
+        .stats-grid .stat-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stats-grid .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        .dash2-table-card {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .dash2-table-card .data-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .dash2-table-card .data-table tbody tr:hover {
+            background: rgba(248, 250, 252, 0.92);
+        }
+
+        .dash2-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .dash2-pill--warn { background: #fef3c7; color: #92400e; }
+        .dash2-pill--neutral { background: #e2e8f0; color: #334155; }
+        .dash2-pill--good { background: #dcfce7; color: #166534; }
+        .dash2-pill--bad { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 980px) {
+            .dash2-cards-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    {% set offerTotal = offerStats.total > 0 ? offerStats.total : 1 %}
+    {% set activeRate = (offerStats.active / offerTotal * 100)|round(1) %}
+    {% set soonRate = (offerStats.expiringSoon / offerTotal * 100)|round(1) %}
+    {% set expiredRate = (offerStats.expired / offerTotal * 100)|round(1) %}
+    {% set promoTotal = promoStats.total > 0 ? promoStats.total : 1 %}
+    {% set promoActiveRate = (promoStats.active / promoTotal * 100)|round(1) %}
+    {% set promoBlockedRate = (promoStats.blocked / promoTotal * 100)|round(1) %}
+    {% set reservationTotal = reservationStats.total > 0 ? reservationStats.total : 1 %}
+    {% set reservationPendingRate = (reservationStats.pending / reservationTotal * 100)|round(1) %}
+
+    <div class="dash2-hero">
+        <div class="dash2-hero__top">
+            <div>
+                <span class="dash2-pill dash2-pill--good" style="margin-bottom:8px;">Vue dynamique</span>
+            <h2 class="section-title" style="margin:0;">Dashboard Offres</h2>
+            <p class="section-subtitle" style="margin:4px 0 0;">Page 2/2: offres, promos et reservations.</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <a href="{{ path('app_admin_dashboard') }}" class="outline-btn">Page 1 · Utilisateurs</a>
+                <span class="outline-btn" style="background:#0f172a;color:#fff;border-color:#0f172a;cursor:default;">Page 2 · Offres & Promos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-card__label">Offres totales</div>
+            <div class="stat-card__value">{{ offerStats.total }}</div>
+            <div class="stat-card__hint">Toutes categories</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Offres actives</div>
+            <div class="stat-card__value">{{ offerStats.active }}</div>
+            <div class="stat-card__hint">{{ activeRate }}% du total</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Expire bientot</div>
+            <div class="stat-card__value">{{ offerStats.expiringSoon }}</div>
+            <div class="stat-card__hint">Dans les prochaines 24h</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Offres expirees</div>
+            <div class="stat-card__value">{{ offerStats.expired }}</div>
+            <div class="stat-card__hint">{{ expiredRate }}% du total</div>
+        </article>
+    </div>
+
+    <div class="stats-grid" style="margin-top: 14px;">
+        <article class="stat-card">
+            <div class="stat-card__label">Codes promo</div>
+            <div class="stat-card__value">{{ promoStats.total }}</div>
+            <div class="stat-card__hint">Total genere</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Promos actives</div>
+            <div class="stat-card__value">{{ promoStats.active }}</div>
+            <div class="stat-card__hint">Encore utilisables</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Promos utilisees</div>
+            <div class="stat-card__value">{{ promoStats.used }}</div>
+            <div class="stat-card__hint">Consommees</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-card__label">Promos bloquees</div>
+            <div class="stat-card__value">{{ promoStats.blocked }}</div>
+            <div class="stat-card__hint">Controle d'abus</div>
+        </article>
+    </div>
+
+    <div class="admin-table-card" style="margin-top:22px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Resume operationnel</h2>
+                <p class="section-subtitle">Synthese rapide des flux offres, promos et reservations.</p>
+            </div>
+            <a href="{{ path('app_admin_offres') }}" class="outline-btn">Gerer les offres</a>
+        </div>
+
+        <div class="dash2-cards-3">
+            <div class="dash2-ring-card">
+                <div class="dash2-ring-head">
+                    <span class="dash2-ring-title">Sante des offres</span>
+                    <span class="dash2-pill dash2-pill--warn">Urgence</span>
+                </div>
+                <div class="dash2-ring" style="--value: {{ soonRate }}; --ring-color: #f59e0b;">
+                    <span class="dash2-ring-value">{{ soonRate }}%</span>
+                </div>
+                <div class="dash2-legend">
+                    <span>Actives: <strong>{{ offerStats.active }}</strong></span>
+                    <span>Expire bientot: <strong>{{ offerStats.expiringSoon }}</strong></span>
+                    <span>Expirees: <strong>{{ offerStats.expired }}</strong></span>
+                </div>
+            </div>
+
+            <div class="dash2-ring-card">
+                <div class="dash2-ring-head">
+                    <span class="dash2-ring-title">Performance promo</span>
+                    <span class="dash2-pill dash2-pill--good">Conversion</span>
+                </div>
+                <div class="dash2-ring" style="--value: {{ promoActiveRate }}; --ring-color: #10b981;">
+                    <span class="dash2-ring-value">{{ promoActiveRate }}%</span>
+                </div>
+                <div class="dash2-legend">
+                    <span>Actives: <strong>{{ promoStats.active }}</strong></span>
+                    <span>Utilisees: <strong>{{ promoStats.used }}</strong></span>
+                    <span>Bloquees abus: <strong>{{ promoStats.blocked }}</strong></span>
+                </div>
+            </div>
+
+            <div class="dash2-ring-card">
+                <div class="dash2-ring-head">
+                    <span class="dash2-ring-title">Reservations</span>
+                    <span class="dash2-pill dash2-pill--neutral">Flux</span>
+                </div>
+                <div class="dash2-ring" style="--value: {{ reservationPendingRate }}; --ring-color: #6366f1;">
+                    <span class="dash2-ring-value">{{ reservationPendingRate }}%</span>
+                </div>
+                <div class="dash2-legend">
+                    <span>En attente: <strong>{{ reservationStats.pending }}</strong></span>
+                    <span>Confirmees: <strong>{{ reservationStats.confirmed }}</strong></span>
+                    <span>Refusees: <strong>{{ reservationStats.refused }}</strong></span>
+                    <span>Promos bloquees: <strong>{{ promoBlockedRate }}%</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-table-card dash2-table-card" style="margin-top:16px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Offres recentes</h2>
+                <p class="section-subtitle">Les offres qui arrivent a echeance ou qui ont ete ajoutees recemment.</p>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Remise</th>
+                    <th>Fin</th>
+                    <th>Statut</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for offer in recentOffers %}
+                    <tr>
+                        <td>{{ offer.titre }}</td>
+                        <td>{{ offer.type }}</td>
+                        <td>{{ offer.pourcentage }}%</td>
+                        <td>{{ offer.date_fin ? offer.date_fin|date('d/m/Y') : '-' }}</td>
+                        <td>
+                            {% if offer.expiring_soon %}
+                                <span style="padding:5px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800;">Expire bientot</span>
+                            {% else %}
+                                <span style="padding:5px 9px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:12px;font-weight:800;">{{ offer.statut }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucune offre.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+        <div class="admin-table-card dash2-table-card">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Derniers codes promo</h2>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Offre</th>
+                        <th>Statut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for promo in recentPromos %}
+                        <tr>
+                            <td>CP{{ '%06d'|format(promo.id) }}</td>
+                            <td>{{ promo.offre_titre ?? '-' }}</td>
+                            <td>
+                                <span class="dash2-pill {{ promo.statut == 'ACTIF' ? 'dash2-pill--good' : promo.statut == 'BLOQUE_ABUS' ? 'dash2-pill--bad' : 'dash2-pill--neutral' }}">{{ promo.statut }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3">Aucun code promo.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-table-card dash2-table-card">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Dernieres reservations</h2>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Offre</th>
+                        <th>Personnes</th>
+                        <th>Statut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for reservation in recentReservations %}
+                        <tr>
+                            <td>{{ reservation.offre_titre ?? '-' }}</td>
+                            <td>{{ reservation.nombre_personnes }}</td>
+                            <td>
+                                <span class="dash2-pill {{ reservation.statut == 'EN_ATTENTE' ? 'dash2-pill--warn' : reservation.statut in ['CONFIRMÉE', 'CONFIRMEE'] ? 'dash2-pill--good' : 'dash2-pill--neutral' }}">{{ reservation.statut }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3">Aucune reservation.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

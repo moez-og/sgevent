@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="page-shell">
+        <div class="front-shell content-stack">
+            {% include 'front/partials/navbar.html.twig' %}
+            {% block front_content %}{% endblock %}
+            <div class="footer-note">{{ 'front.footer_note'|trans }}</div>
+        </div>
+    </div>
+{% endblock %}

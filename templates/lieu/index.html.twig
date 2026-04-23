@@ -1,0 +1,382 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Gestion des lieux | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Lieux{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .users-feedback {
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+            font-weight: 600;
+        }
+
+        .users-feedback--success {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .users-feedback--error {
+            border-color: #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .users-form-card {
+            margin: 18px 0 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .users-form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .users-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .users-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .users-field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .users-input,
+        .users-select {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+            color: #0f172a;
+            outline: none;
+        }
+
+        .users-input:focus,
+        .users-select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .users-submit {
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            font-weight: 700;
+            padding: 11px 18px;
+            cursor: pointer;
+        }
+
+        .users-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
+            gap: 16px;
+            justify-content: start;
+        }
+
+        .user-card {
+            width: 100%;
+            max-width: 320px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 12px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+        }
+
+        .user-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #dbeafe, #f8fafc);
+        }
+
+        .lieu-image-placeholder {
+            width: 100%;
+            height: 180px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #dbeafe, #f8fafc);
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .lieu-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            margin-right: 6px;
+            margin-top: 4px;
+        }
+
+        .badge-cafe { background-color: #fd7e14; }
+        .badge-resto { background-color: #dc3545; }
+        .badge-resto_bar { background-color: #e83e8c; }
+        .badge-lieu_public { background-color: #20c997; }
+        .badge-parc_attraction { background-color: #6f42c1; }
+        .badge-musee { background-color: #6610f2; }
+        .badge-plage { background-color: #17a2b8; }
+        .badge-centre_commercial { background-color: #007bff; }
+        .badge-default { background-color: #334155; }
+
+        .lieu-type-public {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .lieu-type-prive {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .lieux-pagination {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .lieux-pagination a,
+        .lieux-pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #334155;
+            text-decoration: none;
+            transition: background .15s;
+        }
+
+        .lieux-pagination a:hover {
+            background: #f1f5f9;
+        }
+
+        .lieux-pagination .active {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .lieux-pagination .disabled {
+            opacity: .4;
+            pointer-events: none;
+        }
+
+        @media (max-width: 980px) {
+            .users-form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 680px) {
+            .users-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    {% for message in app.flashes('success') %}
+        <div class="users-feedback users-feedback--success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="users-feedback users-feedback--error">{{ message }}</div>
+    {% endfor %}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Gestion des lieux</h2>
+            <p class="section-subtitle">Créer, consulter, filtrer et gérer les lieux depuis l'espace admin.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <a href="{{ path('app_admin_lieu_new') }}" class="primary-btn">Nouveau lieu</a>
+            <a href="{{ path('app_admin_dashboard') }}" class="secondary-btn">Retour dashboard</a>
+        </div>
+    </div>
+
+    <div class="users-form-card">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Recherche et filtres</h2>
+                <p class="section-subtitle">{{ totalItems }} lieu(x) trouvé(s)</p>
+            </div>
+        </div>
+
+        <form method="get" action="{{ path('app_admin_lieu_index') }}" class="users-form-grid">
+            <div class="users-field">
+                <label for="search_q">Recherche</label>
+                <input id="search_q" class="users-input" type="text" name="q" value="{{ searchQuery }}" placeholder="Nom ou ville">
+            </div>
+
+            <div class="users-field">
+                <label for="search_categorie">Catégorie</label>
+                <select id="search_categorie" class="users-select" name="categorie">
+                    <option value="">Toutes les catégories</option>
+                    {% for categorie in categorieCases %}
+                        <option value="{{ categorie.value }}" {{ currentCategorie == categorie.value ? 'selected' : '' }}>{{ categorie.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="users-field">
+                <label for="search_type">Type</label>
+                <select id="search_type" class="users-select" name="type">
+                    <option value="">Tous les types</option>
+                    {% for type in typeCases %}
+                        <option value="{{ type.value }}" {{ currentType == type.value ? 'selected' : '' }}>{{ type.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="users-field">
+                <label for="search_sort">Tri</label>
+                <select id="search_sort" class="users-select" name="sort">
+                    <option value="id" {{ currentSort == 'id' ? 'selected' : '' }}>ID</option>
+                    <option value="nom" {{ currentSort == 'nom' ? 'selected' : '' }}>Nom</option>
+                    <option value="ville" {{ currentSort == 'ville' ? 'selected' : '' }}>Ville</option>
+                    <option value="categorie" {{ currentSort == 'categorie' ? 'selected' : '' }}>Catégorie</option>
+                    <option value="type" {{ currentSort == 'type' ? 'selected' : '' }}>Type</option>
+                    <option value="budget" {{ currentSort == 'budget' ? 'selected' : '' }}>Budget</option>
+                </select>
+            </div>
+
+            <div class="users-field">
+                <label for="search_dir">Ordre</label>
+                <select id="search_dir" class="users-select" name="dir">
+                    <option value="ASC" {{ currentDirection == 'ASC' ? 'selected' : '' }}>Croissant</option>
+                    <option value="DESC" {{ currentDirection == 'DESC' ? 'selected' : '' }}>Décroissant</option>
+                </select>
+            </div>
+
+            <div class="users-field users-field--full" style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="submit" class="users-submit">Filtrer</button>
+                <a href="{{ path('app_admin_lieu_index') }}" class="secondary-btn">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="user-list">
+        {% for lieu in lieux %}
+            {% set categoryValue = lieu.categorie ? lieu.categorie.value : '' %}
+            {% set categoryClassMap = {
+                'CAFE': 'badge-cafe',
+                'RESTO': 'badge-resto',
+                'RESTO_BAR': 'badge-resto_bar',
+                'LIEU_PUBLIC': 'badge-lieu_public',
+                'PARC_ATTRACTION': 'badge-parc_attraction',
+                'MUSEE': 'badge-musee',
+                'PLAGE': 'badge-plage',
+                'CENTRE_COMMERCIAL': 'badge-centre_commercial'
+            } %}
+            {% set categoryClass = categoryClassMap[categoryValue]|default('badge-default') %}
+
+            {% set rawImage = lieu.imageUrl|default('') %}
+            {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+                {% set imageSrc = rawImage %}
+            {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+                {% set imageSrc = asset(rawImage) %}
+            {% elseif rawImage and rawImage != 'default.png' %}
+                {% set imageSrc = asset('uploads/lieux/' ~ rawImage) %}
+            {% else %}
+                {% set imageSrc = '' %}
+            {% endif %}
+
+            <article class="user-card">
+                {% if imageSrc %}
+                    <img src="{{ imageSrc }}" alt="{{ lieu.nom }}" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <div class="lieu-image-placeholder" style="display:none;">Aucune image</div>
+                {% else %}
+                    <div class="lieu-image-placeholder">Aucune image</div>
+                {% endif %}
+
+                <h3>{{ lieu.nom }}</h3>
+                <p><i class="bi bi-geo-alt"></i> {{ lieu.ville }}</p>
+
+                <div>
+                    <span class="lieu-badge {{ categoryClass }}">{{ lieu.categorie ? lieu.categorie.label : '—' }}</span>
+                    {% if lieu.type %}
+                        <span class="lieu-badge {{ lieu.type.value == 'PUBLIC' ? 'lieu-type-public' : 'lieu-type-prive' }}">{{ lieu.type.label }}</span>
+                    {% endif %}
+                </div>
+
+                <p style="margin-top:8px;">
+                    <strong>Budget :</strong>
+                    {% if lieu.budgetMin is not null or lieu.budgetMax is not null %}
+                        {{ lieu.budgetMin is not null ? lieu.budgetMin|number_format(2, ',', ' ') : '—' }}
+                        —
+                        {{ lieu.budgetMax is not null ? lieu.budgetMax|number_format(2, ',', ' ') : '—' }} TND
+                    {% else %}
+                        Non renseigné
+                    {% endif %}
+                </p>
+
+                <div class="users-card-actions">
+                    <a href="{{ path('app_admin_lieu_show', {id: lieu.id}) }}" class="outline-btn" style="text-decoration:none;">Voir</a>
+                    <a href="{{ path('app_admin_lieu_edit', {id: lieu.id}) }}" class="outline-btn" style="text-decoration:none;">Modifier</a>
+                    <form method="post" action="{{ path('app_admin_lieu_delete', {id: lieu.id}) }}" onsubmit="return confirm('Supprimer ce lieu ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_lieu_' ~ lieu.id) }}">
+                        <button type="submit" class="outline-btn" style="color:#b91c1c;border-color:#fecaca;">Supprimer</button>
+                    </form>
+                </div>
+            </article>
+        {% else %}
+            <div class="empty-state">
+                {% if searchQuery %}
+                    Aucun lieu ne correspond à "{{ searchQuery }}".
+                {% else %}
+                    Aucun lieu disponible.
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if pageCount > 1 %}
+        <nav class="lieux-pagination" aria-label="Pagination des lieux">
+            <a class="{{ page <= 1 ? 'disabled' : '' }}" href="{{ page > 1 ? path('app_admin_lieu_index', app.request.query.all|merge({'page': page - 1})) : '#' }}">Précédent</a>
+            {% for currentPage in 1..pageCount %}
+                <a class="{{ currentPage == page ? 'active' : '' }}" href="{{ path('app_admin_lieu_index', app.request.query.all|merge({'page': currentPage})) }}">{{ currentPage }}</a>
+            {% endfor %}
+            <a class="{{ page >= pageCount ? 'disabled' : '' }}" href="{{ page < pageCount ? path('app_admin_lieu_index', app.request.query.all|merge({'page': page + 1})) : '#' }}">Suivant</a>
+        </nav>
+    {% endif %}
+{% endblock %}

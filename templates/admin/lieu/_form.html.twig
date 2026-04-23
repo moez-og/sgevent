@@ -1,0 +1,155 @@
+{{ form_start(form, { attr: { class: 'lieu-form-card', enctype: 'multipart/form-data', novalidate: 'novalidate' } }) }}
+    {{ form_errors(form) }}
+
+    <div class="row g-3">
+        <div class="col-12">
+            {{ form_label(form.offre) }}
+            {{ form_widget(form.offre) }}
+            {{ form_errors(form.offre) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.nom) }}
+            {{ form_widget(form.nom) }}
+            {{ form_errors(form.nom) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.ville) }}
+            {{ form_widget(form.ville) }}
+            {{ form_errors(form.ville) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.adresse) }}
+            {{ form_widget(form.adresse) }}
+            {{ form_errors(form.adresse) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.telephone) }}
+            {{ form_widget(form.telephone) }}
+            {{ form_errors(form.telephone) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.siteWeb) }}
+            {{ form_widget(form.siteWeb) }}
+            {{ form_errors(form.siteWeb) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.instagram) }}
+            {{ form_widget(form.instagram) }}
+            {{ form_errors(form.instagram) }}
+        </div>
+        <div class="col-12">
+            {{ form_label(form.description) }}
+            {{ form_widget(form.description) }}
+            {{ form_errors(form.description) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.budgetMin) }}
+            {{ form_widget(form.budgetMin) }}
+            {{ form_errors(form.budgetMin) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.budgetMax) }}
+            {{ form_widget(form.budgetMax) }}
+            {{ form_errors(form.budgetMax) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.categorie) }}
+            {{ form_widget(form.categorie) }}
+            {{ form_errors(form.categorie) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.type) }}
+            {{ form_widget(form.type) }}
+            {{ form_errors(form.type) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.latitude) }}
+            {{ form_widget(form.latitude) }}
+            {{ form_errors(form.latitude) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.longitude) }}
+            {{ form_widget(form.longitude) }}
+            {{ form_errors(form.longitude) }}
+        </div>
+
+        {% set dayLabels = {
+            'lundi': 'Lundi',
+            'mardi': 'Mardi',
+            'mercredi': 'Mercredi',
+            'jeudi': 'Jeudi',
+            'vendredi': 'Vendredi',
+            'samedi': 'Samedi',
+            'dimanche': 'Dimanche'
+        } %}
+
+        <div class="col-12">
+            <div class="lieu-horaires-card">
+                <h3 class="h5 mb-2">Horaires d'ouverture</h3>
+                <p class="text-muted mb-3">Renseignez les créneaux par jour (ouverture 1 / fermeture 1 puis ouverture 2 / fermeture 2).</p>
+
+                <div class="lieu-horaires-grid">
+                    {% for dayKey, dayLabel in dayLabels %}
+                        {% set dayData = horaires[dayKey]|default({
+                            jour: dayKey,
+                            ouvert: false,
+                            heure_ouverture_1: '',
+                            heure_fermeture_1: '',
+                            heure_ouverture_2: '',
+                            heure_fermeture_2: ''
+                        }) %}
+
+                        <div class="lieu-horaire-day">
+                            <div class="lieu-horaire-day__head">
+                                <strong>{{ dayLabel }}</strong>
+                                <label class="lieu-horaire-toggle">
+                                    <input type="checkbox" name="horaires[{{ dayKey }}][ouvert]" value="1" {{ dayData.ouvert ? 'checked' : '' }}>
+                                    Ouvert
+                                </label>
+                            </div>
+
+                            <div class="lieu-horaire-slot-grid">
+                                <input type="time" name="horaires[{{ dayKey }}][heure_ouverture_1]" value="{{ dayData.heure_ouverture_1 }}" class="form-control" aria-label="{{ dayLabel }} ouverture 1">
+                                <input type="time" name="horaires[{{ dayKey }}][heure_fermeture_1]" value="{{ dayData.heure_fermeture_1 }}" class="form-control" aria-label="{{ dayLabel }} fermeture 1">
+                                <input type="time" name="horaires[{{ dayKey }}][heure_ouverture_2]" value="{{ dayData.heure_ouverture_2 }}" class="form-control" aria-label="{{ dayLabel }} ouverture 2">
+                                <input type="time" name="horaires[{{ dayKey }}][heure_fermeture_2]" value="{{ dayData.heure_fermeture_2 }}" class="form-control" aria-label="{{ dayLabel }} fermeture 2">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            {% set rawImage = lieu is defined and lieu.imageUrl is not null ? lieu.imageUrl : '' %}
+            {% if rawImage %}
+                {% if rawImage starts with 'http://' or rawImage starts with 'https://' %}
+                    {% set imageSrc = rawImage %}
+                {% elseif rawImage starts with 'theme/' or rawImage starts with 'uploads/' %}
+                    {% set imageSrc = asset(rawImage) %}
+                {% else %}
+                    {% set imageSrc = asset(rawImage) %}
+                {% endif %}
+
+                <div class="lieu-image-preview mb-3">
+                    <img src="{{ imageSrc }}" alt="Image actuelle du lieu" class="img-fluid rounded-4 border" style="max-height:240px;object-fit:cover;">
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.imageUrl) }}
+            {{ form_widget(form.imageUrl) }}
+            {{ form_errors(form.imageUrl) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.imageFile) }}
+            {{ form_widget(form.imageFile) }}
+            {{ form_errors(form.imageFile) }}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <button class="primary-btn" type="submit">{{ button_label|default('Enregistrer') }}</button>
+        <a href="{{ path('app_admin_lieu_index') }}" class="secondary-btn">Annuler</a>
+    </div>
+{{ form_end(form) }}

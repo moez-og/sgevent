@@ -1,0 +1,32 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Modifier une sortie | Fin Tokhroj{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {% include 'sortie/_form_styles.html.twig' only %}
+{% endblock %}
+
+{% block front_content %}
+<section>
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Modifier annonce #{{ sortie.id }}</h1>
+            <p class="section-subtitle">Mettez à jour votre annonce de sortie.</p>
+        </div>
+        <a href="{{ path('app_sorties') }}" class="outline-btn"><span class="btn-icon">&larr;</span>Retour aux sorties</a>
+    </div>
+
+    {% include 'sortie/_form.html.twig' with {
+        form: form,
+        sortie: sortie,
+        cancel_path: path('app_sorties'),
+        submit_label: 'Enregistrer modifications'
+    } %}
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% include 'sortie/_form_scripts.html.twig' with { form: form } only %}
+{% endblock %}

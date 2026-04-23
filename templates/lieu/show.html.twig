@@ -1,0 +1,181 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Détails lieu | Fin Tokhroj{% endblock %}
+{% block admin_page_title %}Détails lieu{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('admin/lieu/_styles.html.twig') }}
+{% endblock %}
+
+{% block admin_content %}
+    {{ include('admin/lieu/_flashes.html.twig') }}
+
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">{{ lieu.nom }}</h2>
+            <p class="section-subtitle">Fiche détaillée du lieu.</p>
+        </div>
+        <div class="lieu-page-actions">
+            <a href="{{ path('app_admin_lieu_edit', {id: lieu.id}) }}" class="primary-btn">Modifier</a>
+            <form method="post" action="{{ path('app_admin_lieu_delete', {id: lieu.id}) }}" onsubmit="return confirm('Supprimer ce lieu ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_lieu_' ~ lieu.id) }}">
+                <button type="submit" class="danger-btn">Supprimer</button>
+            </form>
+            <a href="{{ path('app_admin_lieu_index') }}" class="secondary-btn">Retour liste</a>
+        </div>
+    </div>
+
+    {% set rawImage = lieu.imageUrl|default('') %}
+    {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+        {% set imageSrc = rawImage %}
+    {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+        {% set imageSrc = asset(rawImage) %}
+    {% elseif rawImage %}
+        {% set imageSrc = asset(rawImage) %}
+    {% else %}
+        {% set imageSrc = '' %}
+    {% endif %}
+
+    <div class="lieu-detail-card">
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-5">
+                {% if imageSrc %}
+                    <img src="{{ imageSrc }}" alt="{{ lieu.nom }}" class="img-fluid rounded-4 border w-100" style="max-height:360px;object-fit:cover;">
+                {% else %}
+                    <div class="lieu-empty-state">Aucune image disponible.</div>
+                {% endif %}
+            </div>
+            <div class="col-lg-7">
+                <div class="lieu-meta-grid mt-0">
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">ID</div>
+                        <div class="lieu-meta__value">{{ lieu.id }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Offre associée</div>
+                        <div class="lieu-meta__value">{{ lieu.offre ? lieu.offre.titre : 'Aucune' }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Nom</div>
+                        <div class="lieu-meta__value">{{ lieu.nom }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Ville</div>
+                        <div class="lieu-meta__value">{{ lieu.ville }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Adresse</div>
+                        <div class="lieu-meta__value">{{ lieu.adresse ?: '—' }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Téléphone</div>
+                        <div class="lieu-meta__value">{{ lieu.telephone ?: '—' }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Site web</div>
+                        <div class="lieu-meta__value">
+                            {% if lieu.siteWeb %}
+                                <a href="{{ lieu.siteWeb }}" target="_blank" rel="noopener">{{ lieu.siteWeb }}</a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Instagram</div>
+                        <div class="lieu-meta__value">{{ lieu.instagram ?: '—' }}</div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Catégorie</div>
+                        <div class="lieu-meta__value"><span class="badge bg-primary">{{ lieu.categorie ? lieu.categorie.label : '—' }}</span></div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Type</div>
+                        <div class="lieu-meta__value">
+                            {% if lieu.type %}
+                                {% if lieu.type.value == 'PUBLIC' %}
+                                    <span class="badge bg-success">{{ lieu.type.label }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">{{ lieu.type.label }}</span>
+                                {% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Budget</div>
+                        <div class="lieu-meta__value">
+                            {% if lieu.budgetMin is not null or lieu.budgetMax is not null %}
+                                {{ lieu.budgetMin is not null ? lieu.budgetMin|number_format(2, ',', ' ') : '—' }}
+                                —
+                                {{ lieu.budgetMax is not null ? lieu.budgetMax|number_format(2, ',', ' ') : '—' }}
+                                TND
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="lieu-meta">
+                        <div class="lieu-meta__label">Coordonnées</div>
+                        <div class="lieu-meta__value">{{ lieu.latitude is not null ? lieu.latitude : '—' }} / {{ lieu.longitude is not null ? lieu.longitude : '—' }}</div>
+                    </div>
+                    <div class="lieu-meta lieu-field--full">
+                        <div class="lieu-meta__label">Description</div>
+                        <div class="lieu-meta__value">{{ lieu.description ?: '—' }}</div>
+                    </div>
+                    <div class="lieu-meta lieu-field--full">
+                        <div class="lieu-meta__label">Image URL</div>
+                        <div class="lieu-meta__value">{{ lieu.imageUrl ?: '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+            <div class="lieu-detail-card h-100">
+                <h3 class="h5 mb-3">Évaluation associée</h3>
+                {% if lieu.evaluationLieu %}
+                    <div class="mb-2"><strong>Note:</strong> {{ lieu.evaluationLieu.note }}/5</div>
+                    <div class="mb-2"><strong>Commentaire:</strong> {{ lieu.evaluationLieu.commentaire ?: '—' }}</div>
+                    <div><strong>Date:</strong> {{ lieu.evaluationLieu.dateEvaluation ? lieu.evaluationLieu.dateEvaluation|date('d/m/Y H:i') : '—' }}</div>
+                {% else %}
+                    <div class="lieu-empty-state">Aucune évaluation liée à ce lieu.</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="lieu-detail-card h-100">
+                <h3 class="h5 mb-3">Horaires / galerie</h3>
+                {% if lieu.lieuHoraire %}
+                    <div class="mb-3">
+                        <strong>Jour:</strong> {{ lieu.lieuHoraire.jour }}<br>
+                        <strong>Ouvert:</strong> {{ lieu.lieuHoraire.ouvert ? 'Oui' : 'Non' }}
+                    </div>
+                {% endif %}
+                {% if lieu.lieuImages is not empty %}
+                    <div class="lieu-gallery">
+                        {% for image in lieu.lieuImages %}
+                            {% set galleryImage = image.imageUrl|default(image.image_url|default('')) %}
+                            {% if galleryImage %}
+                                {% if galleryImage starts with 'http://' or galleryImage starts with 'https://' %}
+                                    {% set gallerySrc = galleryImage %}
+                                {% elseif galleryImage starts with 'theme/' or galleryImage starts with 'uploads/' %}
+                                    {% set gallerySrc = asset(galleryImage) %}
+                                {% else %}
+                                    {% set gallerySrc = asset(galleryImage) %}
+                                {% endif %}
+                                <img src="{{ gallerySrc }}" alt="Image lieu">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% elseif not lieu.lieuHoraire %}
+                    <div class="lieu-empty-state">Aucun horaire ou image supplémentaire disponible.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

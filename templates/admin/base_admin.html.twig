@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="page-shell">
+        <div class="admin-shell">
+            {% include 'admin/partials/sidebar.html.twig' %}
+            <div class="admin-main">
+                {% include 'admin/partials/navbar.html.twig' %}
+                <div class="admin-panel">
+                    {% block admin_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Mes inscriptions{% endblock %}
+
+{% block front_content %}
+<section style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    <div class="section-head" style="margin-bottom: 20px;">
+        <div>
+            <h1 class="section-title">Mes inscriptions</h1>
+            <p class="section-subtitle">Suivez vos demandes, paiements et tickets</p>
+        </div>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #e9f9ef; border: 1px solid #9de0b0; color: #156337; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div style="margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: #fdeaea; border: 1px solid #f3b8b8; color: #8a1f1f; font-weight: 600;">{{ message }}</div>
+    {% endfor %}
+
+    {% set total = 0 %}
+    {% for label, inscriptions in inscriptions_par_statut %}
+        {% set total = total + (inscriptions|length) %}
+    {% endfor %}
+
+    {% if total == 0 %}
+        <div class="empty-state">Aucune inscription pour le moment.</div>
+    {% else %}
+        {% for label, inscriptions in inscriptions_par_statut %}
+            {% if inscriptions|length > 0 %}
+                <div style="margin-bottom: 22px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px;">{{ label }}</h3>
+
+                    <div style="display: grid; gap: 12px;">
+                        {% for inscription in inscriptions %}
+                            <div class="listing-card" style="padding: 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                    <div>
+                                        <div style="font-weight: 700;">{{ inscription.evenement.titre }}</div>
+                                        <div style="font-size: 13px; color: #64748b;">{{ inscription.evenement.dateDebut|date('d/m/Y H:i') }}</div>
+                                        <div style="font-size: 13px; color: #64748b;">{{ inscription.nbTickets }} ticket{{ inscription.nbTickets > 1 ? 's' : '' }} • {{ inscription.getMontantTotal() }} TND</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 12px; color: #64748b;">Statut</div>
+                                        <div style="font-weight: 700;">{{ inscription.statut|replace({'_':' '}) }}</div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                                    {% if inscription.statut == 'CONFIRMEE' %}
+                                        <a href="{{ path('app_inscription_paiement', {id: inscription.id}) }}" class="cta-btn" style="padding: 8px 12px;">Payer</a>
+                                    {% endif %}
+                                    {% if inscription.statut == 'PAYEE' %}
+                                        <a href="{{ path('app_inscription_tickets', {id: inscription.id}) }}" class="outline-btn" style="padding: 8px 12px;">Voir tickets</a>
+                                    {% endif %}
+                                    {% if inscription.statut in ['EN_ATTENTE', 'CONFIRMEE', 'PAYEE'] %}
+                                        <form method="POST" action="{{ path('app_inscription_annuler', {id: inscription.id}) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('annuler' ~ inscription.id) }}">
+                                            <button type="submit" class="outline-btn" style="padding: 8px 12px; color: #b91c1c;">Annuler</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</section>
+{% endblock %}

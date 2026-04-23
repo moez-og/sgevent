@@ -1,0 +1,134 @@
+{% set isEdit = sortie is defined and sortie %}
+
+<div class="sortie-form-shell">
+    <div class="sortie-form-card">
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'sortie-form'}}) }}
+
+        {% if form_errors(form) %}
+            <div class="sortie-form-global-errors">{{ form_errors(form) }}</div>
+        {% endif %}
+
+        <div class="sortie-grid two-col">
+            <div class="sortie-field">
+                {{ form_label(form.titre, 'Titre') }}
+                {{ form_widget(form.titre) }}
+                {{ form_errors(form.titre) }}
+            </div>
+
+            <div class="sortie-field">
+                {{ form_label(form.ville, 'Ville') }}
+                {{ form_widget(form.ville) }}
+                {{ form_errors(form.ville) }}
+            </div>
+        </div>
+
+        <div class="sortie-field">
+            {{ form_label(form.description, 'Description (facultatif)') }}
+            {{ form_widget(form.description) }}
+            {{ form_errors(form.description) }}
+        </div>
+
+        <div class="sortie-grid two-col">
+            <div class="sortie-field">
+                {{ form_label(form.lieu_texte, 'Lieu') }}
+                {{ form_widget(form.lieu_texte) }}
+                {{ form_errors(form.lieu_texte) }}
+            </div>
+
+            <div class="sortie-field">
+                {{ form_label(form.type_activite, 'Type activite') }}
+                {{ form_widget(form.type_activite) }}
+                {{ form_errors(form.type_activite) }}
+            </div>
+        </div>
+
+        <div class="sortie-field" id="type-activite-autre-wrap">
+            {{ form_label(form.type_activite_autre, 'Autre activite') }}
+            {{ form_widget(form.type_activite_autre) }}
+            {{ form_errors(form.type_activite_autre) }}
+        </div>
+
+        <div class="sortie-grid two-col">
+            <div class="sortie-field">
+                {{ form_label(form.date_sortie, 'Date sortie') }}
+                {{ form_widget(form.date_sortie) }}
+                {{ form_errors(form.date_sortie) }}
+            </div>
+
+            <div class="sortie-field sortie-budget-wrap">
+                <div class="sortie-budget-top">
+                    {{ form_label(form.budget_max, 'Budget max') }}
+                    <label class="switch-line">{{ form_widget(form.budget_gratuit) }} <span>Gratuit</span></label>
+                </div>
+                {{ form_widget(form.budget_max) }}
+                {{ form_errors(form.budget_max) }}
+                {{ form_errors(form.budget_gratuit) }}
+            </div>
+        </div>
+
+        <div class="sortie-grid two-col">
+            <div class="sortie-field">
+                {{ form_label(form.nb_places, 'Nombre de places') }}
+                {{ form_widget(form.nb_places) }}
+                {{ form_errors(form.nb_places) }}
+            </div>
+
+            <div class="sortie-field">
+                {{ form_label(form.imageFile, 'Image') }}
+                {{ form_widget(form.imageFile) }}
+                {{ form_errors(form.imageFile) }}
+                {% if isEdit and sortie.image_url %}
+                    {% set imageSrc = sortie.image_url starts with 'http' ? sortie.image_url : '/' ~ sortie.image_url|trim('/') %}
+                    <div class="image-preview">
+                        <img src="{{ imageSrc }}" alt="Image sortie" loading="lazy">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if form.statut is defined %}
+            <div class="sortie-field">
+                {{ form_label(form.statut, 'Statut') }}
+                {{ form_widget(form.statut) }}
+                {{ form_errors(form.statut) }}
+            </div>
+        {% endif %}
+
+        <div class="sortie-field">
+            <label class="required">Point de rencontre</label>
+            <p class="map-hint">Choisissez une ville puis placez le marqueur sur la carte (drag and drop).</p>
+            <div class="map-search-box">
+                <input
+                    type="search"
+                    id="sortie-map-search"
+                    class="custom-input"
+                    placeholder="Rechercher une adresse ou un lieu..."
+                    autocomplete="off"
+                >
+                <div class="map-search-suggestions" id="sortie-map-suggestions" hidden></div>
+            </div>
+            <div id="sortie-map" class="sortie-map"></div>
+            {{ form_widget(form.point_rencontre) }}
+            {{ form_errors(form.point_rencontre) }}
+        </div>
+
+        <div class="sortie-field question-builder">
+            <label>Questions personnalisées</label>
+            <p class="map-hint">Ajoutez les questions que vous aimez poser avant la participation.</p>
+            <div class="question-input-row">
+                <input type="text" id="question-input" placeholder="Ex: Avez-vous une voiture ?">
+                <button type="button" id="question-add" class="outline-btn"><span class="btn-icon">+</span>Ajouter</button>
+            </div>
+            <ul id="question-list" class="question-list"></ul>
+            {{ form_widget(form.questions_json) }}
+            {{ form_errors(form.questions_json) }}
+        </div>
+
+        <div class="sortie-actions">
+            <button type="submit" class="primary-btn"><span class="btn-icon">&#10003;</span>{{ submit_label|default('Enregistrer') }}</button>
+            <a href="{{ cancel_path }}" class="outline-btn"><span class="btn-icon">&times;</span>Annuler</a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>

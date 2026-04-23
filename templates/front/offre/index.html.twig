@@ -1,0 +1,379 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Offres | Fin Tokhroj{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .offer-front-hero {
+            margin-bottom: 16px;
+            padding: 20px;
+            border-radius: 22px;
+            background: linear-gradient(120deg, rgba(20, 61, 113, 0.94), rgba(32, 79, 139, 0.90), rgba(86, 167, 220, 0.78));
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-front-hero::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.11);
+            right: -55px;
+            top: -65px;
+        }
+
+        .offer-front-hero__row {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: start;
+            flex-wrap: wrap;
+        }
+
+        .offer-front-hero .section-title,
+        .offer-front-hero .section-subtitle {
+            color: #fff;
+        }
+
+        .offer-front-hero .section-subtitle {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .offer-front-kpis {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .offer-front-kpi {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .offer-filter-card {
+            margin-bottom: 14px;
+            background: #fff;
+            border: 1px solid var(--ft-border);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 10px 24px rgba(18, 53, 94, 0.06);
+        }
+
+        .offer-filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .offer-filter-select {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-width: 240px;
+            outline: none;
+            color: var(--ft-primary);
+            background: #fff;
+        }
+
+        .offer-grid { gap: 20px; }
+
+        .offer-front-card {
+            position: relative;
+            overflow: hidden;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .offer-front-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 34px rgba(18, 53, 94, 0.13);
+        }
+
+        .offer-front-card .cover-thumb {
+            margin-bottom: 10px;
+        }
+
+        .offer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            background: rgba(86, 167, 220, 0.13);
+            color: var(--ft-primary);
+            border: 1px solid rgba(86, 167, 220, 0.16);
+            margin-bottom: 8px;
+        }
+
+        .offer-front-title {
+            margin: 0 0 6px;
+            color: var(--ft-primary);
+            line-height: 1.25;
+        }
+
+        .offer-front-desc {
+            margin-top: 12px;
+            color: var(--ft-muted);
+            line-height: 1.62;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .offer-front-footer {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .offer-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+
+        .offer-card--urgent {
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            background: linear-gradient(180deg, rgba(254, 242, 242, 0.92), #ffffff 55%);
+            box-shadow: 0 18px 40px rgba(239, 68, 68, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-card--urgent::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(248, 113, 113, 0.22), transparent 72%);
+            pointer-events: none;
+        }
+
+        .offer-urgent-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 7px 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .offer-double-pill {
+            background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+            color: #fff !important;
+        }
+
+        .offer-countdown {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.84);
+            color: #991b1b;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px dashed rgba(239, 68, 68, 0.35);
+        }
+
+        .offer-countdown.is-expired {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .offer-price-wrap {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 7px;
+            font-weight: 800;
+        }
+
+        .offer-price-old {
+            text-decoration: line-through;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .offer-price-new {
+            color: #b91c1c;
+            font-size: 15px;
+        }
+
+        @media (max-width: 680px) {
+            .offer-front-hero,
+            .offer-filter-card {
+                padding: 14px;
+            }
+
+            .offer-filter-select {
+                min-width: 180px;
+                width: 100%;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block front_content %}
+<section>
+    <div class="offer-front-hero">
+        <div class="offer-front-hero__row">
+            <div>
+                <h1 class="section-title">Offres</h1>
+                <p class="section-subtitle">Découvre les meilleures remises disponibles, avec les offres urgentes mises en avant.</p>
+                <div class="offer-front-kpis">
+                    <span class="offer-front-kpi">{{ offres|length }} offres visibles</span>
+                    <span class="offer-front-kpi">Filtrage par lieu activé</span>
+                    <span class="offer-front-kpi">Alerte expiration 24h</span>
+                </div>
+            </div>
+            <a href="{{ path('app_home') }}" class="outline-btn" style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff;">Retour accueil</a>
+        </div>
+    </div>
+
+    {% if app.user %}
+        <section class="sortie-notification-board notification-root" data-notification-root data-feed-url="{{ path('app_notifications_api_feed') }}" data-read-all-url="{{ path('app_notifications_api_read_all') }}" data-notification-type-prefixes="RESERVATION_" data-notification-inline="true">
+            <div class="sortie-notification-board__head">
+                <div>
+                    <h3>Notifications offres</h3>
+                    <p>Suivi en direct des réservations, statuts et alertes de promotions.</p>
+                </div>
+                <div class="btn-row">
+                    <button type="button" class="outline-btn notification-toggle-btn" data-notification-toggle aria-label="Ouvrir ou fermer les notifications" title="Notifications">
+                        <span class="btn-icon" aria-hidden="true">🔔</span>
+                        <span class="notification-badge" data-notification-badge hidden>0</span>
+                    </button>
+                    <button type="button" class="primary-btn" data-notification-read-all data-notification-token="{{ csrf_token('notifications_read_all') }}">Tout marquer lu</button>
+                </div>
+            </div>
+            <div class="notification-panel notification-panel--inline" data-notification-panel hidden>
+                <div class="notification-panel__list" data-notification-list>
+                    <div class="notification-empty">Aucune notification</div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <div class="offer-filter-card">
+        <form method="get" action="{{ path('app_offres') }}" class="offer-filter-row">
+            <div>
+                <label for="lieu" style="display:block; font-weight:600; margin-bottom:4px; color:var(--ft-primary);">Filtrer par lieu</label>
+                <select id="lieu" name="lieu" class="offer-filter-select">
+                    <option value="0">Tous les lieux</option>
+                    {% for lieu in lieux %}
+                        <option value="{{ lieu.id }}" {{ selectedLieu == lieu.id ? 'selected' : '' }}>{{ lieu.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="sort" style="display:block; font-weight:600; margin-bottom:4px; color:var(--ft-primary);">Trier par</label>
+                <select id="sort" name="sort" class="offer-filter-select">
+                    <option value="urgent" {{ (selectedSort|default('urgent')) == 'urgent' ? 'selected' : '' }}>Urgentes d'abord</option>
+                    <option value="date_fin_asc" {{ (selectedSort|default('urgent')) == 'date_fin_asc' ? 'selected' : '' }}>Date fin (proche)</option>
+                    <option value="date_fin_desc" {{ (selectedSort|default('urgent')) == 'date_fin_desc' ? 'selected' : '' }}>Date fin (lointaine)</option>
+                    <option value="reduction_desc" {{ (selectedSort|default('urgent')) == 'reduction_desc' ? 'selected' : '' }}>Reduction (max-min)</option>
+                    <option value="reduction_asc" {{ (selectedSort|default('urgent')) == 'reduction_asc' ? 'selected' : '' }}>Reduction (min-max)</option>
+                    <option value="titre_asc" {{ (selectedSort|default('urgent')) == 'titre_asc' ? 'selected' : '' }}>Titre (A-Z)</option>
+                    <option value="titre_desc" {{ (selectedSort|default('urgent')) == 'titre_desc' ? 'selected' : '' }}>Titre (Z-A)</option>
+                </select>
+            </div>
+            <button class="outline-btn" type="submit">Appliquer</button>
+        </form>
+    </div>
+
+    <div class="listing-grid offer-grid">
+        {% for item in offres %}
+            {% set displayPercentage = item.expiring_soon is defined and item.expiring_soon ? item.pourcentage * 2 : item.pourcentage %}
+            <article class="listing-card offer-front-card {{ item.expiring_soon is defined and item.expiring_soon ? 'offer-card--urgent' : '' }}">
+                <div class="cover-thumb"><span>{{ attribute(item, 'titre') }}</span></div>
+
+                <div class="listing-card__top">
+                    <div>
+                        {% if item.type is defined and item.type %}<span class="offer-chip">{{ item.type }}</span>{% endif %}
+                        <h3 class="offer-front-title">{{ attribute(item, 'titre') }}</h3>
+                        <p>
+                            {% if item.pourcentage is defined and item.pourcentage %}
+                                Réduction ·
+                                {% if item.expiring_soon is defined and item.expiring_soon %}
+                                    <span class="offer-price-wrap">
+                                        <span class="offer-price-old">{{ item.pourcentage }}%</span>
+                                        <span class="offer-price-new">{{ displayPercentage }}%</span>
+                                    </span>
+                                {% else %}
+                                    {{ displayPercentage }}%
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+                        {% if item.prix is defined %}<span class="price-pill">{{ item.prix }} TND</span>{% endif %}
+                        {% if item.pourcentage is defined %}
+                            {% if item.expiring_soon is defined and item.expiring_soon %}
+                                <span class="price-pill" style="text-decoration:line-through; background:#f1f5f9; color:#64748b;">{{ item.pourcentage }}%</span>
+                            {% endif %}
+                            <span class="price-pill {{ item.expiring_soon is defined and item.expiring_soon ? 'offer-double-pill' : '' }}">{{ displayPercentage }}%</span>
+                        {% endif %}
+                        {% if item.expiring_soon is defined and item.expiring_soon %}<span class="offer-urgent-banner">Expire bientôt</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="meta-row">
+                    {% if item.lieu_nom is defined and item.lieu_nom %}<span>📍 {{ item.lieu_nom }}{% if item.ville is defined and item.ville %}, {{ item.ville }}{% endif %}</span>{% endif %}
+                    {% if item.date_sortie is defined %}<span>🗓 {{ item.date_sortie|date('d/m/Y H:i') }}</span>{% endif %}
+                    {% if item.date_debut is defined %}<span>🗓 {{ item.date_debut|date('d/m/Y H:i') }}</span>{% endif %}
+                    {% if item.date_fin is defined %}<span>⏳ {{ item.date_fin|date('d/m/Y') }}</span>{% endif %}
+                    {% if item.budget_min is defined %}<span>💸 {{ item.budget_min ?? 0 }} - {{ item.budget_max ?? 0 }} TND</span>{% endif %}
+                    {% if item.nb_places is defined %}<span>👥 {{ item.nb_places }} places</span>{% endif %}
+                </div>
+
+                {% if item.description is defined and item.description %}
+                    <p class="offer-front-desc">{{ item.description }}</p>
+                {% endif %}
+
+                {% if item.expiring_soon is defined and item.expiring_soon %}
+                    <div class="offer-countdown" data-offer-countdown="{{ item.countdown_target ?? (item.date_fin|date('Y-m-d') ~ 'T23:59:59') }}">{{ item.countdown_label ?? 'Expire dans ...' }}</div>
+                {% endif %}
+
+                <div class="offer-front-footer">
+                    <div style="display:flex; align-items:center; gap:8px; color:var(--ft-muted); font-size:13px; font-weight:700;">
+                        <span class="offer-status-dot"></span>
+                        <span>{{ item.statut is defined and item.statut ? item.statut : 'ACTIVE' }}</span>
+                    </div>
+                    <a href="{{ path('app_offres_show', {id: item.id}) }}" class="outline-btn">Voir détails</a>
+                </div>
+            </article>
+        {% else %}
+            <div class="empty-state">Aucune donnée disponible pour cette page.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
