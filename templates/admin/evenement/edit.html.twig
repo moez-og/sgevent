@@ -3,10 +3,26 @@
 {% block title %}Modifier l'événement - Admin{% endblock %}
 {% block admin_page_title %}Événements{% endblock %}
 
-{% block stylesheets %}{{ parent() }}{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
+{% endblock %}
 
 {% block admin_content %}
-<div class="admin-container ev-page">
+{% set rawImage = (evenement.imageUrl|default(''))|trim %}
+{% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://' or rawImage starts with 'data:image/') %}
+    {% set imageSrc = rawImage %}
+{% elseif rawImage and (rawImage starts with '/') %}
+    {% set imageSrc = rawImage %}
+{% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+    {% set imageSrc = '/' ~ rawImage|trim('/') %}
+{% elseif rawImage %}
+    {% set imageSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
+{% else %}
+    {% set imageSrc = asset('theme/images/logo.png') %}
+{% endif %}
+
+<div class="admin-container event-form-shell">
     <div class="section-head">
         <div>
             <h1 class="section-title">Modifier l'événement</h1>
@@ -15,119 +31,135 @@
         <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Retour liste</a>
     </div>
 
-    <div class="ev-card">
+    <div class="event-form-card">
         {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-        {# ── Informations générales ── #}
-        <div class="ev-section">
-            <h3 class="ev-section-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                Informations générales
-            </h3>
-            <div class="ev-grid">
-                <div class="ev-field ev-field--full">
+        <div class="event-form-section">
+            <h3 class="event-form-title">Informations générales</h3>
+            <div class="event-form-grid">
+                <div class="event-field event-field--full">
                     {{ form_label(form.titre) }}
-                    {{ form_widget(form.titre, {attr: {class: 'ev-control', placeholder: 'Titre de l\'événement'}}) }}
+                    {{ form_widget(form.titre, {attr: {class: 'form-control', placeholder: 'Titre de l\'événement'}}) }}
                     {% if form.titre.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.titre.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.titre.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
-                <div class="ev-field ev-field--full">
+
+                <div class="event-field event-field--full">
                     {{ form_label(form.description) }}
-                    {{ form_widget(form.description, {attr: {class: 'ev-control', rows: 4, placeholder: 'Décrivez l\'événement (optionnel)'}}) }}
+                    {{ form_widget(form.description, {attr: {class: 'form-control', rows: 4, placeholder: 'Décrivez l\'événement (optionnel)'}}) }}
                 </div>
             </div>
         </div>
 
-        {# ── Dates et capacité ── #}
-        <div class="ev-section">
-            <h3 class="ev-section-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Dates et capacité
-            </h3>
-            <div class="ev-grid">
-                <div class="ev-field">
+        <div class="event-form-section">
+            <h3 class="event-form-title">Dates et capacité</h3>
+            <div class="event-form-grid">
+                <div class="event-field">
                     {{ form_label(form.dateDebut) }}
-                    {{ form_widget(form.dateDebut, {attr: {class: 'ev-control'}}) }}
+                    {{ form_widget(form.dateDebut, {attr: {class: 'form-control', type: 'datetime-local'}}) }}
                     {% if form.dateDebut.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.dateDebut.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.dateDebut.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
-                <div class="ev-field">
+                <div class="event-field">
                     {{ form_label(form.dateFin) }}
-                    {{ form_widget(form.dateFin, {attr: {class: 'ev-control'}}) }}
+                    {{ form_widget(form.dateFin, {attr: {class: 'form-control', type: 'datetime-local'}}) }}
                     {% if form.dateFin.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.dateFin.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.dateFin.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
-                <div class="ev-field">
+                <div class="event-field">
                     {{ form_label(form.capaciteMax) }}
-                    {{ form_widget(form.capaciteMax, {attr: {class: 'ev-control', placeholder: 'Ex: 100'}}) }}
+                    {{ form_widget(form.capaciteMax, {attr: {class: 'form-control', placeholder: 'Ex: 100'}}) }}
                     {% if form.capaciteMax.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.capaciteMax.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.capaciteMax.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
-                <div class="ev-field">
+                <div class="event-field">
                     {{ form_label(form.prix) }}
-                    {{ form_widget(form.prix, {attr: {class: 'ev-control', placeholder: '0 pour gratuit'}}) }}
+                    {{ form_widget(form.prix, {attr: {class: 'form-control', placeholder: '0 pour gratuit'}}) }}
                     {% if form.prix.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.prix.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.prix.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        {# ── Paramètres ── #}
-        <div class="ev-section">
-            <h3 class="ev-section-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                Paramètres
-            </h3>
-            <div class="ev-grid">
-                <div class="ev-field">
+        <div class="event-form-section">
+            <h3 class="event-form-title">Paramètres</h3>
+            <div class="event-form-grid">
+                <div class="event-field">
                     {{ form_label(form.statut) }}
-                    {{ form_widget(form.statut, {attr: {class: 'ev-control ev-select'}}) }}
+                    {{ form_widget(form.statut, {attr: {class: 'form-control'}}) }}
                 </div>
-                <div class="ev-field">
+                <div class="event-field">
                     {{ form_label(form.type) }}
-                    {{ form_widget(form.type, {attr: {class: 'ev-control ev-select'}}) }}
+                    {{ form_widget(form.type, {attr: {class: 'form-control'}}) }}
                 </div>
-                <div class="ev-field ev-field--full">
+                <div class="event-field event-field--full">
                     {{ form_label(form.lieu) }}
-                    {{ form_widget(form.lieu, {attr: {class: 'ev-control ev-select'}}) }}
+                    {{ form_widget(form.lieu, {attr: {class: 'form-control'}}) }}
                 </div>
             </div>
         </div>
 
-        {# ── Visuel ── #}
-        <div class="ev-section ev-section--last">
-            <h3 class="ev-section-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Visuel
-            </h3>
-            <div class="ev-grid">
-                <div class="ev-field">
+        <div class="event-form-section">
+            <h3 class="event-form-title">Visuel</h3>
+            <div class="event-form-grid event-form-grid--media">
+                <div class="event-field">
                     {{ form_label(form.imageFile) }}
-                    {{ form_widget(form.imageFile, {attr: {class: 'ev-control ev-file'}}) }}
+                    {{ form_widget(form.imageFile, {attr: {class: 'form-control file-input'}}) }}
                     {% if form.imageFile.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.imageFile.vars.errors %}{{ e.message }}{% endfor %}</p>
+                        <div class="event-error">
+                            {% for error in form.imageFile.vars.errors %}
+                                {{ error.message }}
+                            {% endfor %}
+                        </div>
                     {% endif %}
-                    <p class="ev-help">Formats acceptés: JPG, PNG, WEBP, GIF · Taille max: 4 Mo</p>
+                    <div class="event-help">Formats acceptés: JPG, PNG, WEBP, GIF. Taille max: 4 Mo.</div>
+                    <div class="event-help">Ou générez un visuel avec l'IA à partir du titre et de la description.</div>
+                    <div>
+                        <button type="button" id="btnGenerateImage" class="ai-image-btn">
+                            <span id="btnGenLabel">✨ Générer image (IA)</span>
+                            <span id="btnGenSpinner" class="spinner" style="display: none;"></span>
+                        </button>
+                        <input type="hidden" name="generated_image" id="generatedImagePath">
+                    </div>
                 </div>
-                <div class="ev-field">
-                    {{ form_label(form.imageUrl) }}
-                    {{ form_widget(form.imageUrl, {attr: {class: 'ev-control', placeholder: 'https://...'}}) }}
-                    {% if form.imageUrl.vars.errors|length > 0 %}
-                        <p class="ev-error">{% for e in form.imageUrl.vars.errors %}{{ e.message }}{% endfor %}</p>
-                    {% endif %}
-                    <p class="ev-help">L'upload a la priorité sur l'URL si les deux sont fournis.</p>
+                <div class="event-field event-preview">
+                    <span class="event-preview-label">Image actuelle</span>
+                    <div class="event-preview-frame">
+                        <img id="event-image-preview" src="{{ imageSrc }}" alt="Aperçu" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';" />
+                    </div>
+                    <div class="event-help">Si vous ne changez pas l'image, elle sera conservée.</div>
                 </div>
             </div>
         </div>
 
-        <div class="ev-actions">
-            <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Annuler</a>
+        <div class="event-form-actions">
             <button type="submit" class="cta-btn">Enregistrer les modifications</button>
+            <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Annuler</a>
         </div>
 
         {{ form_end(form) }}
@@ -135,130 +167,212 @@
 </div>
 
 <style>
-/* ── Layout ─────────────────────────────────────────────────────── */
-.ev-page { max-width: 940px; margin: 36px auto; }
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
-/* ── Card ────────────────────────────────────────────────────────── */
-.ev-card {
-    background: var(--ft-card, #fff);
-    border: 1px solid var(--ft-border, rgba(20,61,113,.1));
-    border-radius: 22px;
-    box-shadow: 0 4px 28px rgba(14,45,94,.08);
-    padding: 32px;
-    position: relative;
-    overflow: hidden;
-}
-.ev-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 4px;
-    background: linear-gradient(90deg, #091f46 0%, #3fa8e0 55%, #d4aa23 100%);
-}
+    :root {
+        --event-ink: #0f1f2e;
+        --event-muted: #56657a;
+        --event-accent: #0b5c78;
+        --event-accent-soft: rgba(11, 92, 120, 0.12);
+        --event-card: #ffffff;
+        --event-stroke: rgba(15, 31, 46, 0.12);
+        --event-shadow: 0 24px 48px rgba(15, 31, 46, 0.12);
+    }
 
-/* ── Sections ────────────────────────────────────────────────────── */
-.ev-section {
-    margin-bottom: 26px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--ft-border, rgba(20,61,113,.07));
-}
-.ev-section--last { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
-
-.ev-section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 18px;
-    font-size: 10.5px;
-    font-weight: 800;
-    color: var(--ft-primary, #0e2d5e);
-    text-transform: uppercase;
-    letter-spacing: .1em;
-}
-.ev-section-title svg { color: #3fa8e0; flex-shrink: 0; }
-
-/* ── Grid ────────────────────────────────────────────────────────── */
-.ev-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-}
-.ev-field { display: grid; gap: 6px; }
-.ev-field--full { grid-column: 1 / -1; }
-
-/* ── Labels ──────────────────────────────────────────────────────── */
-.ev-field > label, .ev-field > .ev-field-label {
-    display: block;
-    font-weight: 600;
-    font-size: 12.5px;
-    color: var(--ft-text, #0f1d33);
-    letter-spacing: .01em;
-    margin-bottom: 0;
-}
-
-/* ── Controls ────────────────────────────────────────────────────── */
-.ev-control {
-    display: block;
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid rgba(20,61,113,.14);
-    border-radius: 12px;
-    font-size: 14px;
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-    background: rgba(237,242,249,.55);
-    color: var(--ft-text, #0f1d33);
-    transition: border-color .2s, box-shadow .2s, background .2s;
-    box-sizing: border-box;
-    -webkit-appearance: none;
-    appearance: none;
-}
-.ev-control:hover:not(:focus) { border-color: rgba(20,61,113,.28); }
-.ev-control:focus {
-    outline: none;
-    border-color: #3fa8e0;
-    background: var(--ft-card, #fff);
-    box-shadow: 0 0 0 3.5px rgba(63,168,224,.18);
-}
-textarea.ev-control { resize: vertical; min-height: 90px; }
-
-/* ── Select ──────────────────────────────────────────────────────── */
-.ev-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%235a6e88' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 13px center;
-    padding-right: 36px;
-    cursor: pointer;
-}
-
-/* ── File ────────────────────────────────────────────────────────── */
-.ev-file {
-    padding: 10px 12px;
-    border-style: dashed;
-    background: rgba(237,242,249,.3);
-    cursor: pointer;
-}
-.ev-file:hover { border-color: #3fa8e0; background: rgba(63,168,224,.06); }
-
-/* ── Messages ────────────────────────────────────────────────────── */
-.ev-error { font-size: 12px; font-weight: 600; color: var(--ft-danger, #c0193a); margin: 0; }
-.ev-help { font-size: 12px; color: var(--ft-muted, #5a6e88); margin: 0; }
-
-/* ── Actions ─────────────────────────────────────────────────────── */
-.ev-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    border-top: 1px solid var(--ft-border, rgba(20,61,113,.07));
-    padding-top: 20px;
-    margin-top: 24px;
-}
-
-@media (max-width: 840px) {
-    .ev-grid { grid-template-columns: 1fr; }
-    .ev-card { padding: 20px 16px; }
-    .ev-actions { flex-direction: column-reverse; align-items: stretch; }
-    .ev-actions .cta-btn, .ev-actions .outline-btn { text-align: center; }
-}
-
+    .event-form-shell {
+        max-width: 980px;
+        margin: 34px auto 48px;
+        font-family: 'Manrope', 'Trebuchet MS', sans-serif;
+        color: var(--event-ink);
+    }
+    .event-form-card {
+        background: linear-gradient(140deg, #ffffff, #f6fbff 70%);
+        border: 1px solid rgba(11, 92, 120, 0.16);
+        border-radius: 24px;
+        box-shadow: var(--event-shadow);
+        padding: 28px 28px 24px;
+        animation: formLift 0.6s ease both;
+    }
+    .event-form-section {
+        margin-bottom: 24px;
+        animation: formSectionIn 0.6s ease both;
+    }
+    .event-form-section:nth-of-type(2) { animation-delay: 0.05s; }
+    .event-form-section:nth-of-type(3) { animation-delay: 0.1s; }
+    .event-form-section:nth-of-type(4) { animation-delay: 0.15s; }
+    .event-form-title {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: var(--event-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-weight: 700;
+    }
+    .event-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+    .event-form-grid--media {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        align-items: center;
+    }
+    .event-field { display: grid; gap: 8px; }
+    .event-field--full { grid-column: 1 / -1; }
+    .event-error {
+        color: #b91c1c;
+        font-size: 12px;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+    .event-help {
+        font-size: 12px;
+        color: var(--event-muted);
+    }
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        transform: translateY(-1px);
+    }
+    .file-input {
+        padding: 8px 10px;
+        background: #f8fbff;
+        border-style: dashed;
+        border-color: rgba(11, 92, 120, 0.32);
+    }
+    .file-input::file-selector-button {
+        border: none;
+        border-radius: 999px;
+        padding: 8px 14px;
+        margin-right: 10px;
+        background: linear-gradient(135deg, #0b5c78, #117ea5);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .file-input::file-selector-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(11, 92, 120, 0.3);
+    }
+    label {
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 700;
+        font-size: 13px;
+        color: #334155;
+    }
+    .event-preview {
+        align-items: stretch;
+    }
+    .event-preview-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--event-muted);
+        font-weight: 600;
+    }
+    .event-preview-frame {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(11, 92, 120, 0.18);
+        background: #e2e8f0;
+        height: 160px;
+        display: grid;
+        place-items: center;
+    }
+    .event-preview-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .event-form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 16px;
+    }
+    @keyframes formLift {
+        from { transform: translateY(12px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes formSectionIn {
+        from { transform: translateY(8px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 900px) {
+        .event-form-shell { margin: 24px 16px 36px; }
+        .event-form-grid,
+        .event-form-grid--media { grid-template-columns: 1fr; }
+        .event-form-actions { flex-direction: column; align-items: stretch; }
+    }
 </style>
+
+<script>
+    (function () {
+        /* ══ Génération image IA ══ */
+        const generateButton = document.getElementById('btnGenerateImage');
+        const genLabel = document.getElementById('btnGenLabel');
+        const genSpinner = document.getElementById('btnGenSpinner');
+        const hiddenPath = document.getElementById('generatedImagePath');
+        const titleInput = document.getElementById('evenement_titre') || document.querySelector('[name="evenement[titre]"]');
+        const descInput = document.getElementById('evenement_description') || document.querySelector('[name="evenement[description]"]');
+        const imagePreview = document.getElementById('event-image-preview');
+
+        if (generateButton) {
+            generateButton.addEventListener('click', async () => {
+                const title = titleInput?.value?.trim() || '';
+                const desc = descInput?.value?.trim() || '';
+                const prompt = [title, desc].filter(Boolean).join('. ');
+                if (!prompt) { alert('Veuillez saisir un titre ou une description.'); return; }
+
+                generateButton.disabled = true;
+                if (genLabel) genLabel.textContent = 'Génération en cours…';
+                if (genSpinner) genSpinner.style.display = 'inline-block';
+                try {
+                    const formData = new FormData();
+                    formData.append('prompt', prompt);
+                    const res = await fetch('{{ path('admin_evenement_generate_image') }}', { method: 'POST', body: formData });
+                    const json = await res.json();
+                    if (!json.ok) throw new Error(json.message || 'Erreur API');
+                    if (hiddenPath) hiddenPath.value = json.path;
+                    if (imagePreview) { imagePreview.src = '/' + json.path; imagePreview.style.animation = 'formLift 0.5s ease both'; }
+                } catch (e) { alert('Échec : ' + e.message); }
+                finally {
+                    generateButton.disabled = false;
+                    if (genLabel) genLabel.textContent = '✨ Générer image (IA)';
+                    if (genSpinner) genSpinner.style.display = 'none';
+                }
+            });
+        }
+
+        /* ══ Preview upload ══ */
+        const input = document.getElementById('{{ form.imageFile.vars.id }}');
+        const preview = document.getElementById('event-image-preview');
+        if (!input || !preview) return;
+        input.addEventListener('change', function () {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                preview.src = String(event.target && event.target.result ? event.target.result : preview.src);
+            };
+            reader.readAsDataURL(file);
+        });
+    })();
+</script>
 {% endblock %}
