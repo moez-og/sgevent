@@ -57,13 +57,48 @@ class EvenementRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function countWithFilters(
+        ?string $query,
+        ?string $statut,
+        ?string $type,
+        ?string $prix
+    ): int {
+        $qb = $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->leftJoin('e.lieu', 'l');
+
+        $query = $query ? trim($query) : '';
+        if ($query !== '') {
+            $qb->andWhere('LOWER(e.titre) LIKE :q OR LOWER(l.nom) LIKE :q OR LOWER(l.ville) LIKE :q')
+                ->setParameter('q', '%'.strtolower($query).'%');
+        }
+
+        if ($statut && in_array($statut, Evenement::STATUTS_VALIDES, true)) {
+            $qb->andWhere('e.statut = :statut')->setParameter('statut', $statut);
+        }
+
+        if ($type && in_array($type, Evenement::TYPES_VALIDES, true)) {
+            $qb->andWhere('e.type = :type')->setParameter('type', $type);
+        }
+
+        if ($prix === 'gratuit') {
+            $qb->andWhere('e.prix = 0');
+        } elseif ($prix === 'payant') {
+            $qb->andWhere('e.prix > 0');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function findWithFilters(
         ?string $query,
         ?string $statut,
         ?string $type,
         ?string $prix,
         ?string $sort,
-        ?string $order
+        ?string $order,
+        ?int $limit = null,
+        ?int $offset = null
     ): array {
         $qb = $this->createQueryBuilder('e')
             ->leftJoin('e.lieu', 'l')
@@ -95,14 +130,21 @@ class EvenementRepository extends ServiceEntityRepository
         $order = $order === 'ASC' ? 'ASC' : 'DESC';
 
         $sortMap = [
-            'date' => 'e.dateDebut',
-            'prix' => 'e.prix',
+            'date'     => 'e.dateDebut',
+            'prix'     => 'e.prix',
             'capacite' => 'e.capaciteMax',
-            'titre' => 'e.titre',
+            'titre'    => 'e.titre',
         ];
         $sortField = $sortMap[$sort] ?? 'e.dateDebut';
 
         $qb->orderBy($sortField, $order);
+
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+        if ($offset !== null) {
+            $qb->setFirstResult($offset);
+        }
 
         return $qb->getQuery()->getResult();
     }
