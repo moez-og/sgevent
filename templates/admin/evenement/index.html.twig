@@ -6,6 +6,9 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
+/* ── Layout ──────────────────────────────────────────────────────── */
+.ev-page { max-width: 1200px; margin: 0 auto; }
+
 .ev-toolbar {
     display: flex;
     align-items: center;
@@ -14,84 +17,134 @@
     flex-wrap: wrap;
     gap: 10px;
 }
+.ev-count { font-size: 13px; color: #64748b; }
+
+/* ── Flash ───────────────────────────────────────────────────────── */
+.ev-flash { border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-weight: 600; font-size: 13.5px; }
+.ev-flash--success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.ev-flash--warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.ev-flash--error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+/* ── Filter bar ──────────────────────────────────────────────────── */
 .ev-filter-bar {
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding: 16px 18px;
-    margin-bottom: 18px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
 }
 .ev-filter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
     align-items: end;
 }
-.ev-filter-field { display: grid; gap: 5px; }
-.ev-filter-field label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+.ev-filter-field { display: grid; gap: 4px; }
+.ev-filter-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
 .ev-filter-field input,
 .ev-filter-field select {
     border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    padding: 8px 12px;
+    border-radius: 9px;
+    padding: 7px 10px;
     font-size: 13px;
     background: #f8fafc;
     color: #0f172a;
     outline: none;
 }
 .ev-filter-field input:focus,
-.ev-filter-field select:focus {
-    border-color: #38bdf8;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(56,189,248,.12);
+.ev-filter-field select:focus { border-color: #38bdf8; background: #fff; box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
+
+/* ── Split layout ────────────────────────────────────────────────── */
+.ev-split {
+    display: grid;
+    grid-template-columns: 390px 1fr;
+    gap: 20px;
+    align-items: start;
 }
-.ev-table-wrap {
+
+/* ── List panel ──────────────────────────────────────────────────── */
+.ev-list-panel {
     background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
+    border: 1px solid rgba(20,61,113,.1);
+    border-radius: 18px;
     overflow: hidden;
+    box-shadow: 0 2px 16px rgba(14,45,94,.06);
+    position: sticky;
+    top: 20px;
 }
-.ev-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13.5px;
+.ev-list-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid rgba(20,61,113,.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
-.ev-table thead tr {
-    background: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
-}
-.ev-table th {
-    padding: 11px 14px;
-    text-align: left;
+.ev-list-header-title {
     font-size: 11px;
     font-weight: 800;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    white-space: nowrap;
+    letter-spacing: .08em;
 }
-.ev-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
-    color: #1e293b;
+.ev-list-header-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 20px;
 }
-.ev-table tbody tr:last-child td { border-bottom: none; }
-.ev-table tbody tr:hover { background: #f8fafc; }
-.ev-thumb {
-    width: 48px;
-    height: 36px;
+
+/* ── List items ──────────────────────────────────────────────────── */
+.ev-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(20,61,113,.05);
+    transition: background .15s;
+    border-left: 3px solid transparent;
+}
+.ev-list-item:last-of-type { border-bottom: none; }
+.ev-list-item:hover { background: rgba(63,168,224,.05); }
+.ev-list-item--active {
+    background: rgba(63,168,224,.08);
+    border-left-color: #3fa8e0;
+}
+.ev-li-thumb {
+    width: 58px;
+    height: 46px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+.ev-li-info {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+.ev-li-titre {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f1d33;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: block;
 }
-.ev-title-cell strong { font-weight: 700; color: #0f172a; display: block; }
-.ev-title-cell span { font-size: 12px; color: #64748b; }
+.ev-li-date { font-size: 11.5px; color: #64748b; }
+.ev-li-lieu { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.ev-li-right { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; }
+
+/* ── Badges ──────────────────────────────────────────────────────── */
 .ev-badge {
     display: inline-block;
-    padding: 2px 9px;
+    padding: 2px 8px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .04em;
@@ -102,69 +155,135 @@
 .ev-badge--canceled { background: #fee2e2; color: #991b1b; }
 .ev-badge--public   { background: #dbeafe; color: #1e40af; }
 .ev-badge--private  { background: #f3e8ff; color: #6b21a8; }
-.ev-actions { display: flex; gap: 7px; align-items: center; flex-wrap: nowrap; }
-.ev-act-btn {
+
+/* ── Pagination ──────────────────────────────────────────────────── */
+.ev-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    border-top: 1px solid rgba(20,61,113,.07);
+    background: #f8fafc;
+}
+.ev-page-arrow, .ev-page-arrow--disabled {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(20,61,113,.14);
+    background: #fff;
+    color: #0e2d5e;
+    text-decoration: none;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.ev-page-arrow:hover { background: #eef6fc; border-color: #3fa8e0; color: #3fa8e0; }
+.ev-page-arrow--disabled { opacity: .35; cursor: default; pointer-events: none; }
+.ev-page-info { font-size: 12.5px; color: #64748b; font-weight: 600; }
+
+/* ── Detail panel ────────────────────────────────────────────────── */
+.ev-detail-panel {
+    background: #fff;
+    border: 1px solid rgba(20,61,113,.1);
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(14,45,94,.06);
+    overflow: hidden;
+    min-height: 480px;
+}
+.ev-detail-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 480px;
+    color: #94a3b8;
+    text-align: center;
+    gap: 14px;
+    padding: 40px 20px;
+}
+.ev-detail-placeholder svg { opacity: .25; }
+.ev-detail-placeholder p { font-size: 14px; font-weight: 500; margin: 0; }
+
+/* Detail body — populated by JS */
+.ev-dc-cover { width: 100%; height: 230px; object-fit: cover; display: block; background: #f1f5f9; }
+.ev-dc-body { padding: 22px 24px; }
+.ev-dc-badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.ev-dc-titre { font-size: 21px; font-weight: 800; color: #0e2d5e; margin: 0 0 10px; line-height: 1.25; }
+.ev-dc-desc { font-size: 13.5px; color: #475569; margin: 0 0 18px; line-height: 1.6; }
+.ev-dc-desc--empty { color: #94a3b8; font-style: italic; }
+.ev-dc-meta { display: grid; gap: 10px; margin-bottom: 20px; }
+.ev-dc-meta-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.45;
+}
+.ev-dc-meta-row svg { flex-shrink: 0; margin-top: 2px; color: #3fa8e0; }
+.ev-dc-divider { border: none; border-top: 1px solid rgba(20,61,113,.07); margin: 0 0 16px; }
+.ev-dc-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ev-dc-delete-btn {
     display: inline-flex;
     align-items: center;
-    padding: 5px 11px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 700;
-    text-decoration: none;
-    border: 1px solid #d1d5db;
+    border: 1.5px solid #fecaca;
     background: #fff;
-    color: #0f172a;
+    color: #b91c1c;
     cursor: pointer;
-    white-space: nowrap;
-    transition: background .15s, border-color .15s;
+    transition: background .15s;
+    font-family: inherit;
 }
-.ev-act-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
-.ev-act-btn--danger { color: #b91c1c; border-color: #fecaca; }
-.ev-act-btn--danger:hover { background: #fef2f2; }
+.ev-dc-delete-btn:hover { background: #fef2f2; }
+
+/* ── Empty state ─────────────────────────────────────────────────── */
 .ev-empty {
     text-align: center;
-    padding: 40px 20px;
+    padding: 50px 20px;
     color: #94a3b8;
     font-size: 14px;
 }
-.ev-count { font-size: 13px; color: #64748b; }
-@media (max-width: 900px) {
-    .ev-table th:nth-child(5),
-    .ev-table td:nth-child(5) { display: none; }
+
+@media (max-width: 980px) {
+    .ev-split { grid-template-columns: 1fr; }
+    .ev-list-panel { position: static; }
 }
-@media (max-width: 700px) {
-    .ev-table th:nth-child(2),
-    .ev-table td:nth-child(2),
-    .ev-table th:nth-child(6),
-    .ev-table td:nth-child(6) { display: none; }
+@media (max-width: 640px) {
+    .ev-filter-grid { grid-template-columns: 1fr 1fr; }
+    .ev-dc-body { padding: 16px; }
 }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-{% set filters = filters|default({q:'',statut:'',type:'',prix:'',sort:'',order:''}) %}
+{% set filters    = filters|default({q:'',statut:'',type:'',prix:'',sort:'',order:''}) %}
 {% set evenements = evenements|default([]) %}
+{% set page       = page|default(1) %}
+{% set totalPages = totalPages|default(1) %}
+{% set totalCount = totalCount|default(evenements|length) %}
+{% set queryString = queryString|default('') %}
 
-<div class="admin-container">
+<div class="admin-container ev-page">
 
+    {# ── Toolbar ── #}
     <div class="ev-toolbar">
         <div>
             <h1 class="section-title">Gestion des Événements</h1>
-            <span class="ev-count">{{ evenements|length }} événement(s)</span>
+            <span class="ev-count">{{ totalCount }} événement(s) · Page {{ page }}/{{ totalPages }}</span>
         </div>
         <a href="{{ path('app_admin_evenements_new') }}" class="cta-btn">+ Nouvel Événement</a>
     </div>
 
-    {% for message in app.flashes('success') %}
-        <div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:600;">{{ message }}</div>
-    {% endfor %}
-    {% for message in app.flashes('warning') %}
-        <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:600;">{{ message }}</div>
-    {% endfor %}
-    {% for message in app.flashes('error') %}
-        <div style="background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:600;">{{ message }}</div>
-    {% endfor %}
+    {# ── Flash messages ── #}
+    {% for m in app.flashes('success') %}<div class="ev-flash ev-flash--success">{{ m }}</div>{% endfor %}
+    {% for m in app.flashes('warning') %}<div class="ev-flash ev-flash--warning">{{ m }}</div>{% endfor %}
+    {% for m in app.flashes('error')   %}<div class="ev-flash ev-flash--error">{{ m }}</div>{% endfor %}
 
+    {# ── Filter bar ── #}
     <div class="ev-filter-bar">
         <form method="get" class="ev-filter-grid">
             <div class="ev-filter-field">
@@ -175,9 +294,9 @@
                 <label>Statut</label>
                 <select name="statut">
                     <option value="">Tous</option>
-                    <option value="OUVERT"  {{ filters.statut == 'OUVERT'  ? 'selected' : '' }}>Ouvert</option>
-                    <option value="FERME"   {{ filters.statut == 'FERME'   ? 'selected' : '' }}>Fermé</option>
-                    <option value="ANNULE"  {{ filters.statut == 'ANNULE'  ? 'selected' : '' }}>Annulé</option>
+                    <option value="OUVERT" {{ filters.statut == 'OUVERT' ? 'selected' : '' }}>Ouvert</option>
+                    <option value="FERME"  {{ filters.statut == 'FERME'  ? 'selected' : '' }}>Fermé</option>
+                    <option value="ANNULE" {{ filters.statut == 'ANNULE' ? 'selected' : '' }}>Annulé</option>
                 </select>
             </div>
             <div class="ev-filter-field">
@@ -213,100 +332,223 @@
                 </select>
             </div>
             <div class="ev-filter-field" style="display:flex;gap:8px;align-items:end;">
-                <button type="submit" class="cta-btn" style="flex:1;">Filtrer</button>
-                <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Reset</a>
+                <button type="submit" class="cta-btn" style="flex:1;font-size:13px;">Filtrer</button>
+                <a href="{{ path('app_admin_evenements') }}" class="outline-btn" style="font-size:13px;">Reset</a>
             </div>
         </form>
     </div>
 
-    <div class="ev-table-wrap">
-        <table class="ev-table">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Événement</th>
-                    <th>Dates</th>
-                    <th>Type / Statut</th>
-                    <th>Capacité / Prix</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for evenement in evenements %}
-                {% set rawImage = (evenement.imageUrl|default(''))|trim %}
-                {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://' or rawImage starts with 'data:image/') %}
-                    {% set imageSrc = rawImage %}
-                {% elseif rawImage and rawImage starts with '/' %}
-                    {% set imageSrc = rawImage %}
-                {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
-                    {% set imageSrc = '/' ~ rawImage|trim('/') %}
-                {% elseif rawImage %}
-                    {% set imageSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
-                {% else %}
-                    {% set imageSrc = asset('theme/images/logo.png') %}
-                {% endif %}
-                <tr>
-                    <td>
-                        <a href="{{ path('app_admin_evenement_show', {id: evenement.id}) }}">
-                            <img class="ev-thumb" src="{{ imageSrc }}" alt="{{ evenement.titre }}"
-                                onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
-                        </a>
-                    </td>
-                    <td class="ev-title-cell">
-                        <a href="{{ path('app_admin_evenement_show', {id: evenement.id}) }}" style="text-decoration:none;">
-                            <strong>{{ evenement.titre }}</strong>
-                        </a>
-                        {% if evenement.lieu %}
-                            <span>{{ evenement.lieu.nom }}{% if evenement.lieu.ville %} · {{ evenement.lieu.ville }}{% endif %}</span>
-                        {% endif %}
-                    </td>
-                    <td style="white-space:nowrap;font-size:12.5px;color:#475569;">
-                        {{ evenement.dateDebut|date('d/m/Y') }}<br>
-                        <span style="color:#94a3b8;">{{ evenement.dateDebut|date('H:i') }}</span>
-                    </td>
-                    <td>
-                        {% if evenement.type == 'PRIVE' %}
-                            <span class="ev-badge ev-badge--private">Privé</span>
-                        {% else %}
-                            <span class="ev-badge ev-badge--public">Public</span>
-                        {% endif %}
-                        <br style="margin:3px 0;">
-                        {% if evenement.statut == 'OUVERT' %}
-                            <span class="ev-badge ev-badge--open">Ouvert</span>
-                        {% elseif evenement.statut == 'FERME' %}
-                            <span class="ev-badge ev-badge--closed">Fermé</span>
-                        {% else %}
-                            <span class="ev-badge ev-badge--canceled">Annulé</span>
-                        {% endif %}
-                    </td>
-                    <td style="white-space:nowrap;font-size:13px;">
-                        <span style="font-weight:700;">{{ evenement.capaciteMax }}</span> places<br>
-                        {% if evenement.prix > 0 %}
-                            <span style="color:#0f172a;font-weight:600;">{{ evenement.prix }} TND</span>
-                        {% else %}
-                            <span style="color:#16a34a;font-weight:700;">Gratuit</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="ev-actions">
-                            <a href="{{ path('app_admin_inscriptions', {id: evenement.id}) }}" class="ev-act-btn">Inscriptions</a>
-                            <a href="{{ path('app_admin_evenements_edit', {id: evenement.id}) }}" class="ev-act-btn">Modifier</a>
-                            <form method="post" action="{{ path('app_admin_evenements_delete', {id: evenement.id}) }}" style="margin:0;">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
-                                <button type="submit" class="ev-act-btn ev-act-btn--danger"
-                                    onclick="return confirm('Supprimer cet événement ?')">Supprimer</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="6" class="ev-empty">Aucun événement trouvé.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    {# ── Split layout ── #}
+    <div class="ev-split">
 
+        {# ── Left: List panel ── #}
+        <div class="ev-list-panel">
+            <div class="ev-list-header">
+                <span class="ev-list-header-title">Événements</span>
+                <span class="ev-list-header-count">{{ evenements|length }} / {{ totalCount }}</span>
+            </div>
+
+            {% if evenements|length == 0 %}
+                <div class="ev-empty">Aucun événement trouvé.</div>
+            {% else %}
+                {% for ev in evenements %}
+                    {% set rawImage = (ev.imageUrl|default(''))|trim %}
+                    {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://' or rawImage starts with 'data:image/') %}
+                        {% set imgSrc = rawImage %}
+                    {% elseif rawImage and rawImage starts with '/' %}
+                        {% set imgSrc = rawImage %}
+                    {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+                        {% set imgSrc = '/' ~ rawImage|trim('/') %}
+                    {% elseif rawImage %}
+                        {% set imgSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
+                    {% else %}
+                        {% set imgSrc = asset('theme/images/logo.png') %}
+                    {% endif %}
+
+                    <div class="ev-list-item{% if loop.first %} ev-list-item--active{% endif %}"
+                        data-ev-id="{{ ev.id }}"
+                        data-ev-titre="{{ ev.titre|e('html_attr') }}"
+                        data-ev-description="{{ ev.description|default('')|e('html_attr') }}"
+                        data-ev-date-debut="{{ ev.dateDebut|date('d/m/Y à H:i') }}"
+                        data-ev-date-fin="{{ ev.dateFin ? ev.dateFin|date('d/m/Y à H:i') : 'Non définie' }}"
+                        data-ev-statut="{{ ev.statut }}"
+                        data-ev-type="{{ ev.type }}"
+                        data-ev-capacite="{{ ev.capaciteMax }}"
+                        data-ev-prix="{{ ev.prix }}"
+                        data-ev-lieu="{{ ev.lieu ? (ev.lieu.nom ~ (ev.lieu.ville ? ' · ' ~ ev.lieu.ville : ''))|e('html_attr') : 'Non défini' }}"
+                        data-ev-image="{{ imgSrc }}"
+                        data-ev-url-inscriptions="{{ path('app_admin_inscriptions', {id: ev.id}) }}"
+                        data-ev-url-edit="{{ path('app_admin_evenements_edit', {id: ev.id}) }}"
+                        data-ev-url-show="{{ path('app_admin_evenement_show', {id: ev.id}) }}"
+                        onclick="evSelect(this)">
+
+                        <img class="ev-li-thumb" src="{{ imgSrc }}" alt="{{ ev.titre|e('html_attr') }}"
+                            onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+
+                        <div class="ev-li-info">
+                            <strong class="ev-li-titre">{{ ev.titre }}</strong>
+                            <span class="ev-li-date">{{ ev.dateDebut|date('d/m/Y') }} · {{ ev.dateDebut|date('H:i') }}</span>
+                            {% if ev.lieu %}
+                                <span class="ev-li-lieu">{{ ev.lieu.nom }}{% if ev.lieu.ville %} · {{ ev.lieu.ville }}{% endif %}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="ev-li-right">
+                            {% if ev.statut == 'OUVERT' %}
+                                <span class="ev-badge ev-badge--open">Ouvert</span>
+                            {% elseif ev.statut == 'FERME' %}
+                                <span class="ev-badge ev-badge--closed">Fermé</span>
+                            {% else %}
+                                <span class="ev-badge ev-badge--canceled">Annulé</span>
+                            {% endif %}
+                            {% if ev.type == 'PRIVE' %}
+                                <span class="ev-badge ev-badge--private">Privé</span>
+                            {% else %}
+                                <span class="ev-badge ev-badge--public">Public</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# Hidden delete form for this event #}
+                    <form id="del-{{ ev.id }}" method="post" action="{{ path('app_admin_evenements_delete', {id: ev.id}) }}" style="display:none;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ev.id) }}">
+                    </form>
+                {% endfor %}
+            {% endif %}
+
+            {# ── Pagination arrows ── #}
+            {% if totalPages > 1 %}
+            <div class="ev-pagination">
+                {% if page > 1 %}
+                    <a href="?{{ queryString }}{{ queryString ? '&' : '' }}page={{ page - 1 }}" class="ev-page-arrow" title="Page précédente">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                {% else %}
+                    <span class="ev-page-arrow--disabled">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                {% endif %}
+
+                <span class="ev-page-info">Page <strong>{{ page }}</strong> / <strong>{{ totalPages }}</strong></span>
+
+                {% if page < totalPages %}
+                    <a href="?{{ queryString }}{{ queryString ? '&' : '' }}page={{ page + 1 }}" class="ev-page-arrow" title="Page suivante">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                {% else %}
+                    <span class="ev-page-arrow--disabled">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {# ── Right: Detail panel ── #}
+        <div class="ev-detail-panel" id="ev-detail-panel">
+            <div id="ev-detail-placeholder" class="ev-detail-placeholder">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <p>Sélectionnez un événement<br><span style="font-size:12px;font-weight:400;">pour afficher ses détails ici</span></p>
+            </div>
+            <div id="ev-detail-body" style="display:none;"></div>
+        </div>
+
+    </div>{# end .ev-split #}
 </div>
+
+<script>
+(function () {
+    const FALLBACK = '{{ asset('theme/images/logo.png') }}';
+
+    const ICO_CAL = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const ICO_PIN = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    const ICO_USR = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    window.evSelect = function (el) {
+        document.querySelectorAll('.ev-list-item').forEach(i => i.classList.remove('ev-list-item--active'));
+        el.classList.add('ev-list-item--active');
+
+        const d = el.dataset;
+        const statut = d.evStatut;
+        const type   = d.evType;
+        const prix   = parseFloat(d.evPrix);
+
+        const statutBadge = statut === 'OUVERT'
+            ? '<span class="ev-badge ev-badge--open">Ouvert</span>'
+            : statut === 'FERME'
+            ? '<span class="ev-badge ev-badge--closed">Fermé</span>'
+            : '<span class="ev-badge ev-badge--canceled">Annulé</span>';
+
+        const typeBadge = type === 'PRIVE'
+            ? '<span class="ev-badge ev-badge--private">Privé</span>'
+            : '<span class="ev-badge ev-badge--public">Public</span>';
+
+        const prixHtml = prix > 0
+            ? `<strong>${prix} TND</strong>`
+            : `<strong style="color:#16a34a;">Gratuit</strong>`;
+
+        const descHtml = d.evDescription
+            ? `<p class="ev-dc-desc">${esc(d.evDescription).replace(/\n/g,'<br>')}</p>`
+            : `<p class="ev-dc-desc ev-dc-desc--empty">Aucune description disponible.</p>`;
+
+        const html = `
+            <img class="ev-dc-cover" src="${esc(d.evImage)}" alt="${esc(d.evTitre)}"
+                onerror="this.onerror=null;this.src='${FALLBACK}'">
+            <div class="ev-dc-body">
+                <div class="ev-dc-badges">${statutBadge} ${typeBadge}</div>
+                <h2 class="ev-dc-titre">${esc(d.evTitre)}</h2>
+                ${descHtml}
+                <hr class="ev-dc-divider">
+                <div class="ev-dc-meta">
+                    <div class="ev-dc-meta-row">
+                        ${ICO_CAL}
+                        <div>
+                            <div>Début&nbsp;: <strong>${esc(d.evDateDebut)}</strong></div>
+                            <div style="margin-top:2px;">Fin&nbsp;: <strong>${esc(d.evDateFin)}</strong></div>
+                        </div>
+                    </div>
+                    <div class="ev-dc-meta-row">
+                        ${ICO_PIN}
+                        <span>${esc(d.evLieu)}</span>
+                    </div>
+                    <div class="ev-dc-meta-row">
+                        ${ICO_USR}
+                        <span><strong>${esc(d.evCapacite)}</strong> places · ${prixHtml}</span>
+                    </div>
+                </div>
+                <div class="ev-dc-actions">
+                    <a href="${esc(d.evUrlInscriptions)}" class="cta-btn" style="font-size:13px;padding:8px 16px;">Inscriptions</a>
+                    <a href="${esc(d.evUrlEdit)}" class="outline-btn" style="font-size:13px;padding:8px 16px;">Modifier</a>
+                    <button class="ev-dc-delete-btn"
+                        onclick="evConfirmDelete('del-${esc(d.evId)}','${esc(d.evTitre).replace(/'/g,"\\'")}')">
+                        Supprimer
+                    </button>
+                </div>
+            </div>`;
+
+        document.getElementById('ev-detail-placeholder').style.display = 'none';
+        const body = document.getElementById('ev-detail-body');
+        body.innerHTML = html;
+        body.style.display = 'block';
+    };
+
+    window.evConfirmDelete = function (formId, titre) {
+        if (confirm('Supprimer l\'événement "' + titre + '" ?')) {
+            document.getElementById(formId).submit();
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const first = document.querySelector('.ev-list-item');
+        if (first) evSelect(first);
+    });
+})();
+</script>
 {% endblock %}

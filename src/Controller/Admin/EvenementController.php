@@ -42,7 +42,7 @@ class EvenementController extends AbstractController
             'order' => (string) $request->query->get('order', ''),
         ];
 
-        $evenements = $repository->findWithFilters(
+        $allEvenements = $repository->findWithFilters(
             $filters['q'],
             $filters['statut'],
             $filters['type'],
@@ -51,10 +51,24 @@ class EvenementController extends AbstractController
             $filters['order']
         );
 
+        $perPage = 5;
+        $totalCount = count($allEvenements);
+        $totalPages = max(1, (int) ceil($totalCount / $perPage));
+        $page = max(1, min($totalPages, (int) $request->query->get('page', 1)));
+        $evenements = array_slice($allEvenements, ($page - 1) * $perPage, $perPage);
+
+        $queryParams = $request->query->all();
+        unset($queryParams['page']);
+        $queryString = http_build_query($queryParams);
+
         return $this->render('admin/evenement/index.html.twig', [
             'active' => 'evenements',
             'evenements' => $evenements,
             'filters' => $filters,
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'totalCount' => $totalCount,
+            'queryString' => $queryString,
         ]);
     }
 

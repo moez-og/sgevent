@@ -124,15 +124,56 @@
                     {% if form.imageFile.vars.errors|length > 0 %}
                         <p class="ev-error">{% for e in form.imageFile.vars.errors %}{{ e.message }}{% endfor %}</p>
                     {% endif %}
-                    <p class="ev-help">Formats acceptés: JPG, PNG, WEBP, GIF · Taille max: 4 Mo</p>
+                    <p class="ev-help">Formats: JPG, PNG, WEBP, GIF · Max 4 Mo</p>
                 </div>
                 <div class="ev-field">
                     {{ form_label(form.imageUrl) }}
-                    {{ form_widget(form.imageUrl, {attr: {class: 'ev-control', placeholder: 'https://...'}}) }}
+                    {{ form_widget(form.imageUrl, {attr: {class: 'ev-control', placeholder: 'https://...', id: 'evenement_imageUrl'}}) }}
                     {% if form.imageUrl.vars.errors|length > 0 %}
                         <p class="ev-error">{% for e in form.imageUrl.vars.errors %}{{ e.message }}{% endfor %}</p>
                     {% endif %}
                     <p class="ev-help">L'upload a la priorité sur l'URL si les deux sont fournis.</p>
+                    <div id="ai-url-used" class="ev-ai-url-used">URL de l'image IA copiée dans le champ.</div>
+                </div>
+            </div>
+
+            {# ── Panneau génération IA ── #}
+            <div class="ev-ai-panel">
+                <div class="ev-ai-panel-header">
+                    <div class="ev-ai-panel-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        Générer une image avec l'IA
+                    </div>
+                    <button type="button" id="ai-gen-btn" class="ev-ai-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        Générer
+                    </button>
+                </div>
+                <p class="ev-help" style="margin-bottom:14px;">
+                    L'IA crée une image basée sur le <strong>titre</strong> et la <strong>description</strong> de l'événement — sans compte, sans clé API.
+                </p>
+
+                <div id="ai-loading" class="ev-ai-loading" style="display:none;">
+                    <div class="ev-ai-spinner"></div>
+                    <span>Génération en cours<span id="ai-dots">.</span> (peut prendre 15 à 30 secondes)</span>
+                </div>
+
+                <div id="ai-result" style="display:none;">
+                    <img id="ai-img" class="ev-ai-img" src="" alt="Image générée par IA">
+                    <div class="ev-ai-result-actions">
+                        <button type="button" id="ai-use-btn" class="cta-btn" style="font-size:13px;padding:9px 18px;">
+                            Utiliser cette image
+                        </button>
+                        <button type="button" id="ai-regen-btn" class="outline-btn" style="font-size:13px;padding:9px 18px;">
+                            Regénérer
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ai-error" class="ev-ai-error" style="display:none;">
+                    La génération a échoué. Vérifiez votre connexion internet et réessayez.
                 </div>
             </div>
         </div>
@@ -275,134 +316,223 @@ textarea.ev-control { resize: vertical; min-height: 90px; }
     margin-top: 24px;
 }
 
+/* ── AI Generation Panel ─────────────────────────────────────────── */
+.ev-ai-panel {
+    margin-top: 20px;
+    padding: 16px 18px 18px;
+    background: linear-gradient(135deg, rgba(109,40,217,.04) 0%, rgba(63,168,224,.05) 100%);
+    border: 1.5px dashed rgba(109,40,217,.22);
+    border-radius: 16px;
+}
+.ev-ai-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.ev-ai-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: #6d28d9;
+}
+.ev-ai-panel-title svg { color: #7c3aed; }
+
+/* AI Generate button */
+.ev-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    background: linear-gradient(135deg, #7c3aed 0%, #3fa8e0 100%);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s, box-shadow .2s;
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+    box-shadow: 0 3px 12px rgba(124,58,237,.3);
+}
+.ev-ai-btn:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 5px 16px rgba(124,58,237,.38); }
+.ev-ai-btn:active { transform: translateY(0); }
+.ev-ai-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Loading */
+.ev-ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0 4px;
+    color: #6d28d9;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+.ev-ai-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(109,40,217,.18);
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    animation: aiSpin .75s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes aiSpin { to { transform: rotate(360deg); } }
+
+/* Result */
+.ev-ai-img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid rgba(109,40,217,.15);
+    display: block;
+    margin-bottom: 12px;
+}
+.ev-ai-result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Error */
+.ev-ai-error {
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* URL used confirmation */
+.ev-ai-url-used {
+    display: none;
+    font-size: 12px;
+    color: #166534;
+    font-weight: 600;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+
 @media (max-width: 840px) {
     .ev-grid { grid-template-columns: 1fr; }
     .ev-card { padding: 20px 16px; }
     .ev-actions { flex-direction: column-reverse; align-items: stretch; }
     .ev-actions .cta-btn, .ev-actions .outline-btn { text-align: center; }
+    .ev-ai-panel-header { flex-direction: column; align-items: flex-start; }
 }
-
-/*
-    background: var(--ft-card, #fff) !important;
-    border: 1px solid rgba(20,61,113,.13) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 16px 52px rgba(14,45,94,.2) !important;
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif !important;
-    overflow: hidden;
-    padding-bottom: 4px;
-    width: 310px !important;
-}
-.flatpickr-calendar::before,
-.flatpickr-calendar::after { display: none !important; }
-
-/* Month header */
-.flatpickr-months {
-    background: linear-gradient(135deg, #091f46 0%, #0e2d5e 55%, #1a4a8a 100%) !important;
-    padding: 12px 8px 10px;
-}
-.flatpickr-months .flatpickr-month { background: transparent; color: #fff; fill: #fff; height: 36px; }
-.flatpickr-current-month {
-    font-family: 'Playfair Display', serif !important;
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    color: #fff !important;
-    padding-top: 3px;
-}
-.flatpickr-current-month .numInputWrapper { display: inline-flex; align-items: center; }
-.flatpickr-current-month input.cur-year { color: #fff !important; font-weight: 700 !important; }
-.flatpickr-current-month .numInputWrapper span { border-color: rgba(255,255,255,.2); }
-.numInputWrapper span.arrowUp:after { border-bottom-color: rgba(255,255,255,.8) !important; }
-.numInputWrapper span.arrowDown:after { border-top-color: rgba(255,255,255,.8) !important; }
-.numInputWrapper:hover { background: rgba(255,255,255,.12) !important; }
-.flatpickr-months .flatpickr-prev-month,
-.flatpickr-months .flatpickr-next-month {
-    top: 12px;
-    fill: rgba(255,255,255,.75) !important;
-    color: rgba(255,255,255,.75) !important;
-    transition: fill .18s, color .18s;
-}
-.flatpickr-months .flatpickr-prev-month:hover svg,
-.flatpickr-months .flatpickr-next-month:hover svg { fill: #d4aa23 !important; }
-
-/* Weekdays */
-.flatpickr-weekdays { background: rgba(14,45,94,.05); padding: 8px 0 4px; }
-span.flatpickr-weekday {
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    color: #5a6e88 !important;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-}
-
-/* Days */
-.dayContainer { padding: 6px 6px 2px; gap: 0; }
-.flatpickr-days { width: 310px !important; }
-.dayContainer { width: 298px !important; min-width: 298px !important; max-width: 298px !important; }
-.flatpickr-day {
-    border-radius: 10px !important;
-    color: var(--ft-text, #0f1d33) !important;
-    font-size: 13px !important;
-    font-weight: 500;
-    height: 36px !important;
-    line-height: 36px !important;
-    max-width: 36px !important;
-    border: 1.5px solid transparent !important;
-    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
-    margin: 2px;
-}
-.flatpickr-day:hover,
-.flatpickr-day:focus {
-    background: rgba(63,168,224,.13) !important;
-    border-color: transparent !important;
-    color: #0e2d5e !important;
-}
-.flatpickr-day.selected,
-.flatpickr-day.selected:hover,
-.flatpickr-day.selected:focus {
-    background: linear-gradient(135deg, #0e2d5e 0%, #3fa8e0 100%) !important;
-    border-color: transparent !important;
-    color: #fff !important;
-    font-weight: 700;
-    box-shadow: 0 3px 12px rgba(14,45,94,.32) !important;
-}
-.flatpickr-day.today {
-    border-color: #d4aa23 !important;
-    color: #9a7012 !important;
-    font-weight: 700;
-}
-.flatpickr-day.today:hover {
-    background: rgba(212,170,35,.14) !important;
-    color: #9a7012 !important;
-    border-color: #d4aa23 !important;
-}
-.flatpickr-day.prevMonthDay,
-.flatpickr-day.nextMonthDay { color: rgba(90,110,136,.3) !important; }
-.flatpickr-day.flatpickr-disabled { color: rgba(90,110,136,.22) !important; }
-
-/* Time picker */
-.flatpickr-time {
-    background: rgba(237,242,249,.8) !important;
-    border-top: 1px solid rgba(20,61,113,.08) !important;
-    height: 46px !important;
-    border-radius: 0 0 18px 18px;
-}
-.flatpickr-time input {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    color: #0e2d5e !important;
-    background: transparent;
-}
-.flatpickr-time input:focus { background: rgba(63,168,224,.1) !important; }
-.flatpickr-time .flatpickr-time-separator {
-    color: #3fa8e0 !important;
-    font-weight: 800;
-    font-size: 18px;
-    line-height: 46px;
-}
-.flatpickr-time .numInputWrapper:hover { background: rgba(63,168,224,.1) !important; }
-.flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: #3fa8e0 !important; }
-.flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: #3fa8e0 !important; }
-
 </style>
+
+<script>
+(function () {
+    const genBtn   = document.getElementById('ai-gen-btn');
+    const regenBtn = document.getElementById('ai-regen-btn');
+    const useBtn   = document.getElementById('ai-use-btn');
+    const loading  = document.getElementById('ai-loading');
+    const resultEl = document.getElementById('ai-result');
+    const errorEl  = document.getElementById('ai-error');
+    const imgEl    = document.getElementById('ai-img');
+    const urlUsed  = document.getElementById('ai-url-used');
+    const dotsEl   = document.getElementById('ai-dots');
+
+    const urlInput   = document.getElementById('evenement_imageUrl');
+    const titreInput = document.getElementById('evenement_titre');
+    const descInput  = document.getElementById('evenement_description');
+
+    let currentUrl = '';
+    let dotsTimer  = null;
+
+    function startDots() {
+        let n = 1;
+        dotsTimer = setInterval(function () {
+            dotsEl.textContent = '.'.repeat(n % 4 || 1);
+            n++;
+        }, 500);
+    }
+    function stopDots() {
+        clearInterval(dotsTimer);
+        if (dotsEl) dotsEl.textContent = '.';
+    }
+
+    function buildPrompt() {
+        const titre = (titreInput ? titreInput.value : '').trim();
+        const desc  = (descInput  ? descInput.value  : '').trim();
+
+        if (!titre) {
+            alert('Veuillez d\'abord renseigner le titre de l\'événement.');
+            return null;
+        }
+
+        const parts = [
+            'Professional high-quality event poster',
+            'Event: "' + titre + '"'
+        ];
+        if (desc) parts.push(desc.substring(0, 180));
+        parts.push('vivid colors, modern design, sharp photography, no text overlay');
+
+        return parts.join('. ');
+    }
+
+    function generate() {
+        const prompt = buildPrompt();
+        if (!prompt) return;
+
+        const seed = Math.floor(Math.random() * 999983);
+        currentUrl = 'https://image.pollinations.ai/prompt/'
+            + encodeURIComponent(prompt)
+            + '?width=1280&height=720&nologo=true&seed=' + seed;
+
+        loading.style.display  = 'flex';
+        resultEl.style.display = 'none';
+        errorEl.style.display  = 'none';
+        urlUsed.style.display  = 'none';
+        genBtn.disabled        = true;
+        if (regenBtn) regenBtn.disabled = true;
+        startDots();
+
+        const newImg = new Image();
+        newImg.onload = function () {
+            stopDots();
+            imgEl.src              = currentUrl;
+            loading.style.display  = 'none';
+            resultEl.style.display = 'block';
+            genBtn.disabled        = false;
+            if (regenBtn) regenBtn.disabled = false;
+        };
+        newImg.onerror = function () {
+            stopDots();
+            loading.style.display  = 'none';
+            errorEl.style.display  = 'block';
+            genBtn.disabled        = false;
+            if (regenBtn) regenBtn.disabled = false;
+        };
+        newImg.src = currentUrl;
+    }
+
+    genBtn.addEventListener('click', generate);
+    if (regenBtn) regenBtn.addEventListener('click', generate);
+
+    if (useBtn) {
+        useBtn.addEventListener('click', function () {
+            if (!currentUrl || !urlInput) return;
+            urlInput.value = currentUrl;
+            urlUsed.style.display = 'block';
+            urlInput.style.transition = 'border-color .3s, box-shadow .3s';
+            urlInput.style.borderColor = '#16a34a';
+            urlInput.style.boxShadow   = '0 0 0 3px rgba(22,163,74,.15)';
+            setTimeout(function () {
+                urlInput.style.borderColor = '';
+                urlInput.style.boxShadow   = '';
+            }, 2200);
+        });
+    }
+})();
+</script>
 {% endblock %}
