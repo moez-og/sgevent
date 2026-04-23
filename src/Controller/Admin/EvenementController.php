@@ -9,7 +9,6 @@ use App\Repository\EvenementRepository;
 use App\Repository\InscriptionRepository;
 use App\Service\AiEventService;
 use App\Service\EvenementService;
-use App\Service\NotionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -29,7 +28,6 @@ class EvenementController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private EvenementService $evenementService,
-        private NotionService $notionService,
     ) {}
 
     #[Route('', name: 'app_admin_evenements', methods: ['GET'])]
@@ -110,12 +108,7 @@ class EvenementController extends AbstractController
                 $this->em->persist($evenement);
                 $this->em->flush();
 
-                if ($this->notionService->syncEvenement($evenement)) {
-                    $this->addFlash('success', 'Événement créé avec succès et synchronisé avec Notion.');
-                } else {
-                    $this->addFlash('success', 'Événement créé avec succès.');
-                    $this->addFlash('warning', 'La synchronisation avec Notion a échoué. Vérifiez la configuration.');
-                }
+                $this->addFlash('success', 'Événement créé avec succès.');
                 return $this->redirectToRoute('app_admin_evenements');
             } catch (\Throwable) {
                 $this->addFlash('error', 'Impossible de créer l\'événement. Vérifiez les champs obligatoires puis réessayez.');
@@ -170,12 +163,7 @@ class EvenementController extends AbstractController
             try {
                 $this->em->flush();
 
-                if ($this->notionService->syncEvenement($evenement)) {
-                    $this->addFlash('success', 'Événement modifié avec succès et synchronisé avec Notion.');
-                } else {
-                    $this->addFlash('success', 'Événement modifié avec succès.');
-                    $this->addFlash('warning', 'La synchronisation avec Notion a échoué. Vérifiez la configuration.');
-                }
+                $this->addFlash('success', 'Événement modifié avec succès.');
                 return $this->redirectToRoute('app_admin_evenements');
             } catch (\Throwable) {
                 $this->addFlash('error', 'Impossible de modifier l\'événement. Vérifiez les champs obligatoires puis réessayez.');
