@@ -5,6 +5,7 @@ namespace App\Controller\Front;
 use App\Entity\Evenement;
 use App\Entity\Inscription;
 use App\Entity\Paiement;
+use App\Entity\User;
 use App\Repository\EvenementRepository;
 use App\Repository\InscriptionRepository;
 use App\Service\AiEventService;
@@ -50,8 +51,38 @@ class EvenementController extends AbstractController
     #[Route('/ai-recommend', name: 'app_evenements_ai_recommend', methods: ['GET'])]
     public function aiRecommend(Request $request, EvenementRepository $repository, AiEventService $aiService): Response
     {
-        $userInterests = json_decode((string) $request->query->get('interests', '{}'), true) ?? [];
-        $events = $repository->findUpcoming();
+        $localInterests = json_decode((string) $request->query->get('interests', '{}'), true) ?? [];
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'type' => (string) $request->query->get('type', ''),
+            'prix' => (string) $request->query->get('prix', ''),
+        ];
+
+        $user = $this->getUser();
+        $historyInterests = $user instanceof User ? $this->buildUserInterestsFromRegistrations($user) : [];
+        $userInterests = $this->mergeRecommendationInputs($localInterests, $historyInterests);
+
+        $events = $repository->findUpcomingWithFilters(
+            $filters['q'],
+            $filters['type'],
+            $filters['prix']
+        );
+
+        if ($user instanceof User) {
+            $registeredIds = [];
+            foreach ($this->inscriptionRepository->findBy(['user' => $user], ['dateCreation' => 'DESC']) as $inscription) {
+                $eventId = $inscription->getEvenement()?->getId();
+                if ($eventId !== null) {
+                    $registeredIds[$eventId] = true;
+                }
+            }
+
+            $events = array_values(array_filter(
+                $events,
+                static fn (Evenement $event): bool => !isset($registeredIds[$event->getId()])
+            ));
+        }
+
         $result = $aiService->recommendEvents($events, $userInterests);
 
         $eventsById = [];
@@ -82,7 +113,80 @@ class EvenementController extends AbstractController
             ];
         }
 
-        return $this->json(['recommendations' => $recommendations]);
+        return $this->json([
+            'recommendations' => $recommendations,
+            'profile' => [
+                'has_history' => $historyInterests !== [],
+                'has_local_interests' => $localInterests !== [],
+            ],
+        ]);
+    }
+
+    private function buildUserInterestsFromRegistrations(User $user): array
+    {
+        $inscriptions = $this->inscriptionRepository->findBy(['user' => $user], ['dateCreation' => 'DESC']);
+        if ($inscriptions === []) {
+            return [];
+        }
+
+        $types = [];
+        $cities = [];
+        $titles = [];
+        $priceSignals = [];
+
+        foreach ($inscriptions as $inscription) {
+            $event = $inscription->getEvenement();
+            if (!$event instanceof Evenement) {
+                continue;
+            }
+
+            $types[] = $event->getType();
+            $titles[] = $event->getTitre();
+
+            $ville = $event->getLieu()?->getVille() ?? $event->getLieu()?->getNom();
+            if ($ville) {
+                $cities[] = $ville;
+            }
+
+            $priceSignals[] = $event->getPrix() > 0 ? 'payant' : 'gratuit';
+        }
+
+        $pricePreference = '';
+        if ($priceSignals !== []) {
+            $counts = array_count_values($priceSignals);
+            arsort($counts);
+            $pricePreference = (string) array_key_first($counts);
+        }
+
+        return array_filter([
+            'types_inscrits' => array_values(array_slice(array_unique($types), 0, 5)),
+            'villes_inscrites' => array_values(array_slice(array_unique($cities), 0, 5)),
+            'evenements_inscrits' => array_values(array_slice(array_unique($titles), 0, 8)),
+            'prix_preference_historique' => $pricePreference,
+        ], static fn ($value): bool => is_array($value) ? $value !== [] : $value !== '');
+    }
+
+    private function mergeRecommendationInputs(array $localInterests, array $historyInterests): array
+    {
+        $merged = $historyInterests;
+
+        foreach ($localInterests as $key => $value) {
+            if (is_array($value)) {
+                $existing = $merged[$key] ?? [];
+                if (!is_array($existing)) {
+                    $existing = [];
+                }
+
+                $merged[$key] = array_values(array_slice(array_unique(array_merge($existing, $value)), 0, 10));
+                continue;
+            }
+
+            if ($value !== null && $value !== '') {
+                $merged[$key] = $value;
+            }
+        }
+
+        return $merged;
     }
 
     #[Route('/{id<\\d+>}', name: 'app_evenement_show', methods: ['GET'])]

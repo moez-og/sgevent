@@ -157,6 +157,8 @@ front.events.place_to_confirm: 'Lieu a confirmer'
 front.events.remaining_places: '%count% places restantes'
 front.events.join: 'Participer'
 front.events.none_available: 'Aucun evenement disponible pour le moment.'
+front.events.ai_recommended: 'Recommande par IA'
+front.events.recommended_name: 'Nom recommande'
 
 common.edit: 'Modifier'
 common.delete: 'Supprimer'

@@ -7,6 +7,7 @@ use App\Entity\Inscription;
 use App\Form\EvenementType;
 use App\Repository\EvenementRepository;
 use App\Repository\InscriptionRepository;
+use App\Service\AiEventService;
 use App\Service\EvenementService;
 use App\Service\NotionSyncService;
 use App\Service\WeatherService;
@@ -157,6 +158,22 @@ class EvenementController extends AbstractController
             'stats' => $stats,
             'weather' => $weather,
         ]);
+    }
+
+    #[Route('/{id<\d+>}/ai-insights', name: 'app_admin_evenement_ai_insights', methods: ['GET'])]
+    public function aiInsights(int $id, EvenementRepository $repository, AiEventService $aiEventService): JsonResponse
+    {
+        $evenement = $repository->find($id);
+        if (!$evenement) {
+            return $this->json(['ok' => false, 'message' => 'Evenement introuvable.'], 404);
+        }
+
+        $insights = $aiEventService->analyzeEventStats(
+            $evenement,
+            $this->evenementService->getStatistiquesEvenement($evenement)
+        );
+
+        return $this->json(array_merge(['ok' => true], $insights));
     }
 
     #[Route('/{id<\d+>}/weather-summary', name: 'app_admin_evenement_weather_summary', methods: ['GET'])]

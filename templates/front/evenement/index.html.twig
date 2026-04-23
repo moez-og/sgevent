@@ -46,6 +46,19 @@
     box-shadow: 0 0 0 3px rgba(63,168,224,.15);
 }
 .evl-filter-actions { display: flex; align-items: flex-end; }
+.evl-filter-buttons {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.evl-gemini-btn {
+    border: 1.5px solid rgba(63,168,224,.26);
+    background: linear-gradient(135deg, rgba(9,31,70,.94), rgba(63,168,224,.92));
+    color: #fff;
+    white-space: nowrap;
+}
+.evl-gemini-btn:hover { opacity: .92; }
 
 /* Results count */
 .evl-count {
@@ -104,6 +117,11 @@
     box-shadow: 0 18px 44px rgba(9,31,70,.14);
 }
 .ev-card:hover::before { transform: scaleX(1); }
+.ev-card.is-ai-recommended {
+    border-color: rgba(63,168,224,.45);
+    box-shadow: 0 16px 38px rgba(63,168,224,.18);
+}
+.ev-card.is-ai-recommended::before { transform: scaleX(1); }
 
 /* ---- Image section ---- */
 .ev-card__img {
@@ -165,6 +183,33 @@
     background: #d4aa23;
 }
 .ev-card__price.free { background: #10b981; }
+.ev-card__ai-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: calc(100% - 90px);
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(9,31,70,.88);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    box-shadow: 0 12px 24px rgba(9,31,70,.22);
+}
+.ev-card__ai-badge[hidden] { display: none; }
+@media (max-width: 640px) {
+    .ev-card__ai-badge {
+        max-width: calc(100% - 70px);
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+}
 
 /* ---- Card body ---- */
 .ev-card__body {
@@ -314,24 +359,70 @@
     background: var(--ft-glass, rgba(255,255,255,.9));
     border-radius: 16px;
     border: 1px solid var(--ft-border, rgba(20,61,113,.1));
-    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
     transition: transform .25s, box-shadow .25s;
     cursor: pointer;
     text-decoration: none;
     color: inherit;
+    overflow: hidden;
 }
 .ai-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(9,31,70,.12);
+}
+.ai-card-image {
+    position: relative;
+    height: 150px;
+    background: linear-gradient(135deg, #0e2d5e 0%, #1a4a8a 100%);
+    overflow: hidden;
+}
+.ai-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.ai-card-image-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: rgba(255,255,255,.35);
+}
+.ai-card-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 .ai-card-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
+}
+.ai-card-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ai-card-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.ai-card-name-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #3fa8e0;
 }
 .ai-card-title {
     font-family: 'Playfair Display', serif;
@@ -340,6 +431,20 @@
     color: var(--ft-text, #0f1d33);
     line-height: 1.3;
     margin: 0;
+}
+.ai-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(63,168,224,.12);
+    color: #0e4f7a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
 }
 .ai-score {
     flex-shrink: 0;
@@ -394,6 +499,20 @@
     color: var(--ft-muted, #5a6e88);
     font-size: 13px;
 }
+.ai-feedback {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(63,168,224,.08);
+    border: 1px solid rgba(63,168,224,.18);
+    color: #0e2d5e;
+    font-size: 13px;
+    font-weight: 600;
+}
+.evl-gemini-btn[disabled] {
+    opacity: .72;
+    cursor: wait;
+}
 </style>
 {% endblock %}
 
@@ -437,7 +556,10 @@
                 </select>
             </div>
             <div class="evl-filter-field evl-filter-actions">
-                <button type="submit" class="cta-btn">{{ 'front.events.filter'|trans }}</button>
+                <div class="evl-filter-buttons">
+                    <button type="submit" class="cta-btn">{{ 'front.events.filter'|trans }}</button>
+                    <button type="button" class="outline-btn evl-gemini-btn" id="gemini-recommend-btn">Recommended</button>
+                </div>
             </div>
         </form>
     </div>
@@ -454,6 +576,7 @@
                 <span id="ai-status-text">Analyse de vos intérêts…</span>
             </div>
         </div>
+        <div class="ai-feedback" id="ai-feedback" style="display:none;"></div>
         <div class="ai-cards" id="ai-cards"></div>
     </div>
 
@@ -482,6 +605,7 @@
             {% endif %}
 
             <article class="ev-card"
+                     data-event-id="{{ event.id }}"
                      style="animation-delay: {{ loop.index0 * 0.07 }}s;"
                      onclick="location.href='{{ path('app_evenement_show', {id: event.id}) }}'">
 
@@ -494,6 +618,7 @@
                         <div class="ev-card__letter">{{ event.titre|slice(0,1) }}</div>
                     {% endif %}
                     <div class="ev-card__img-overlay"></div>
+                    <span class="ev-card__ai-badge" hidden>{{ 'front.events.ai_recommended'|trans }}</span>
 
                     {% if dateDebut %}
                         <div class="ev-card__date">
@@ -567,6 +692,15 @@
 (function () {
     const STORAGE_KEY = 'ftk_event_interests';
     const AI_ENDPOINT = '{{ path('app_evenements_ai_recommend') }}';
+    const RECOMMENDED_NAME_LABEL = '{{ 'front.events.recommended_name'|trans|e('js') }}';
+    const EVENT_IMAGE_BASE = '{{ asset('uploads/evenements/') }}';
+    const recommendBtn = document.getElementById('gemini-recommend-btn');
+    const section = document.getElementById('ai-section');
+    const cards = document.getElementById('ai-cards');
+    const spinner = document.getElementById('ai-spinner');
+    const txt = document.getElementById('ai-status-text');
+    const feedback = document.getElementById('ai-feedback');
+    const eventCards = Array.from(document.querySelectorAll('.ev-card[data-event-id]'));
 
     /* ── Read / update interests in localStorage ─────────────────── */
     function getInterests() {
@@ -575,6 +709,39 @@
     }
     function saveInterests(obj) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch {}
+    }
+
+    function resolveImageUrl(raw) {
+        const value = String(raw || '').trim();
+        if (!value) {
+            return '';
+        }
+        if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) {
+            return value;
+        }
+        if (value.startsWith('theme/') || value.startsWith('uploads/')) {
+            return '/' + value;
+        }
+
+        return EVENT_IMAGE_BASE.replace(/\/$/, '') + '/' + value.replace(/^\/+/, '');
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function setFeedback(message, visible = true) {
+        if (!feedback) {
+            return;
+        }
+
+        feedback.textContent = message;
+        feedback.style.display = visible ? 'block' : 'none';
     }
 
     /* Track the active filters as interests */
@@ -602,11 +769,26 @@
         const datePart   = rec.date  ? '<span>📅 ' + rec.date  + '</span>' : '';
         const lieuPart   = rec.lieu  ? '<span>📍 ' + rec.lieu  + '</span>' : '';
         const url        = '/evenements/' + rec.id;
+        const imageSrc   = resolveImageUrl(rec.image || '');
+        const fallbackLetter = escapeHtml((rec.titre || '?').trim().charAt(0) || '?');
+        const imageHtml  = imageSrc
+            ? `<img src="${imageSrc}" alt="${escapeHtml(rec.titre || '')}" onerror="this.onerror=null;this.closest('.ai-card-image').innerHTML='<div class=&quot;ai-card-image-fallback&quot;>${fallbackLetter}</div>';">`
+            : `<div class="ai-card-image-fallback">${fallbackLetter}</div>`;
 
         return `
         <a class="ai-card" href="${url}">
+            <div class="ai-card-image">
+                ${imageHtml}
+            </div>
+            <div class="ai-card-body">
             <div class="ai-card-top">
-                <h3 class="ai-card-title">${rec.titre}</h3>
+                <div class="ai-card-head">
+                    <span class="ai-card-badge">Gemini Pick</span>
+                    <div class="ai-card-name">
+                        <span class="ai-card-name-label">${RECOMMENDED_NAME_LABEL}</span>
+                        <h3 class="ai-card-title">${escapeHtml(rec.titre || '')}</h3>
+                    </div>
+                </div>
                 <div class="ai-score">${scoreLabel}</div>
             </div>
             <div class="ai-card-reason">💡 ${rec.reason}</div>
@@ -616,28 +798,25 @@
                 ${lieuPart}
             </div>
             <span class="ai-card-cta">Voir l'événement →</span>
+            </div>
         </a>`;
     }
 
     /* ── Fetch AI recommendations ────────────────────────────────── */
-    async function loadRecommendations() {
+    async function loadRecommendations(forceOpen = false) {
         const interests = getInterests();
-        const hasInterests = Object.keys(interests).some(k => {
-            const v = interests[k];
-            return Array.isArray(v) ? v.length > 0 : !!v;
-        });
-
-        const section = document.getElementById('ai-section');
-        const cards   = document.getElementById('ai-cards');
-        const spinner = document.getElementById('ai-spinner');
-        const txt     = document.getElementById('ai-status-text');
-
-        if (!hasInterests) return; // nothing to personalise yet
-
         section.style.display = '';
+        cards.innerHTML = '';
+        spinner.style.display = 'inline-block';
+        txt.textContent = 'Gemini analyse vos centres d\'interet et vos inscriptions...';
 
         try {
-            const url = AI_ENDPOINT + '?interests=' + encodeURIComponent(JSON.stringify(interests));
+            const params = new URLSearchParams(window.location.search);
+            const url = AI_ENDPOINT
+                + '?interests=' + encodeURIComponent(JSON.stringify(interests))
+                + '&q=' + encodeURIComponent(params.get('q') || '')
+                + '&type=' + encodeURIComponent(params.get('type') || '')
+                + '&prix=' + encodeURIComponent(params.get('prix') || '');
             const res = await fetch(url);
             const data = await res.json();
             const recs = (data.recommendations || []).slice(0, 3);
@@ -656,7 +835,106 @@
         }
     }
 
-    loadRecommendations();
+    async function loadRecommendations(forceOpen = false) {
+        const interests = getInterests();
+
+        section.style.display = '';
+        cards.innerHTML = '';
+        clearRecommendedCards();
+        setFeedback('Chargement des evenements recommandes...');
+        spinner.style.display = 'inline-block';
+        txt.textContent = 'Gemini analyse vos centres d\'interet et vos inscriptions...';
+        if (recommendBtn) {
+            recommendBtn.disabled = true;
+            recommendBtn.textContent = 'Chargement...';
+        }
+
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const url = AI_ENDPOINT
+                + '?interests=' + encodeURIComponent(JSON.stringify(interests))
+                + '&q=' + encodeURIComponent(params.get('q') || '')
+                + '&type=' + encodeURIComponent(params.get('type') || '')
+                + '&prix=' + encodeURIComponent(params.get('prix') || '');
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (!res.ok) {
+                throw new Error('Recommendation request failed');
+            }
+
+            const data = await res.json();
+            const recs = (data.recommendations || []).slice(0, 3);
+
+            spinner.style.display = 'none';
+
+            if (recs.length === 0) {
+                txt.textContent = 'Aucune recommandation Gemini pour le moment.';
+                cards.innerHTML = '<div class="ai-no-interests">Gemini n\'a pas trouve d\'evenement plus pertinent avec vos centres d\'interet et votre historique.</div>';
+                setFeedback('Aucun evenement recommande n\'a ete trouve avec les criteres actuels.');
+                return;
+            }
+
+            txt.textContent = recs.length + ' evenement' + (recs.length > 1 ? 's' : '') + ' recommande' + (recs.length > 1 ? 's' : '') + ' par Gemini';
+            cards.innerHTML = recs.map(buildCard).join('');
+            markRecommendedCards(recs);
+            setFeedback(recs.length + ' evenement' + (recs.length > 1 ? 's' : '') + ' recommande' + (recs.length > 1 ? 's' : '') + ' affiche' + (recs.length > 1 ? 's' : '') + '.');
+
+            if (forceOpen) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch {
+            clearRecommendedCards();
+            spinner.style.display = 'none';
+            cards.innerHTML = '<div class="ai-no-interests">Impossible de charger les recommandations pour le moment.</div>';
+            txt.textContent = 'Impossible de charger les recommandations Gemini.';
+            setFeedback('La recommandation n\'a pas pu etre chargee.');
+        } finally {
+            if (recommendBtn) {
+                recommendBtn.disabled = false;
+                recommendBtn.textContent = 'Recommended';
+            }
+        }
+    }
+
+    function clearRecommendedCards() {
+        eventCards.forEach((card) => {
+            card.classList.remove('is-ai-recommended');
+            const badge = card.querySelector('.ev-card__ai-badge');
+            if (badge) {
+                badge.hidden = true;
+            }
+        });
+    }
+
+    function markRecommendedCards(recommendations) {
+        const recommendedIds = new Set(
+            recommendations
+                .map((rec) => String(rec.id || ''))
+                .filter(Boolean)
+        );
+
+        eventCards.forEach((card) => {
+            const isRecommended = recommendedIds.has(card.dataset.eventId || '');
+            card.classList.toggle('is-ai-recommended', isRecommended);
+
+            const badge = card.querySelector('.ev-card__ai-badge');
+            if (badge) {
+                badge.hidden = !isRecommended;
+            }
+        });
+    }
+
+    if (txt) {
+        txt.textContent = 'Cliquez sur Gemini pour afficher vos suggestions.';
+    }
+    setFeedback('', false);
+
+    if (recommendBtn) {
+        recommendBtn.addEventListener('click', function () {
+            loadRecommendations(true);
+        });
+    }
 })();
 </script>
 {% endblock %}

@@ -370,7 +370,7 @@
         <div class="evs-ai-body" id="ai-body">
             <div class="evs-ai-loading" id="ai-loading">
                 <div class="evs-ai-spin"></div>
-                <span>Analyse en cours avec Claude AI… Veuillez patienter.</span>
+                <span>Analyse en cours avec Gemini AI... Veuillez patienter.</span>
             </div>
             <div id="ai-results" style="display:none;"></div>
         </div>
@@ -407,7 +407,7 @@ async function fetchInsights() {
         renderInsights(data);
     } catch (e) {
         document.getElementById('ai-loading').innerHTML =
-            '<span style="color:#f87171;">❌ Erreur de chargement. Vérifiez la configuration ANTHROPIC_API_KEY.</span>';
+            '<span style="color:#f87171;">❌ Erreur de chargement. Verifiez la configuration GEMINI_API_KEY.</span>';
     }
     aiLoaded = true;
 }

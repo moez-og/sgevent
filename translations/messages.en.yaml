@@ -157,6 +157,8 @@ front.events.place_to_confirm: 'Place to confirm'
 front.events.remaining_places: '%count% places remaining'
 front.events.join: 'Join'
 front.events.none_available: 'No event available for now.'
+front.events.ai_recommended: 'Recommended by AI'
+front.events.recommended_name: 'Recommended name'
 
 common.edit: 'Edit'
 common.delete: 'Delete'

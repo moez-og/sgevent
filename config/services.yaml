@@ -31,7 +31,7 @@ services:
 
     App\Service\AiEventService:
         arguments:
-            $anthropicApiKey: '%env(string:ANTHROPIC_API_KEY)%'
+            $geminiApiKey: '%env(string:GEMINI_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
