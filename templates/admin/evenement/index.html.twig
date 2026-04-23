@@ -4,551 +4,934 @@
 {% block admin_page_title %}Événements{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-/* ── Layout ──────────────────────────────────────────────────────── */
-.ev-page { max-width: 1200px; margin: 0 auto; }
-
-.ev-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.ev-count { font-size: 13px; color: #64748b; }
-
-/* ── Flash ───────────────────────────────────────────────────────── */
-.ev-flash { border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-weight: 600; font-size: 13.5px; }
-.ev-flash--success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
-.ev-flash--warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-.ev-flash--error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
-
-/* ── Filter bar ──────────────────────────────────────────────────── */
-.ev-filter-bar {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-}
-.ev-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    align-items: end;
-}
-.ev-filter-field { display: grid; gap: 4px; }
-.ev-filter-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
-.ev-filter-field input,
-.ev-filter-field select {
-    border: 1px solid #cbd5e1;
-    border-radius: 9px;
-    padding: 7px 10px;
-    font-size: 13px;
-    background: #f8fafc;
-    color: #0f172a;
-    outline: none;
-}
-.ev-filter-field input:focus,
-.ev-filter-field select:focus { border-color: #38bdf8; background: #fff; box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
-
-/* ── Split layout ────────────────────────────────────────────────── */
-.ev-split {
-    display: grid;
-    grid-template-columns: 390px 1fr;
-    gap: 20px;
-    align-items: start;
-}
-
-/* ── List panel ──────────────────────────────────────────────────── */
-.ev-list-panel {
-    background: #fff;
-    border: 1px solid rgba(20,61,113,.1);
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 2px 16px rgba(14,45,94,.06);
-    position: sticky;
-    top: 20px;
-}
-.ev-list-header {
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid rgba(20,61,113,.07);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.ev-list-header-title {
-    font-size: 11px;
-    font-weight: 800;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-}
-.ev-list-header-count {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 20px;
-}
-
-/* ── List items ──────────────────────────────────────────────────── */
-.ev-list-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(20,61,113,.05);
-    transition: background .15s;
-    border-left: 3px solid transparent;
-}
-.ev-list-item:last-of-type { border-bottom: none; }
-.ev-list-item:hover { background: rgba(63,168,224,.05); }
-.ev-list-item--active {
-    background: rgba(63,168,224,.08);
-    border-left-color: #3fa8e0;
-}
-.ev-li-thumb {
-    width: 58px;
-    height: 46px;
-    object-fit: cover;
-    border-radius: 10px;
-    flex-shrink: 0;
-    background: #f1f5f9;
-}
-.ev-li-info {
-    flex: 1;
-    min-width: 0;
-    display: grid;
-    gap: 2px;
-}
-.ev-li-titre {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #0f1d33;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-}
-.ev-li-date { font-size: 11.5px; color: #64748b; }
-.ev-li-lieu { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-.ev-li-right { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; flex-shrink: 0; }
-
-/* ── Badges ──────────────────────────────────────────────────────── */
-.ev-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    white-space: nowrap;
-}
-.ev-badge--open     { background: #dcfce7; color: #166534; }
-.ev-badge--closed   { background: #fef3c7; color: #92400e; }
-.ev-badge--canceled { background: #fee2e2; color: #991b1b; }
-.ev-badge--public   { background: #dbeafe; color: #1e40af; }
-.ev-badge--private  { background: #f3e8ff; color: #6b21a8; }
-
-/* ── Pagination ──────────────────────────────────────────────────── */
-.ev-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 11px 16px;
-    border-top: 1px solid rgba(20,61,113,.07);
-    background: #f8fafc;
-}
-.ev-page-arrow, .ev-page-arrow--disabled {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    border: 1.5px solid rgba(20,61,113,.14);
-    background: #fff;
-    color: #0e2d5e;
-    text-decoration: none;
-    transition: background .15s, border-color .15s, color .15s;
-}
-.ev-page-arrow:hover { background: #eef6fc; border-color: #3fa8e0; color: #3fa8e0; }
-.ev-page-arrow--disabled { opacity: .35; cursor: default; pointer-events: none; }
-.ev-page-info { font-size: 12.5px; color: #64748b; font-weight: 600; }
-
-/* ── Detail panel ────────────────────────────────────────────────── */
-.ev-detail-panel {
-    background: #fff;
-    border: 1px solid rgba(20,61,113,.1);
-    border-radius: 18px;
-    box-shadow: 0 2px 16px rgba(14,45,94,.06);
-    overflow: hidden;
-    min-height: 480px;
-}
-.ev-detail-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 480px;
-    color: #94a3b8;
-    text-align: center;
-    gap: 14px;
-    padding: 40px 20px;
-}
-.ev-detail-placeholder svg { opacity: .25; }
-.ev-detail-placeholder p { font-size: 14px; font-weight: 500; margin: 0; }
-
-/* Detail body — populated by JS */
-.ev-dc-cover { width: 100%; height: 230px; object-fit: cover; display: block; background: #f1f5f9; }
-.ev-dc-body { padding: 22px 24px; }
-.ev-dc-badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-.ev-dc-titre { font-size: 21px; font-weight: 800; color: #0e2d5e; margin: 0 0 10px; line-height: 1.25; }
-.ev-dc-desc { font-size: 13.5px; color: #475569; margin: 0 0 18px; line-height: 1.6; }
-.ev-dc-desc--empty { color: #94a3b8; font-style: italic; }
-.ev-dc-meta { display: grid; gap: 10px; margin-bottom: 20px; }
-.ev-dc-meta-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 13px;
-    color: #334155;
-    line-height: 1.45;
-}
-.ev-dc-meta-row svg { flex-shrink: 0; margin-top: 2px; color: #3fa8e0; }
-.ev-dc-divider { border: none; border-top: 1px solid rgba(20,61,113,.07); margin: 0 0 16px; }
-.ev-dc-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.ev-dc-delete-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    border: 1.5px solid #fecaca;
-    background: #fff;
-    color: #b91c1c;
-    cursor: pointer;
-    transition: background .15s;
-    font-family: inherit;
-}
-.ev-dc-delete-btn:hover { background: #fef2f2; }
-
-/* ── Empty state ─────────────────────────────────────────────────── */
-.ev-empty {
-    text-align: center;
-    padding: 50px 20px;
-    color: #94a3b8;
-    font-size: 14px;
-}
-
-@media (max-width: 980px) {
-    .ev-split { grid-template-columns: 1fr; }
-    .ev-list-panel { position: static; }
-}
-@media (max-width: 640px) {
-    .ev-filter-grid { grid-template-columns: 1fr 1fr; }
-    .ev-dc-body { padding: 16px; }
-}
-</style>
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
 {% endblock %}
 
 {% block admin_content %}
-{% set filters    = filters|default({q:'',statut:'',type:'',prix:'',sort:'',order:''}) %}
-{% set evenements = evenements|default([]) %}
-{% set page       = page|default(1) %}
-{% set totalPages = totalPages|default(1) %}
-{% set totalCount = totalCount|default(evenements|length) %}
-{% set queryString = queryString|default('') %}
+{% set filters = filters|default({
+    q: '',
+    statut: '',
+    type: '',
+    prix: '',
+    sort: '',
+    order: ''
+}) %}
+{% set evenements = evenements|default(events|default([])) %}
+{% set total_results = total_results|default(evenements|length) %}
 
-<div class="admin-container ev-page">
-
-    {# ── Toolbar ── #}
-    <div class="ev-toolbar">
+<div class="admin-container">
+    <div class="section-head">
         <div>
-            <h1 class="section-title">Gestion des Événements</h1>
-            <span class="ev-count">{{ totalCount }} événement(s) · Page {{ page }}/{{ totalPages }}</span>
+            <h1 class="section-title">Gestion des Evenements</h1>
+            <p class="section-subtitle">Vue liste des evenements.</p>
         </div>
-        <a href="{{ path('app_admin_evenements_new') }}" class="cta-btn">+ Nouvel Événement</a>
+        <div class="event-head-actions">
+            <a href="{{ path('app_admin_evenements_new') }}" class="cta-btn">+ Nouvel Evenement</a>
+            <a href="{{ path('app_admin_evenements_calendar') }}" class="outline-btn">Calendrier (sync)</a>
+        </div>
     </div>
 
-    {# ── Flash messages ── #}
-    {% for m in app.flashes('success') %}<div class="ev-flash ev-flash--success">{{ m }}</div>{% endfor %}
-    {% for m in app.flashes('warning') %}<div class="ev-flash ev-flash--warning">{{ m }}</div>{% endfor %}
-    {% for m in app.flashes('error')   %}<div class="ev-flash ev-flash--error">{{ m }}</div>{% endfor %}
-
-    {# ── Filter bar ── #}
-    <div class="ev-filter-bar">
-        <form method="get" class="ev-filter-grid">
-            <div class="ev-filter-field">
+    <div class="admin-table-card" style="margin-bottom: 18px;">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Recherche et filtres</h2>
+                <p class="section-subtitle">Filtrer rapidement les événements.</p>
+            </div>
+            <a href="{{ path('app_admin_evenements') }}" class="outline-btn">Réinitialiser</a>
+        </div>
+        <form method="get" class="event-filter-grid">
+            <div class="event-filter-field">
                 <label>Recherche</label>
                 <input type="text" name="q" value="{{ filters.q }}" placeholder="Titre ou lieu">
             </div>
-            <div class="ev-filter-field">
+            <div class="event-filter-field">
                 <label>Statut</label>
                 <select name="statut">
-                    <option value="">Tous</option>
+                    <option value="">Tous les statuts</option>
                     <option value="OUVERT" {{ filters.statut == 'OUVERT' ? 'selected' : '' }}>Ouvert</option>
-                    <option value="FERME"  {{ filters.statut == 'FERME'  ? 'selected' : '' }}>Fermé</option>
+                    <option value="FERME" {{ filters.statut == 'FERME' ? 'selected' : '' }}>Fermé</option>
                     <option value="ANNULE" {{ filters.statut == 'ANNULE' ? 'selected' : '' }}>Annulé</option>
                 </select>
             </div>
-            <div class="ev-filter-field">
+            <div class="event-filter-field">
                 <label>Type</label>
                 <select name="type">
-                    <option value="">Tous</option>
+                    <option value="">Tous les types</option>
                     <option value="PUBLIC" {{ filters.type == 'PUBLIC' ? 'selected' : '' }}>Public</option>
-                    <option value="PRIVE"  {{ filters.type == 'PRIVE'  ? 'selected' : '' }}>Privé</option>
+                    <option value="PRIVE" {{ filters.type == 'PRIVE' ? 'selected' : '' }}>Privé</option>
                 </select>
             </div>
-            <div class="ev-filter-field">
+            <div class="event-filter-field">
                 <label>Prix</label>
                 <select name="prix">
                     <option value="">Tous</option>
                     <option value="gratuit" {{ filters.prix == 'gratuit' ? 'selected' : '' }}>Gratuit</option>
-                    <option value="payant"  {{ filters.prix == 'payant'  ? 'selected' : '' }}>Payant</option>
+                    <option value="payant" {{ filters.prix == 'payant' ? 'selected' : '' }}>Payant</option>
                 </select>
             </div>
-            <div class="ev-filter-field">
+            <div class="event-filter-field">
                 <label>Tri</label>
                 <select name="sort">
-                    <option value="date"     {{ filters.sort == 'date'     or filters.sort == '' ? 'selected' : '' }}>Date</option>
-                    <option value="titre"    {{ filters.sort == 'titre'    ? 'selected' : '' }}>Titre</option>
-                    <option value="prix"     {{ filters.sort == 'prix'     ? 'selected' : '' }}>Prix</option>
+                    <option value="date" {{ filters.sort == 'date' or filters.sort == '' ? 'selected' : '' }}>Date</option>
+                    <option value="prix" {{ filters.sort == 'prix' ? 'selected' : '' }}>Prix</option>
                     <option value="capacite" {{ filters.sort == 'capacite' ? 'selected' : '' }}>Capacité</option>
+                    <option value="titre" {{ filters.sort == 'titre' ? 'selected' : '' }}>Titre</option>
                 </select>
             </div>
-            <div class="ev-filter-field">
+            <div class="event-filter-field">
                 <label>Ordre</label>
                 <select name="order">
                     <option value="DESC" {{ filters.order == 'DESC' or filters.order == '' ? 'selected' : '' }}>Décroissant</option>
-                    <option value="ASC"  {{ filters.order == 'ASC'  ? 'selected' : '' }}>Croissant</option>
+                    <option value="ASC" {{ filters.order == 'ASC' ? 'selected' : '' }}>Croissant</option>
                 </select>
             </div>
-            <div class="ev-filter-field" style="display:flex;gap:8px;align-items:end;">
-                <button type="submit" class="cta-btn" style="flex:1;font-size:13px;">Filtrer</button>
-                <a href="{{ path('app_admin_evenements') }}" class="outline-btn" style="font-size:13px;">Reset</a>
+            <div class="event-filter-field event-filter-actions">
+                <button type="submit" class="cta-btn">Filtrer</button>
             </div>
         </form>
     </div>
 
-    {# ── Split layout ── #}
-    <div class="ev-split">
-
-        {# ── Left: List panel ── #}
-        <div class="ev-list-panel">
-            <div class="ev-list-header">
-                <span class="ev-list-header-title">Événements</span>
-                <span class="ev-list-header-count">{{ evenements|length }} / {{ totalCount }}</span>
+    <div class="event-split">
+        <div class="event-list-panel">
+            <div class="event-list-nav">
+                <button id="nav-prev" class="event-nav-arrow" aria-label="Événement précédent" disabled>&#8249;</button>
+                <span id="nav-counter" class="event-nav-counter">
+                    {% if evenements|length > 0 %}1 / {{ evenements|length }}{% else %}0 événement{% endif %}
+                </span>
+                <button id="nav-next" class="event-nav-arrow" aria-label="Événement suivant" {% if evenements|length <= 1 %}disabled{% endif %}>&#8250;</button>
             </div>
-
-            {% if evenements|length == 0 %}
-                <div class="ev-empty">Aucun événement trouvé.</div>
-            {% else %}
-                {% for ev in evenements %}
-                    {% set rawImage = (ev.imageUrl|default(''))|trim %}
+            <div class="event-list">
+                {% for evenement in evenements %}
+                    {% set rawImage = (evenement.imageUrl|default(''))|trim %}
                     {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://' or rawImage starts with 'data:image/') %}
-                        {% set imgSrc = rawImage %}
-                    {% elseif rawImage and rawImage starts with '/' %}
-                        {% set imgSrc = rawImage %}
+                        {% set imageSrc = rawImage %}
+                    {% elseif rawImage and (rawImage starts with '/') %}
+                        {% set imageSrc = rawImage %}
                     {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
-                        {% set imgSrc = '/' ~ rawImage|trim('/') %}
+                        {% set imageSrc = '/' ~ rawImage|trim('/') %}
                     {% elseif rawImage %}
-                        {% set imgSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
+                        {% set imageSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
                     {% else %}
-                        {% set imgSrc = asset('theme/images/logo.png') %}
+                        {% set imageSrc = asset('theme/images/logo.png') %}
                     {% endif %}
 
-                    <div class="ev-list-item{% if loop.first %} ev-list-item--active{% endif %}"
-                        data-ev-id="{{ ev.id }}"
-                        data-ev-titre="{{ ev.titre|e('html_attr') }}"
-                        data-ev-description="{{ ev.description|default('')|e('html_attr') }}"
-                        data-ev-date-debut="{{ ev.dateDebut|date('d/m/Y à H:i') }}"
-                        data-ev-date-fin="{{ ev.dateFin ? ev.dateFin|date('d/m/Y à H:i') : 'Non définie' }}"
-                        data-ev-statut="{{ ev.statut }}"
-                        data-ev-type="{{ ev.type }}"
-                        data-ev-capacite="{{ ev.capaciteMax }}"
-                        data-ev-prix="{{ ev.prix }}"
-                        data-ev-lieu="{{ ev.lieu ? (ev.lieu.nom ~ (ev.lieu.ville ? ' · ' ~ ev.lieu.ville : ''))|e('html_attr') : 'Non défini' }}"
-                        data-ev-image="{{ imgSrc }}"
-                        data-ev-url-inscriptions="{{ path('app_admin_inscriptions', {id: ev.id}) }}"
-                        data-ev-url-edit="{{ path('app_admin_evenements_edit', {id: ev.id}) }}"
-                        data-ev-url-show="{{ path('app_admin_evenement_show', {id: ev.id}) }}"
-                        onclick="evSelect(this)">
-
-                        <img class="ev-li-thumb" src="{{ imgSrc }}" alt="{{ ev.titre|e('html_attr') }}"
-                            onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
-
-                        <div class="ev-li-info">
-                            <strong class="ev-li-titre">{{ ev.titre }}</strong>
-                            <span class="ev-li-date">{{ ev.dateDebut|date('d/m/Y') }} · {{ ev.dateDebut|date('H:i') }}</span>
-                            {% if ev.lieu %}
-                                <span class="ev-li-lieu">{{ ev.lieu.nom }}{% if ev.lieu.ville %} · {{ ev.lieu.ville }}{% endif %}</span>
-                            {% endif %}
+                    <article
+                        class="event-row"
+                        style="--row-index: {{ loop.index0 }}"
+                        tabindex="0"
+                        role="button"
+                        aria-label="Sélectionner l'événement {{ evenement.titre|e('html_attr') }}"
+                        data-id="{{ evenement.id }}"
+                        data-weather-url="{{ path('app_admin_evenement_weather_summary', {id: evenement.id}) }}"
+                        data-weather-cards-url="{{ path('app_admin_evenement_weather_cards', {id: evenement.id}) }}"
+                        data-href="{{ path('app_admin_evenement_show', {id: evenement.id}) }}"
+                        data-title="{{ evenement.titre|e('html_attr') }}"
+                        data-date-start="{{ evenement.dateDebut|date('d/m/Y H:i') }}"
+                        data-date-end="{{ evenement.dateFin|date('d/m/Y H:i') }}"
+                        data-capacity="{{ evenement.capaciteMax }}"
+                        data-price="{{ evenement.prix }}"
+                        data-status="{{ evenement.statut }}"
+                        data-type="{{ evenement.type|default('') }}"
+                        data-lieu="{{ evenement.lieu ? evenement.lieu.nom : 'Lieu non defini' }}"
+                        data-image="{{ imageSrc }}"
+                        data-description="{{ evenement.description|default('')|striptags|trim|e('html_attr') }}"
+                    >
+                        <div class="event-row__media">
+                            <img src="{{ imageSrc }}" alt="{{ evenement.titre }}" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
                         </div>
+                        <div class="event-row__body">
+                            <div class="event-row__title">{{ evenement.titre }}</div>
+                            <div class="event-row__meta">
+                                <span>{{ evenement.dateDebut|date('d/m/Y H:i') }}</span>
+                                <span>·</span>
+                                <span>{{ evenement.dateFin|date('d/m/Y H:i') }}</span>
+                                <span>·</span>
+                                <span>{{ evenement.lieu ? evenement.lieu.nom : 'Lieu non defini' }}</span>
+                            </div>
+                            <div class="event-row__badges">
+                                <span class="event-chip">👥 {{ evenement.capaciteMax }} places</span>
+                                <span class="event-chip">💰 {{ evenement.prix }} TND</span>
+                                <span class="event-chip event-chip--status {{ evenement.statut == 'OUVERT' ? 'success' : 'warning' }}">
+                                    {{ evenement.statut }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="event-row__actions">
+                            <a href="{{ path('app_admin_inscriptions', {id: evenement.id}) }}" class="outline-btn event-action-btn"><span>Inscriptions</span></a>
+                            <a href="{{ path('app_admin_evenements_edit', {id: evenement.id}) }}" class="outline-btn event-action-btn"><span>Modifier</span></a>
+                            <form method="post" action="{{ path('app_admin_evenements_delete', {id: evenement.id}) }}" class="btn-inline-form" style="display:inline; margin:0;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                                <button type="submit" class="outline-btn event-action-btn event-action-btn--danger" onclick="return confirm('Supprimer cet événement ?')"><span>Supprimer</span></button>
+                            </form>
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="empty-state">Aucun événement trouvé.</div>
+                {% endfor %}
+            </div>
 
-                        <div class="ev-li-right">
-                            {% if ev.statut == 'OUVERT' %}
-                                <span class="ev-badge ev-badge--open">Ouvert</span>
-                            {% elseif ev.statut == 'FERME' %}
-                                <span class="ev-badge ev-badge--closed">Fermé</span>
-                            {% else %}
-                                <span class="ev-badge ev-badge--canceled">Annulé</span>
-                            {% endif %}
-                            {% if ev.type == 'PRIVE' %}
-                                <span class="ev-badge ev-badge--private">Privé</span>
-                            {% else %}
-                                <span class="ev-badge ev-badge--public">Public</span>
-                            {% endif %}
+        </div>
+
+        <aside class="event-detail-panel">
+            <div class="event-detail-card" id="event-detail-card">
+                <div class="event-detail-media">
+                    <img id="event-detail-image" src="{{ asset('theme/images/logo.png') }}" alt="Apercu evenement">
+                    <div class="event-detail-media__overlay">
+                        <span class="event-detail-chip event-detail-chip--status" id="event-detail-status-chip">--</span>
+                        <span class="event-detail-chip event-detail-chip--type" id="event-detail-type-chip">--</span>
+                    </div>
+                </div>
+                <div class="event-detail-body">
+                    <div class="event-detail-kicker">Apercu evenement</div>
+                    <div class="event-detail-heading">
+                        <h2 id="event-detail-title">Selectionnez un evenement</h2>
+                        <div id="event-detail-dates" class="event-detail-dates">--</div>
+                    </div>
+                    <p id="event-detail-description">Cliquez sur une ligne pour afficher les details dans ce panneau.</p>
+
+                    <div class="event-detail-grid">
+                        <div>
+                            <span class="event-detail-label">Lieu</span>
+                            <span id="event-detail-lieu" class="event-detail-value">--</span>
+                        </div>
+                        <div>
+                            <span class="event-detail-label">Capacite</span>
+                            <span id="event-detail-capacity" class="event-detail-value">--</span>
+                        </div>
+                        <div>
+                            <span class="event-detail-label">Prix</span>
+                            <span id="event-detail-price" class="event-detail-value">--</span>
                         </div>
                     </div>
 
-                    {# Hidden delete form for this event #}
-                    <form id="del-{{ ev.id }}" method="post" action="{{ path('app_admin_evenements_delete', {id: ev.id}) }}" style="display:none;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ev.id) }}">
-                    </form>
-                {% endfor %}
-            {% endif %}
+                    <div class="event-detail-weather">
+                        <div class="event-detail-weather__head">
+                            <span>Météo sur site</span>
+                            <strong id="event-detail-weather-status">--</strong>
+                        </div>
 
-            {# ── Pagination arrows ── #}
-            {% if totalPages > 1 %}
-            <div class="ev-pagination">
-                {% if page > 1 %}
-                    <a href="?{{ queryString }}{{ queryString ? '&' : '' }}page={{ page - 1 }}" class="ev-page-arrow" title="Page précédente">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </a>
-                {% else %}
-                    <span class="ev-page-arrow--disabled">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </span>
-                {% endif %}
+                        {# ───── Mini-stats résumées ───── #}
+                        <div class="event-detail-weather__grid">
+                            <div>
+                                <span>Pluie</span>
+                                <strong id="event-detail-weather-precip">--</strong>
+                            </div>
+                            <div>
+                                <span>Vent</span>
+                                <strong id="event-detail-weather-wind">--</strong>
+                            </div>
+                            <div>
+                                <span>Participation</span>
+                                <strong id="event-detail-weather-participation">--</strong>
+                            </div>
+                        </div>
+                        <div class="event-detail-weather__temp" id="event-detail-weather-temp">--</div>
 
-                <span class="ev-page-info">Page <strong>{{ page }}</strong> / <strong>{{ totalPages }}</strong></span>
+                        {# ───── Cartes météo quotidiennes (style image ref) ───── #}
+                        <div id="event-detail-weather-cards" class="wx-cards-strip" aria-label="Prévisions météo">
+                            <!-- Injecté par JS -->
+                        </div>
+                    </div>
 
-                {% if page < totalPages %}
-                    <a href="?{{ queryString }}{{ queryString ? '&' : '' }}page={{ page + 1 }}" class="ev-page-arrow" title="Page suivante">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                {% else %}
-                    <span class="ev-page-arrow--disabled">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </span>
-                {% endif %}
+                    <div class="event-detail-actions">
+                        <a id="event-detail-link" href="#" class="cta-btn">Voir la fiche</a>
+                        <span class="event-detail-hint">Les actions CRUD restent disponibles dans la liste.</span>
+                    </div>
+                </div>
             </div>
-            {% endif %}
-        </div>
+        </aside>
+    </div>
+ </div>
 
-        {# ── Right: Detail panel ── #}
-        <div class="ev-detail-panel" id="ev-detail-panel">
-            <div id="ev-detail-placeholder" class="ev-detail-placeholder">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <p>Sélectionnez un événement<br><span style="font-size:12px;font-weight:400;">pour afficher ses détails ici</span></p>
-            </div>
-            <div id="ev-detail-body" style="display:none;"></div>
-        </div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
-    </div>{# end .ev-split #}
-</div>
-
-<script>
-(function () {
-    const FALLBACK = '{{ asset('theme/images/logo.png') }}';
-
-    const ICO_CAL = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-    const ICO_PIN = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
-    const ICO_USR = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
-
-    function esc(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    :root {
+        --event-ink: #0f1f2e;
+        --event-muted: #56657a;
+        --event-accent: #0b5c78;
+        --event-accent-soft: rgba(11, 92, 120, 0.12);
+        --event-card: #ffffff;
+        --event-stroke: rgba(15, 31, 46, 0.12);
+        --event-shadow: 0 24px 48px rgba(15, 31, 46, 0.12);
     }
 
-    window.evSelect = function (el) {
-        document.querySelectorAll('.ev-list-item').forEach(i => i.classList.remove('ev-list-item--active'));
-        el.classList.add('ev-list-item--active');
+    .admin-container {
+        font-family: 'Manrope', 'Trebuchet MS', sans-serif;
+        color: var(--event-ink);
+    }
 
-        const d = el.dataset;
-        const statut = d.evStatut;
-        const type   = d.evType;
-        const prix   = parseFloat(d.evPrix);
+    .admin-container .section-title {
+        font-family: 'Fraunces', 'Times New Roman', serif;
+        letter-spacing: 0.02em;
+    }
+    .event-head-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-        const statutBadge = statut === 'OUVERT'
-            ? '<span class="ev-badge ev-badge--open">Ouvert</span>'
-            : statut === 'FERME'
-            ? '<span class="ev-badge ev-badge--closed">Fermé</span>'
-            : '<span class="ev-badge ev-badge--canceled">Annulé</span>';
+    .event-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .event-filter-field {
+        display: grid;
+        gap: 6px;
+    }
+    .event-filter-field label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+    .event-filter-field input,
+    .event-filter-field select {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 14px;
+        background: #fff;
+        color: #0f172a;
+        outline: none;
+    }
+    .event-filter-field input:focus,
+    .event-filter-field select:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+    .event-filter-actions {
+        display: flex;
+        align-items: end;
+    }
+    .event-split {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+        gap: 22px;
+        align-items: start;
+    }
+    .event-list-panel {
+        background: linear-gradient(135deg, rgba(11, 92, 120, 0.06), rgba(19, 96, 140, 0.03));
+        border-radius: 20px;
+        padding: 18px;
+        border: 1px solid rgba(11, 92, 120, 0.12);
+    }
+    .event-list {
+        display: grid;
+        gap: 14px;
+    }
+    .event-row {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr) minmax(220px, 0.7fr);
+        gap: 16px;
+        align-items: center;
+        padding: 14px 16px;
+        background: var(--event-card);
+        border-radius: 18px;
+        border: 1px solid var(--event-stroke);
+        box-shadow: 0 16px 28px rgba(15, 31, 46, 0.08);
+        cursor: pointer;
+        transform: translateY(10px);
+        opacity: 0;
+        animation: eventRowIn 0.6s ease forwards;
+        animation-delay: calc(var(--row-index) * 70ms);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .event-row:hover {
+        transform: translateY(-2px);
+        border-color: rgba(11, 92, 120, 0.32);
+        box-shadow: 0 26px 40px rgba(15, 31, 46, 0.18);
+    }
+    .event-row.is-active {
+        border-color: rgba(11, 92, 120, 0.6);
+        box-shadow: 0 28px 56px rgba(11, 92, 120, 0.2);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.94));
+    }
+    .event-row__media {
+        width: 92px;
+        height: 92px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(11, 92, 120, 0.2);
+        background: #f1f5f9;
+    }
+    .event-row__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .event-row__title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: 0.01em;
+    }
+    .event-row__meta {
+        font-size: 13px;
+        color: var(--event-muted);
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .event-row__badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .event-chip {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(11, 92, 120, 0.08);
+        color: var(--event-accent);
+    }
+    .event-chip--status.success {
+        background: rgba(16, 185, 129, 0.16);
+        color: #0f766e;
+    }
+    .event-chip--status.warning {
+        background: rgba(245, 158, 11, 0.18);
+        color: #92400e;
+    }
+    .event-row__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: center;
+    }
+    .event-row__actions .btn-inline-form {
+        grid-column: 1 / -1;
+    }
+    .event-detail-panel {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+    }
+    .event-detail-card {
+        background: linear-gradient(145deg, #ffffff, #f8fbff 60%);
+        border-radius: 24px;
+        border: 1px solid rgba(11, 92, 120, 0.18);
+        box-shadow: var(--event-shadow);
+        overflow: hidden;
+        animation: detailIn 0.5s ease both;
+        max-height: calc(100vh - 32px);
+        display: grid;
+        grid-template-rows: auto 1fr;
+    }
+    .event-detail-media {
+        height: 190px;
+        background: #e2e8f0;
+        overflow: hidden;
+        position: relative;
+    }
+    .event-detail-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .event-detail-body {
+        padding: 18px 20px 20px;
+        overflow: auto;
+        min-height: 0;
+        display: grid;
+        gap: 12px;
+    }
+    .event-detail-kicker {
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--event-muted);
+        margin-bottom: 8px;
+    }
+    .event-detail-heading {
+        display: grid;
+        gap: 6px;
+    }
+    .event-detail-body h2 {
+        font-family: 'Fraunces', 'Times New Roman', serif;
+        font-size: 22px;
+        margin: 0 0 8px;
+    }
+    .event-detail-dates {
+        font-size: 12px;
+        color: var(--event-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+    .event-detail-body p {
+        margin: 0 0 16px;
+        color: var(--event-muted);
+        line-height: 1.5;
+    }
+    .event-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 16px;
+    }
+    .event-detail-label {
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--event-muted);
+        margin-bottom: 4px;
+    }
+    .event-detail-value {
+        font-weight: 600;
+    }
+    .event-detail-media__overlay {
+        position: absolute;
+        inset: auto 12px 12px 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .event-detail-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(15, 31, 46, 0.18);
+        color: var(--event-ink);
+        box-shadow: 0 8px 16px rgba(15, 31, 46, 0.18);
+    }
+    .event-detail-chip--status.is-open {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.35);
+        color: #0f766e;
+    }
+    .event-detail-chip--status.is-closed {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #92400e;
+    }
+    .event-detail-chip--status.is-cancelled {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #b91c1c;
+    }
+    .event-detail-chip--type {
+        background: rgba(11, 92, 120, 0.15);
+        border-color: rgba(11, 92, 120, 0.3);
+        color: var(--event-accent);
+    }
+    .event-detail-actions {
+        display: grid;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .event-detail-hint {
+        font-size: 12px;
+        color: var(--event-muted);
+    }
+    .event-action-btn {
+        width: 100%;
+        min-height: 44px;
+        white-space: nowrap;
+        background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+        color: var(--ft-primary) !important;
+        border: 1px solid rgba(20,61,113,.24) !important;
+    }
+    .event-action-btn span {
+        color: inherit;
+        font-weight: 800;
+    }
+    .event-action-btn--danger {
+        color: #b91c1c !important;
+        border-color: #fecaca !important;
+        background: linear-gradient(180deg, #ffffff, #fff6f6);
+    }
 
-        const typeBadge = type === 'PRIVE'
-            ? '<span class="ev-badge ev-badge--private">Privé</span>'
-            : '<span class="ev-badge ev-badge--public">Public</span>';
+    .event-detail-weather {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(11, 92, 120, 0.08), rgba(15, 31, 46, 0.04));
+        border: 1px solid rgba(11, 92, 120, 0.14);
+        display: grid;
+        gap: 10px;
+    }
+    .event-detail-weather__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--event-muted);
+    }
+    .event-detail-weather__head strong {
+        color: var(--event-accent);
+        font-size: 12px;
+    }
+    .event-detail-weather__grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .event-detail-weather__grid div {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid rgba(15, 31, 46, 0.08);
+        padding: 8px;
+        display: grid;
+        gap: 4px;
+    }
+    .event-detail-weather__grid span {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--event-muted);
+    }
+    .event-detail-weather__grid strong {
+        font-size: 14px;
+    }
+    .event-detail-weather__temp {
+        font-size: 12px;
+        color: var(--event-muted);
+    }
 
-        const prixHtml = prix > 0
-            ? `<strong>${prix} TND</strong>`
-            : `<strong style="color:#16a34a;">Gratuit</strong>`;
+    /* ── Arrow navigation ───────────────────────────────────────── */
+    .event-list-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        padding: 8px 4px;
+        border-bottom: 1px solid rgba(11, 92, 120, 0.12);
+    }
+    .event-nav-arrow {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(11, 92, 120, 0.22);
+        background: #fff;
+        color: var(--event-accent);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: background 0.18s, border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+        box-shadow: 0 2px 8px rgba(11, 92, 120, 0.08);
+        flex-shrink: 0;
+    }
+    .event-nav-arrow:hover:not(:disabled) {
+        background: var(--event-accent);
+        color: #fff;
+        border-color: var(--event-accent);
+        transform: scale(1.08);
+        box-shadow: 0 6px 18px rgba(11, 92, 120, 0.28);
+    }
+    .event-nav-arrow:disabled {
+        opacity: 0.32;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .event-nav-counter {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--event-muted);
+        letter-spacing: 0.06em;
+    }
 
-        const descHtml = d.evDescription
-            ? `<p class="ev-dc-desc">${esc(d.evDescription).replace(/\n/g,'<br>')}</p>`
-            : `<p class="ev-dc-desc ev-dc-desc--empty">Aucune description disponible.</p>`;
-
-        const html = `
-            <img class="ev-dc-cover" src="${esc(d.evImage)}" alt="${esc(d.evTitre)}"
-                onerror="this.onerror=null;this.src='${FALLBACK}'">
-            <div class="ev-dc-body">
-                <div class="ev-dc-badges">${statutBadge} ${typeBadge}</div>
-                <h2 class="ev-dc-titre">${esc(d.evTitre)}</h2>
-                ${descHtml}
-                <hr class="ev-dc-divider">
-                <div class="ev-dc-meta">
-                    <div class="ev-dc-meta-row">
-                        ${ICO_CAL}
-                        <div>
-                            <div>Début&nbsp;: <strong>${esc(d.evDateDebut)}</strong></div>
-                            <div style="margin-top:2px;">Fin&nbsp;: <strong>${esc(d.evDateFin)}</strong></div>
-                        </div>
-                    </div>
-                    <div class="ev-dc-meta-row">
-                        ${ICO_PIN}
-                        <span>${esc(d.evLieu)}</span>
-                    </div>
-                    <div class="ev-dc-meta-row">
-                        ${ICO_USR}
-                        <span><strong>${esc(d.evCapacite)}</strong> places · ${prixHtml}</span>
-                    </div>
-                </div>
-                <div class="ev-dc-actions">
-                    <a href="${esc(d.evUrlInscriptions)}" class="cta-btn" style="font-size:13px;padding:8px 16px;">Inscriptions</a>
-                    <a href="${esc(d.evUrlEdit)}" class="outline-btn" style="font-size:13px;padding:8px 16px;">Modifier</a>
-                    <button class="ev-dc-delete-btn"
-                        onclick="evConfirmDelete('del-${esc(d.evId)}','${esc(d.evTitre).replace(/'/g,"\\'")}')">
-                        Supprimer
-                    </button>
-                </div>
-            </div>`;
-
-        document.getElementById('ev-detail-placeholder').style.display = 'none';
-        const body = document.getElementById('ev-detail-body');
-        body.innerHTML = html;
-        body.style.display = 'block';
-    };
-
-    window.evConfirmDelete = function (formId, titre) {
-        if (confirm('Supprimer l\'événement "' + titre + '" ?')) {
-            document.getElementById(formId).submit();
+    @keyframes eventRowIn {
+        to {
+            transform: translateY(0);
+            opacity: 1;
         }
-    };
+    }
+    @keyframes detailIn {
+        from {
+            transform: translateY(8px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    @media (max-width: 1100px) {
+        .event-split {
+            grid-template-columns: 1fr;
+        }
+        .event-detail-panel {
+            position: static;
+        }
+    }
+    @media (max-width: 900px) {
+        .event-row {
+            grid-template-columns: 72px minmax(0, 1fr);
+        }
+        .event-row__actions {
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .event-detail-weather__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const first = document.querySelector('.ev-list-item');
-        if (first) evSelect(first);
-    });
-})();
+<script>
+    (function () {
+        const rows = Array.from(document.querySelectorAll('.event-row'));
+        const detailImage = document.getElementById('event-detail-image');
+        const detailTitle = document.getElementById('event-detail-title');
+        const detailDescription = document.getElementById('event-detail-description');
+        const detailDates = document.getElementById('event-detail-dates');
+        const detailLieu = document.getElementById('event-detail-lieu');
+        const detailCapacity = document.getElementById('event-detail-capacity');
+        const detailPrice = document.getElementById('event-detail-price');
+        const detailStatus = document.getElementById('event-detail-status');
+        const detailType = document.getElementById('event-detail-type');
+        const detailLink = document.getElementById('event-detail-link');
+        const detailStatusChip = document.getElementById('event-detail-status-chip');
+        const detailTypeChip = document.getElementById('event-detail-type-chip');
+        const weatherStatus = document.getElementById('event-detail-weather-status');
+        const weatherPrecip = document.getElementById('event-detail-weather-precip');
+        const weatherWind = document.getElementById('event-detail-weather-wind');
+        const weatherParticipation = document.getElementById('event-detail-weather-participation');
+        const weatherTemp = document.getElementById('event-detail-weather-temp');
+        const weatherCardsEl = document.getElementById('event-detail-weather-cards');
+
+        const summaryCache = new Map();
+        const cardsCache = new Map();
+
+        /* ══════════════  Weather icons (SVG) ══════════════ */
+        const WX_ICONS = {
+            sunny: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="sunGrad" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#fff7c2"/><stop offset="100%" stop-color="#f7c137"/></radialGradient></defs><circle cx="32" cy="32" r="14" fill="url(#sunGrad)"/><g stroke="#ffeaa3" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6"  x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="58"/><line x1="6"  y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="58" y2="32"/><line x1="14" y1="14" x2="18" y2="18"/><line x1="46" y1="46" x2="50" y2="50"/><line x1="14" y1="50" x2="18" y2="46"/><line x1="46" y1="18" x2="50" y2="14"/></g></svg>',
+            'partly-sunny': '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="22" r="11" fill="#f7c137"/><g transform="translate(20,28)"><ellipse cx="20" cy="14" rx="18" ry="10" fill="#fff"/><ellipse cx="10" cy="18" rx="14" ry="8" fill="#e9f2fb"/></g></svg>',
+            cloudy: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="36" cy="32" rx="20" ry="12" fill="#fff"/><ellipse cx="22" cy="38" rx="14" ry="8" fill="#dbe6f3"/></svg>',
+            rain: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="24" rx="20" ry="11" fill="#fff"/><g fill="#9cc0e8"><ellipse cx="18" cy="44" rx="2" ry="4"/><ellipse cx="28" cy="48" rx="2" ry="4"/><ellipse cx="38" cy="44" rx="2" ry="4"/><ellipse cx="46" cy="48" rx="2" ry="4"/></g></svg>',
+            showers: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g fill="#a9cbe8"><path d="M16 38 L14 48 L20 42 Z"/><path d="M30 40 L28 52 L34 44 Z"/><path d="M44 38 L42 48 L48 42 Z"/></g></svg>',
+            thunderstorm: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><path d="M30 34 L20 48 H28 L24 58 L40 42 H32 L36 34 Z" fill="#ffd54f" stroke="#f57c00" stroke-width="1"/></svg>',
+            drizzle: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g stroke="#9cc0e8" stroke-width="2" stroke-linecap="round"><line x1="18" y1="40" x2="16" y2="46"/><line x1="28" y1="42" x2="26" y2="48"/><line x1="38" y1="40" x2="36" y2="46"/><line x1="46" y1="42" x2="44" y2="48"/></g></svg>',
+            snow: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g fill="#fff"><circle cx="18" cy="44" r="2"/><circle cx="28" cy="50" r="2"/><circle cx="38" cy="44" r="2"/><circle cx="46" cy="50" r="2"/></g></svg>',
+            fog: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.85"><line x1="10" y1="20" x2="54" y2="20"/><line x1="14" y1="30" x2="50" y2="30"/><line x1="10" y1="40" x2="54" y2="40"/><line x1="14" y1="50" x2="50" y2="50"/></g></svg>',
+            night: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M42 8 A 22 22 0 1 0 56 36 A 18 18 0 0 1 42 8 Z" fill="#fff"/></svg>',
+            unknown: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="18" fill="#fff" opacity="0.5"/></svg>',
+        };
+
+        function wxIcon(slug) {
+            return WX_ICONS[slug] || WX_ICONS.unknown;
+        }
+
+        /* ══════════════  Résumé météo (existant) ══════════════ */
+        function setWeatherLoading(label) {
+            if (weatherStatus) weatherStatus.textContent = label || 'Chargement…';
+            if (weatherPrecip) weatherPrecip.textContent = '--';
+            if (weatherWind) weatherWind.textContent = '--';
+            if (weatherParticipation) weatherParticipation.textContent = '--';
+            if (weatherTemp) weatherTemp.textContent = '--';
+        }
+
+        function applyWeatherSummary(data) {
+            if (!data || !data.ok) {
+                setWeatherLoading('Indisponible');
+                return;
+            }
+            if (weatherStatus) weatherStatus.textContent = 'OK';
+            if (weatherPrecip) weatherPrecip.textContent = data.precip_avg !== null ? data.precip_avg + '%' : '--';
+            if (weatherWind) weatherWind.textContent = data.wind_avg !== null ? data.wind_avg + ' km/h' : '--';
+            if (weatherParticipation) weatherParticipation.textContent = data.participation_avg !== null ? data.participation_avg + '%' : '--';
+            if (weatherTemp) {
+                const min = data.temp_min_avg !== null ? data.temp_min_avg + '°' : '--';
+                const max = data.temp_max_avg !== null ? data.temp_max_avg + '°' : '--';
+                weatherTemp.textContent = 'Temp: ' + min + ' / ' + max;
+            }
+        }
+
+        async function loadWeatherSummary(id, url) {
+            if (!id || !url) { setWeatherLoading('Indisponible'); return; }
+            if (summaryCache.has(id)) { applyWeatherSummary(summaryCache.get(id)); return; }
+            setWeatherLoading('Chargement…');
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+                summaryCache.set(id, json);
+                applyWeatherSummary(json);
+            } catch (e) {
+                applyWeatherSummary({ ok: false });
+            }
+        }
+
+        /* ══════════════  Weather cards (nouveau - style image ref) ══════════════ */
+        function renderSkeletonCards() {
+            if (!weatherCardsEl) return;
+            let html = '';
+            for (let i = 0; i < 4; i++) {
+                html += '<div class="wx-card is-skeleton"><div></div></div>';
+            }
+            weatherCardsEl.innerHTML = html;
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+            })[c]);
+        }
+
+        function renderWeatherCards(data) {
+            if (!weatherCardsEl) return;
+            if (!data || !data.ok || !Array.isArray(data.cards) || data.cards.length === 0) {
+                weatherCardsEl.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--event-muted); font-size: 12px; width:100%;">Météo indisponible pour cet événement.</div>';
+                return;
+            }
+            const html = data.cards.map((card, idx) => {
+                const tempTxt = card.temp !== null ? (card.temp + '°') : '--';
+                const gradCls = 'grad-' + (card.gradient || 'unknown');
+                return '' +
+                    '<div class="wx-card ' + gradCls + '" style="animation-delay: ' + (idx * 60) + 'ms;">' +
+                      '<div class="wx-card__date">' + escapeHtml(card.date_fr || card.date || '') + '</div>' +
+                      '<div class="wx-card__icon" aria-hidden="true">' + wxIcon(card.icon_slug) + '</div>' +
+                      '<div class="wx-card__temp">' + tempTxt + '</div>' +
+                      '<div class="wx-card__label">' + escapeHtml(card.label || '') + '</div>' +
+                      '<div class="wx-card__meta">' +
+                        (card.precip_prob !== null ? '<span>💧 ' + card.precip_prob + '%</span>' : '') +
+                        (card.wind_max !== null ? '<span>💨 ' + Math.round(card.wind_max) + '</span>' : '') +
+                      '</div>' +
+                      '<div class="wx-card__dots" aria-hidden="true">' +
+                        '<span class="' + (idx === 0 ? 'active' : '') + '"></span>' +
+                        '<span class="' + (idx === 1 ? 'active' : '') + '"></span>' +
+                        '<span class="' + (idx === 2 ? 'active' : '') + '"></span>' +
+                      '</div>' +
+                    '</div>';
+            }).join('');
+            weatherCardsEl.innerHTML = html;
+        }
+
+        async function loadWeatherCards(id, url) {
+            if (!weatherCardsEl) return;
+            if (!id || !url) {
+                weatherCardsEl.innerHTML = '';
+                return;
+            }
+            if (cardsCache.has(id)) { renderWeatherCards(cardsCache.get(id)); return; }
+            renderSkeletonCards();
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+                cardsCache.set(id, json);
+                renderWeatherCards(json);
+            } catch (e) {
+                renderWeatherCards({ ok: false });
+            }
+        }
+
+        /* ══════════════  Remplissage du panneau détails ══════════════ */
+        function fillDetail(row) {
+            if (!row) return;
+            const data = row.dataset;
+            if (detailImage) detailImage.src = data.image || detailImage.src;
+            if (detailTitle) detailTitle.textContent = data.title || 'Événement';
+            if (detailDescription) detailDescription.textContent = data.description || 'Aucune description disponible.';
+            if (detailDates) detailDates.textContent = (data.dateStart || '--') + ' — ' + (data.dateEnd || '--');
+            if (detailLieu) detailLieu.textContent = data.lieu || '--';
+            if (detailCapacity) detailCapacity.textContent = data.capacity ? data.capacity + ' places' : '--';
+            if (detailPrice) detailPrice.textContent = data.price ? data.price + ' TND' : '--';
+            if (detailStatus) detailStatus.textContent = data.status || '--';
+            if (detailType) detailType.textContent = data.type || '--';
+            if (detailStatusChip) {
+                detailStatusChip.textContent = data.status || '--';
+                detailStatusChip.classList.remove('is-open', 'is-closed', 'is-cancelled');
+                if (data.status === 'OUVERT') detailStatusChip.classList.add('is-open');
+                else if (data.status === 'FERME') detailStatusChip.classList.add('is-closed');
+                else if (data.status === 'ANNULE') detailStatusChip.classList.add('is-cancelled');
+            }
+            if (detailTypeChip) detailTypeChip.textContent = data.type || '--';
+            if (detailLink) detailLink.href = data.href || '#';
+
+            // Charge la météo résumée + les cards
+            loadWeatherSummary(data.id, data.weatherUrl);
+            loadWeatherCards(data.id, data.weatherCardsUrl);
+
+            // UI : classe 'is-selected' (nouvelle) + compat avec 'is-active' existante
+            rows.forEach((item) => {
+                item.classList.remove('is-active');
+                item.classList.remove('is-selected');
+            });
+            row.classList.add('is-active');
+            row.classList.add('is-selected');
+        }
+
+        /* ══════════════  Navigation flèches ══════════════ */
+        const navPrev    = document.getElementById('nav-prev');
+        const navNext    = document.getElementById('nav-next');
+        const navCounter = document.getElementById('nav-counter');
+
+        let currentIndex = 0;
+
+        function updateNav() {
+            if (navCounter) navCounter.textContent = rows.length > 0
+                ? (currentIndex + 1) + ' / ' + rows.length
+                : '0 événement';
+            if (navPrev) navPrev.disabled = currentIndex <= 0;
+            if (navNext) navNext.disabled = currentIndex >= rows.length - 1;
+        }
+
+        function selectIndex(idx) {
+            if (rows.length === 0) return;
+            currentIndex = Math.max(0, Math.min(rows.length - 1, idx));
+            fillDetail(rows[currentIndex]);
+            rows[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            updateNav();
+        }
+
+        if (navPrev) navPrev.addEventListener('click', () => selectIndex(currentIndex - 1));
+        if (navNext) navNext.addEventListener('click', () => selectIndex(currentIndex + 1));
+
+        rows.forEach((row, idx) => {
+            row.addEventListener('click', (event) => {
+                if (event.target.closest('a, button, form, input, select, textarea, label')) return;
+                currentIndex = idx;
+                fillDetail(row);
+                updateNav();
+            });
+
+            row.addEventListener('dblclick', (event) => {
+                if (event.target.closest('a, button, form, input, select, textarea, label')) return;
+                const href = row.getAttribute('data-href');
+                if (href) window.location.href = href;
+            });
+
+            row.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    currentIndex = idx;
+                    fillDetail(row);
+                    updateNav();
+                } else if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    selectIndex(idx + 1);
+                } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    selectIndex(idx - 1);
+                } else if (event.key === 'Home') {
+                    event.preventDefault();
+                    selectIndex(0);
+                } else if (event.key === 'End') {
+                    event.preventDefault();
+                    selectIndex(rows.length - 1);
+                }
+            });
+        });
+
+        if (rows.length > 0) {
+            fillDetail(rows[0]);
+            updateNav();
+        }
+    })();
 </script>
 {% endblock %}

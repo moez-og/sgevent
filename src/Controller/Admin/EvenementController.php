@@ -52,30 +52,16 @@ class EvenementController extends AbstractController
             'order' => (string) $request->query->get('order', ''),
         ];
 
-        $page = max(1, (int) $request->query->get('page', 1));
-        $limit = 5;
-        $total = $repository->countWithFilters(
-            $filters['q'], $filters['statut'], $filters['type'], $filters['prix']
-        );
-        $totalPages = $total > 0 ? (int) ceil($total / $limit) : 1;
-        if ($page > $totalPages) {
-            $page = $totalPages;
-        }
-        $offset = ($page - 1) * $limit;
-
         $evenements = $repository->findWithFilters(
             $filters['q'], $filters['statut'], $filters['type'], $filters['prix'],
-            $filters['sort'], $filters['order'], $limit, $offset
+            $filters['sort'], $filters['order']
         );
 
         return $this->render('admin/evenement/index.html.twig', [
-            'active' => 'evenements',
-            'evenements' => $evenements,
-            'filters' => $filters,
-            'page' => $page,
-            'total_pages' => $totalPages,
-            'total_results' => $total,
-            'limit' => $limit,
+            'active'        => 'evenements',
+            'evenements'    => $evenements,
+            'filters'       => $filters,
+            'total_results' => count($evenements),
         ]);
     }
 
