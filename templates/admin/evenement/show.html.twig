@@ -1,382 +1,647 @@
 {% extends 'admin/base_admin.html.twig' %}
 
-{% block title %}Événement | {{ evenement.titre }}{% endblock %}
+{% block title %}Evenement | {{ evenement.titre }}{% endblock %}
 {% block admin_page_title %}Événements{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-/* ── Admin event show ──────────────────────────── */
-.evs-wrap  { max-width: 1120px; margin: 30px auto; display: grid; gap: 22px; }
-
-/* Header */
-.evs-header {
-    background: linear-gradient(135deg, #091f46 0%, #1a4a8a 60%, #3fa8e0 100%);
-    border-radius: 16px;
-    padding: 24px 28px;
-    color: #fff;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.evs-header-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; margin: 0 0 4px; }
-.evs-header-dates { font-size: 13px; opacity: .82; }
-.evs-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.evs-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 9px 18px; border-radius: 10px; font-size: 13px;
-    font-weight: 700; cursor: pointer; border: none; text-decoration: none;
-    transition: opacity .2s, transform .15s;
-}
-.evs-btn:hover { opacity: .88; transform: translateY(-1px); }
-.evs-btn--outline { background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); }
-.evs-btn--solid   { background: #d4aa23; color: #0f1d33; }
-.evs-btn--ai      { background: rgba(255,255,255,.12); color: #fff; border: 1.5px solid rgba(255,255,255,.28); }
-
-/* 2-col grid */
-.evs-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
-@media (max-width: 768px) { .evs-grid { grid-template-columns: 1fr; } }
-
-/* Cards */
-.evs-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 20px 22px;
-}
-.evs-card-title {
-    font-size: 13px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: #64748b;
-    margin: 0 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-.evs-info-row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 7px 0;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 13.5px;
-}
-.evs-info-row:last-child { border-bottom: none; }
-.evs-info-label { color: #64748b; min-width: 120px; font-weight: 600; flex-shrink: 0; }
-.evs-info-val   { color: #0f172a; font-weight: 500; }
-
-/* Badge */
-.evs-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
-.evs-badge--open     { background: #dcfce7; color: #166534; }
-.evs-badge--closed   { background: #fef3c7; color: #92400e; }
-.evs-badge--canceled { background: #fee2e2; color: #991b1b; }
-.evs-badge--public   { background: #dbeafe; color: #1e40af; }
-.evs-badge--private  { background: #f3e8ff; color: #6b21a8; }
-
-/* Stat items */
-.evs-stat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-.evs-stat {
-    background: #f8fafc;
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.evs-stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-.evs-stat-val   { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1; }
-.evs-stat-val--blue   { color: #1d4ed8; }
-.evs-stat-val--green  { color: #16a34a; }
-.evs-stat-val--amber  { color: #d97706; }
-.evs-stat-val--red    { color: #dc2626; }
-
-/* Fill bar */
-.evs-fill-bar { height: 8px; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin: 6px 0 2px; }
-.evs-fill-bar__inner { height: 100%; background: linear-gradient(90deg, #3fa8e0, #091f46); border-radius: 8px; transition: width .6s ease; }
-.evs-fill-label { font-size: 12px; color: #64748b; display: flex; justify-content: space-between; }
-
-/* ── AI Insights panel ───────────────────────── */
-.evs-ai-panel {
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1.5px solid rgba(63,168,224,.3);
-}
-.evs-ai-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 22px;
-    background: linear-gradient(135deg, #0e2d5e, #1a4a8a);
-    color: #fff;
-    cursor: pointer;
-    border: none;
-    width: 100%;
-    font-family: inherit;
-}
-.evs-ai-trigger-left { display: flex; align-items: center; gap: 10px; }
-.evs-ai-trigger-title { font-size: 14px; font-weight: 800; }
-.evs-ai-badge {
-    background: rgba(255,255,255,.15);
-    border: 1px solid rgba(255,255,255,.25);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-}
-.evs-ai-trigger-hint { font-size: 12px; opacity: .75; }
-.evs-ai-body {
-    display: none;
-    padding: 22px;
-    background: linear-gradient(135deg, #0a1929, #0e2d5e);
-    color: #fff;
-}
-.evs-ai-body.open { display: block; }
-
-/* Loading */
-.evs-ai-loading { display: flex; align-items: center; gap: 12px; padding: 16px 0; font-size: 13px; opacity: .8; }
-.evs-ai-spin {
-    width: 20px; height: 20px;
-    border: 2px solid rgba(255,255,255,.25);
-    border-top-color: #3fa8e0;
-    border-radius: 50%;
-    animation: ai-spin .8s linear infinite;
-    flex-shrink: 0;
-}
-@keyframes ai-spin { to { transform: rotate(360deg); } }
-
-/* Score gauge */
-.evs-ai-score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-.evs-ai-score-circle {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    background: conic-gradient(#3fa8e0 var(--pct), rgba(255,255,255,.1) 0);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-}
-.evs-ai-score-circle::after {
-    content: '';
-    position: absolute;
-    inset: 8px;
-    background: #0e2d5e;
-    border-radius: 50%;
-}
-.evs-ai-score-num {
-    position: relative;
-    z-index: 1;
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: #fff;
-}
-.evs-ai-score-label { font-size: 1.1rem; font-weight: 800; }
-.evs-ai-score-sublabel { font-size: 12px; opacity: .7; margin-top: 3px; }
-
-/* Insights list */
-.evs-ai-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: #3fa8e0;
-    margin: 16px 0 8px;
-}
-.evs-ai-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
-.evs-ai-list li {
-    padding: 9px 13px;
-    background: rgba(255,255,255,.07);
-    border-radius: 10px;
-    border-left: 3px solid #3fa8e0;
-    font-size: 13px;
-    line-height: 1.5;
-}
-.evs-ai-list--rec li { border-left-color: #d4aa23; }
-
-/* Prediction */
-.evs-ai-prediction {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(212,170,35,.12);
-    border: 1px solid rgba(212,170,35,.3);
-    border-radius: 12px;
-    font-size: 13px;
-    line-height: 1.5;
-}
-.evs-ai-prediction strong { color: #d4aa23; }
-</style>
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
 {% endblock %}
 
 {% block admin_content %}
-<div class="evs-wrap">
+{% set rawImage = (evenement.imageUrl|default(''))|trim %}
+{% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://' or rawImage starts with 'data:image/') %}
+    {% set imageSrc = rawImage %}
+{% elseif rawImage and (rawImage starts with '/') %}
+    {% set imageSrc = rawImage %}
+{% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+    {% set imageSrc = '/' ~ rawImage|trim('/') %}
+{% elseif rawImage %}
+    {% set imageSrc = '/uploads/evenements/' ~ rawImage|trim('/') %}
+{% else %}
+    {% set imageSrc = asset('theme/images/logo.png') %}
+{% endif %}
 
-    {# ── Header ──────────────────────────────────────── #}
-    <div class="evs-header">
-        <div>
-            <h1 class="evs-header-title">{{ evenement.titre }}</h1>
-            <p class="evs-header-dates">
-                📅 {{ evenement.dateDebut|date('d/m/Y H:i') }}
-                {% if evenement.dateFin %}
-                    → {{ evenement.dateFin|date('d/m/Y H:i') }}
+<div class="admin-container event-show-shell">
+    <header class="event-show-hero">
+        <div class="event-hero-copy">
+            <div class="event-hero-kicker">Fiche evenement</div>
+            <h1 class="section-title">{{ evenement.titre }}</h1>
+            <p class="section-subtitle">{{ evenement.dateDebut|date('d/m/Y H:i') }} - {{ evenement.dateFin|date('d/m/Y H:i') }}</p>
+            <div class="event-hero-tags">
+                <span class="event-tag">{{ evenement.type }}</span>
+                <span class="event-tag event-tag--status">{{ evenement.statut }}</span>
+            </div>
+        </div>
+        <div class="event-hero-actions">
+            <a href="{{ path('app_admin_evenements_edit', {id: evenement.id}) }}" class="outline-btn">Modifier</a>
+            <a href="{{ path('app_admin_inscriptions', {id: evenement.id}) }}" class="cta-btn">Gerer les inscriptions</a>
+        </div>
+    </header>
+
+    <div class="event-show-grid">
+        <section class="event-card">
+            <div class="event-media">
+                <img src="{{ imageSrc }}" alt="{{ evenement.titre }}" onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';" />
+            </div>
+            <div class="event-card-body">
+                <h3>Informations</h3>
+                <div class="event-info-list">
+                    <div><span>Lieu</span><strong>{{ evenement.lieu ? evenement.lieu.nom : 'Lieu a confirmer' }}</strong></div>
+                    <div><span>Capacite</span><strong>{{ evenement.capaciteMax }} places</strong></div>
+                    <div><span>Prix</span><strong>{{ evenement.prix }} TND</strong></div>
+                    <div><span>Places restantes</span><strong>{{ stats.places_restantes }}</strong></div>
+                </div>
+
+                {% if evenement.description %}
+                    <div class="event-description">
+                        <h4>Description</h4>
+                        <p>{{ evenement.description }}</p>
+                    </div>
                 {% endif %}
-            </p>
-        </div>
-        <div class="evs-header-actions">
-            <a href="{{ path('app_admin_evenements') }}" class="evs-btn evs-btn--outline">← Retour</a>
-            <a href="{{ path('app_admin_evenements_edit', {id: evenement.id}) }}" class="evs-btn evs-btn--outline">✏️ Modifier</a>
-            <a href="{{ path('app_admin_inscriptions', {id: evenement.id}) }}" class="evs-btn evs-btn--solid">👥 Inscriptions</a>
+            </div>
+        </section>
+        <div class="event-side-stack">
+            <aside class="event-card event-card--weather">
+                <div class="event-card-body">
+                    <div class="event-weather-header">
+                        <div>
+                            <h3>Meteo evenement</h3>
+                            {% set eventStartLabel = evenement.dateDebut|date('d/m/Y') %}
+                            {% set eventEndLabel = evenement.dateFin|date('d/m/Y') %}
+                            {% set eventRangeLabel = eventStartLabel == eventEndLabel
+                                ? 'le ' ~ eventStartLabel
+                                : 'du ' ~ eventStartLabel ~ ' au ' ~ eventEndLabel
+                            %}
+                            <div class="event-weather-range">{{ eventRangeLabel }}</div>
+                        </div>
+                        <div class="event-weather-location">
+                            <span>Localisation</span>
+                            <strong>{{ weather.location }}</strong>
+                        </div>
+                    </div>
+
+                    {% if weather.status != 'ok' or weather.days is empty %}
+                        <div class="event-weather-empty">Meteo indisponible pour le moment.</div>
+                    {% else %}
+                        {% set eventStart = evenement.dateDebut|date('Y-m-d') %}
+                        {% set eventEnd = evenement.dateFin|date('Y-m-d') %}
+                        {% set eventDays = weather.days|filter(day => day.date >= eventStart and day.date <= eventEnd) %}
+                        {% if eventDays is empty %}
+                            {% set eventDays = weather.days %}
+                        {% endif %}
+
+                        {# ═════ Cartes météo (style image de référence) ═════ #}
+                        <div class="wx-cards-strip" aria-label="Prévisions jour par jour" style="margin-top: 14px;">
+                            {% for day in eventDays|slice(0, 6) %}
+                                {% set code = day.weather_code %}
+                                {% set gradCls =
+                                    code == 0 ? 'grad-sunny' :
+                                    (code in 1..3 ? 'grad-partly' :
+                                    (code in 45..48 ? 'grad-fog' :
+                                    (code in 51..57 ? 'grad-drizzle' :
+                                    (code in 61..67 ? 'grad-rain' :
+                                    (code in 71..77 ? 'grad-snow' :
+                                    (code in 80..82 ? 'grad-showers' :
+                                    (code in 95..99 ? 'grad-storm' : 'grad-cloudy')))))))
+                                %}
+                                {% set iconSlug =
+                                    code == 0 ? 'sunny' :
+                                    (code in 1..3 ? 'partly-sunny' :
+                                    (code in 45..48 ? 'fog' :
+                                    (code in 51..57 ? 'drizzle' :
+                                    (code in 61..67 ? 'rain' :
+                                    (code in 71..77 ? 'snow' :
+                                    (code in 80..82 ? 'showers' :
+                                    (code in 95..99 ? 'thunderstorm' : 'cloudy')))))))
+                                %}
+                                <div class="wx-card {{ gradCls }}" style="animation-delay: {{ loop.index0 * 60 }}ms;">
+                                    <div class="wx-card__date">{{ day.date|date('D d/m') }}</div>
+                                    <div class="wx-card__icon" aria-hidden="true" data-icon="{{ iconSlug }}">
+                                        <!-- icône injectée par JS ci-dessous -->
+                                    </div>
+                                    <div class="wx-card__temp">{{ day.temp_max|default('--') }}°</div>
+                                    <div class="wx-card__label">{{ day.label }}</div>
+                                    <div class="wx-card__meta">
+                                        {% if day.precip_prob is not null %}<span>💧 {{ day.precip_prob }}%</span>{% endif %}
+                                        {% if day.wind_max is not null %}<span>💨 {{ day.wind_max|round }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <script>
+                        (function () {
+                            const icons = {
+                                sunny: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="sunG{{ evenement.id }}" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#fff7c2"/><stop offset="100%" stop-color="#f7c137"/></radialGradient></defs><circle cx="32" cy="32" r="14" fill="url(#sunG{{ evenement.id }})"/><g stroke="#ffeaa3" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6"  x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="58"/><line x1="6"  y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="58" y2="32"/><line x1="14" y1="14" x2="18" y2="18"/><line x1="46" y1="46" x2="50" y2="50"/><line x1="14" y1="50" x2="18" y2="46"/><line x1="46" y1="18" x2="50" y2="14"/></g></svg>',
+                                'partly-sunny': '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="22" r="11" fill="#f7c137"/><g transform="translate(20,28)"><ellipse cx="20" cy="14" rx="18" ry="10" fill="#fff"/><ellipse cx="10" cy="18" rx="14" ry="8" fill="#e9f2fb"/></g></svg>',
+                                cloudy: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="36" cy="32" rx="20" ry="12" fill="#fff"/><ellipse cx="22" cy="38" rx="14" ry="8" fill="#dbe6f3"/></svg>',
+                                rain: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="24" rx="20" ry="11" fill="#fff"/><g fill="#9cc0e8"><ellipse cx="18" cy="44" rx="2" ry="4"/><ellipse cx="28" cy="48" rx="2" ry="4"/><ellipse cx="38" cy="44" rx="2" ry="4"/><ellipse cx="46" cy="48" rx="2" ry="4"/></g></svg>',
+                                showers: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g fill="#a9cbe8"><path d="M16 38 L14 48 L20 42 Z"/><path d="M30 40 L28 52 L34 44 Z"/><path d="M44 38 L42 48 L48 42 Z"/></g></svg>',
+                                thunderstorm: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><path d="M30 34 L20 48 H28 L24 58 L40 42 H32 L36 34 Z" fill="#ffd54f"/></svg>',
+                                drizzle: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g stroke="#9cc0e8" stroke-width="2" stroke-linecap="round"><line x1="18" y1="40" x2="16" y2="46"/><line x1="28" y1="42" x2="26" y2="48"/><line x1="38" y1="40" x2="36" y2="46"/><line x1="46" y1="42" x2="44" y2="48"/></g></svg>',
+                                snow: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="22" rx="20" ry="11" fill="#fff"/><g fill="#fff"><circle cx="18" cy="44" r="2"/><circle cx="28" cy="50" r="2"/><circle cx="38" cy="44" r="2"/><circle cx="46" cy="50" r="2"/></g></svg>',
+                                fog: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.85"><line x1="10" y1="20" x2="54" y2="20"/><line x1="14" y1="30" x2="50" y2="30"/><line x1="10" y1="40" x2="54" y2="40"/><line x1="14" y1="50" x2="50" y2="50"/></g></svg>',
+                            };
+                            document.querySelectorAll('.wx-card__icon[data-icon]').forEach(el => {
+                                const slug = el.getAttribute('data-icon');
+                                el.innerHTML = icons[slug] || icons.cloudy;
+                            });
+                        })();
+                        </script>
+
+                        {% set weatherIcons = {
+                            0: '☀️',
+                            1: '🌤️',
+                            2: '⛅',
+                            3: '☁️',
+                            45: '🌫️',
+                            48: '🌫️',
+                            51: '🌦️',
+                            53: '🌦️',
+                            55: '🌧️',
+                            56: '🌧️',
+                            57: '🌧️',
+                            61: '🌧️',
+                            63: '🌧️',
+                            65: '🌧️',
+                            66: '🌧️',
+                            67: '🌧️',
+                            71: '🌨️',
+                            73: '🌨️',
+                            75: '🌨️',
+                            77: '🌨️',
+                            80: '🌧️',
+                            81: '🌧️',
+                            82: '🌧️',
+                            85: '🌨️',
+                            86: '🌨️',
+                            95: '⛈️',
+                            96: '⛈️',
+                            99: '⛈️'
+                        } %}
+
+                        {% set firstDay = eventDays|first %}
+                        <div class="event-weather-hero">
+                            <div class="event-weather-hero__main">
+                                <div class="event-weather-hero__icon">{{ weatherIcons[firstDay.weather_code]|default('🌤️') }}</div>
+                                <div>
+                                    <div class="event-weather-hero__temp">{{ firstDay.temp_max }}°</div>
+                                    <div class="event-weather-hero__label">{{ firstDay.label }}</div>
+                                    <div class="event-weather-hero__minmax">Min {{ firstDay.temp_min }}° · Max {{ firstDay.temp_max }}°</div>
+                                </div>
+                            </div>
+                            <div class="event-weather-hero__stats">
+                                <div>
+                                    <span>Pluie</span>
+                                    <strong>{{ firstDay.precip_prob }}%</strong>
+                                </div>
+                                <div>
+                                    <span>Vent</span>
+                                    <strong>{{ firstDay.wind_max }} km/h</strong>
+                                </div>
+                                <div>
+                                    <span>Accum.</span>
+                                    <strong>{{ firstDay.precip_sum }} mm</strong>
+                                </div>
+                            </div>
+                            <div class="event-weather-hero__insights">
+                                <div>
+                                    <span>Participation estimee</span>
+                                    <strong>{{ weather.avg_participation }}%</strong>
+                                </div>
+                                <div>
+                                    <span>Participants estimes</span>
+                                    <strong>{{ weather.estimated_participants }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="event-weather-list">
+                            {% for day in eventDays %}
+                                <article class="event-weather-row">
+                                    <div class="event-weather-row__date">
+                                        <span class="event-weather-row__day">{{ day.date|date('D') }}</span>
+                                        <span class="event-weather-row__full">{{ day.date|date('d/m') }}</span>
+                                    </div>
+                                    <div class="event-weather-row__main">
+                                        <div class="event-weather-row__icon">{{ weatherIcons[day.weather_code]|default('🌤️') }}</div>
+                                        <div>
+                                            <div class="event-weather-row__label">{{ day.label }}</div>
+                                            <div class="event-weather-row__temps">{{ day.temp_min }}° / {{ day.temp_max }}°</div>
+                                        </div>
+                                    </div>
+                                    <div class="event-weather-row__meta">
+                                        <span>Pluie {{ day.precip_prob }}%</span>
+                                        <span>Vent {{ day.wind_max }} km/h</span>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </aside>
+
+            <aside class="event-card event-card--stats">
+                <div class="event-card-body">
+                    <h3>Statistiques</h3>
+                    <div class="event-stats-grid">
+                        <div class="event-stat">
+                            <span>Demandes</span>
+                            <strong>{{ stats.total_demandes }}</strong>
+                        </div>
+                        <div class="event-stat">
+                            <span>En attente</span>
+                            <strong>{{ stats.en_attente }}</strong>
+                        </div>
+                        <div class="event-stat">
+                            <span>Confirmees</span>
+                            <strong>{{ stats.confirmees }}</strong>
+                        </div>
+                        <div class="event-stat">
+                            <span>Payees</span>
+                            <strong>{{ stats.payees }}</strong>
+                        </div>
+                        <div class="event-stat">
+                            <span>Rejetees</span>
+                            <strong>{{ stats.rejetees }}</strong>
+                        </div>
+                        <div class="event-stat">
+                            <span>Annulees</span>
+                            <strong>{{ stats.annulees }}</strong>
+                        </div>
+                    </div>
+                    <div class="event-fill">
+                        <div class="event-fill-label">
+                            <span>Taux de remplissage</span>
+                            <strong>{{ stats.taux_remplissage }}%</strong>
+                        </div>
+                        <div class="event-fill-bar">
+                            <span style="width: {{ stats.taux_remplissage }}%"></span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
-
-    {# ── Info + Stats ─────────────────────────────────── #}
-    <div class="evs-grid">
-
-        {# Left: Event info #}
-        <div class="evs-card">
-            <p class="evs-card-title">📋 Informations</p>
-
-            <div class="evs-info-row">
-                <span class="evs-info-label">Lieu</span>
-                <span class="evs-info-val">
-                    {% if evenement.lieu %}
-                        {{ evenement.lieu.nom }}{% if evenement.lieu.ville %} · {{ evenement.lieu.ville }}{% endif %}
-                    {% else %}
-                        <em style="color:#94a3b8;">À confirmer</em>
-                    {% endif %}
-                </span>
-            </div>
-            <div class="evs-info-row">
-                <span class="evs-info-label">Type</span>
-                <span class="evs-info-val">
-                    {% if evenement.type == 'PRIVE' %}
-                        <span class="evs-badge evs-badge--private">Privé</span>
-                    {% else %}
-                        <span class="evs-badge evs-badge--public">Public</span>
-                    {% endif %}
-                </span>
-            </div>
-            <div class="evs-info-row">
-                <span class="evs-info-label">Statut</span>
-                <span class="evs-info-val">
-                    {% if evenement.statut == 'OUVERT' %}
-                        <span class="evs-badge evs-badge--open">Ouvert</span>
-                    {% elseif evenement.statut == 'FERME' %}
-                        <span class="evs-badge evs-badge--closed">Fermé</span>
-                    {% else %}
-                        <span class="evs-badge evs-badge--canceled">Annulé</span>
-                    {% endif %}
-                </span>
-            </div>
-            <div class="evs-info-row">
-                <span class="evs-info-label">Capacité</span>
-                <span class="evs-info-val">{{ evenement.capaciteMax }} places</span>
-            </div>
-            <div class="evs-info-row">
-                <span class="evs-info-label">Prix</span>
-                <span class="evs-info-val">
-                    {% if evenement.prix > 0 %}
-                        {{ evenement.prix }} TND
-                    {% else %}
-                        <span style="color:#16a34a;font-weight:700;">Gratuit</span>
-                    {% endif %}
-                </span>
-            </div>
-            <div class="evs-info-row">
-                <span class="evs-info-label">Places restantes</span>
-                <span class="evs-info-val" style="color:{% if stats.places_restantes > 10 %}#16a34a{% elseif stats.places_restantes > 0 %}#d97706{% else %}#dc2626{% endif %}; font-weight:700;">
-                    {{ stats.places_restantes }}
-                </span>
-            </div>
-
-            {% if evenement.description %}
-                <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
-                    <p class="evs-card-title" style="margin-bottom: 8px;">📝 Description</p>
-                    <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.6;">{{ evenement.description }}</p>
-                </div>
-            {% endif %}
-        </div>
-
-        {# Right: Stats #}
-        <div class="evs-card">
-            <p class="evs-card-title">📊 Statistiques des inscriptions</p>
-
-            <div class="evs-stat-grid">
-                <div class="evs-stat">
-                    <span class="evs-stat-label">Total demandes</span>
-                    <span class="evs-stat-val">{{ stats.total_demandes }}</span>
-                </div>
-                <div class="evs-stat">
-                    <span class="evs-stat-label">Payées ✅</span>
-                    <span class="evs-stat-val evs-stat-val--green">{{ stats.payees }}</span>
-                </div>
-                <div class="evs-stat">
-                    <span class="evs-stat-label">En attente ⏳</span>
-                    <span class="evs-stat-val evs-stat-val--amber">{{ stats.en_attente }}</span>
-                </div>
-                <div class="evs-stat">
-                    <span class="evs-stat-label">Confirmées ✔️</span>
-                    <span class="evs-stat-val evs-stat-val--blue">{{ stats.confirmees }}</span>
-                </div>
-                <div class="evs-stat">
-                    <span class="evs-stat-label">Rejetées ❌</span>
-                    <span class="evs-stat-val evs-stat-val--red">{{ stats.rejetees }}</span>
-                </div>
-                <div class="evs-stat">
-                    <span class="evs-stat-label">Annulées 🗑</span>
-                    <span class="evs-stat-val" style="color:#64748b;">{{ stats.annulees }}</span>
-                </div>
-            </div>
-
-            <p class="evs-card-title" style="margin-bottom: 8px;">Taux de remplissage</p>
-            <div class="evs-fill-bar">
-                <div class="evs-fill-bar__inner" style="width: {{ stats.taux_remplissage }}%;"></div>
-            </div>
-            <div class="evs-fill-label">
-                <span>{{ stats.places_restantes }} places libres</span>
-                <span>{{ stats.taux_remplissage }}%</span>
-            </div>
-        </div>
-    </div>
-
-    {# ── AI Insights Panel ──────────────────────────── #}
-    <div class="evs-ai-panel">
-        <button class="evs-ai-trigger" id="ai-trigger" onclick="toggleAiPanel()">
-            <div class="evs-ai-trigger-left">
-                <span style="font-size:1.4rem;">🤖</span>
-                <span class="evs-ai-trigger-title">Analyse Intelligence Artificielle</span>
-                <span class="evs-ai-badge">IA</span>
-            </div>
-            <span class="evs-ai-trigger-hint" id="ai-trigger-hint">Cliquez pour analyser cet événement →</span>
-        </button>
-
-        <div class="evs-ai-body" id="ai-body">
-            <div class="evs-ai-loading" id="ai-loading">
-                <div class="evs-ai-spin"></div>
-                <span>Analyse en cours avec Gemini AI... Veuillez patienter.</span>
-            </div>
-            <div id="ai-results" style="display:none;"></div>
-        </div>
-    </div>
-
 </div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+    :root {
+        --event-ink: #0f1f2e;
+        --event-muted: #56657a;
+        --event-accent: #0b5c78;
+        --event-accent-soft: rgba(11, 92, 120, 0.14);
+        --event-card: #ffffff;
+        --event-stroke: rgba(15, 31, 46, 0.12);
+        --event-shadow: 0 24px 48px rgba(15, 31, 46, 0.12);
+    }
+
+    .event-show-shell {
+        max-width: 1120px;
+        margin: 30px auto 48px;
+        font-family: 'Manrope', 'Trebuchet MS', sans-serif;
+        color: var(--event-ink);
+    }
+    .event-show-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-end;
+        margin-bottom: 20px;
+    }
+    .event-hero-kicker {
+        font-size: 12px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--event-muted);
+        margin-bottom: 8px;
+    }
+    .event-hero-copy .section-title {
+        font-family: 'Fraunces', 'Times New Roman', serif;
+        margin-bottom: 6px;
+    }
+    .event-hero-tags {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .event-tag {
+        background: var(--event-accent-soft);
+        color: var(--event-accent);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .event-tag--status {
+        background: rgba(16, 185, 129, 0.18);
+        color: #0f766e;
+    }
+    .event-hero-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .event-show-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+        gap: 20px;
+        align-items: start;
+    }
+    .event-side-stack {
+        display: grid;
+        gap: 20px;
+    }
+    .event-card {
+        background: linear-gradient(140deg, #ffffff, #f6fbff 70%);
+        border: 1px solid rgba(11, 92, 120, 0.16);
+        border-radius: 24px;
+        box-shadow: var(--event-shadow);
+        overflow: hidden;
+        animation: cardLift 0.6s ease both;
+    }
+    .event-card--stats {
+        position: sticky;
+        top: 16px;
+    }
+    .event-card--weather {
+        align-self: start;
+    }
+    .event-media {
+        height: 220px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .event-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .event-card-body {
+        padding: 20px 22px 22px;
+    }
+    .event-card-body h3 {
+        margin: 0 0 14px;
+        font-size: 16px;
+    }
+    .event-info-list {
+        display: grid;
+        gap: 10px;
+    }
+    .event-info-list div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(15, 31, 46, 0.03);
+        border: 1px solid rgba(15, 31, 46, 0.08);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    .event-info-list span {
+        color: var(--event-muted);
+        font-weight: 600;
+    }
+    .event-info-list strong {
+        font-weight: 700;
+    }
+    .event-description {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(15, 31, 46, 0.08);
+    }
+    .event-description h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+    }
+    .event-description p {
+        margin: 0;
+        color: var(--event-muted);
+        line-height: 1.55;
+    }
+    .event-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .event-stat {
+        background: #ffffff;
+        border: 1px solid rgba(15, 31, 46, 0.08);
+        border-radius: 16px;
+        padding: 12px;
+        display: grid;
+        gap: 6px;
+    }
+    .event-stat span {
+        color: var(--event-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .event-stat strong {
+        font-size: 18px;
+    }
+    .event-fill {
+        background: rgba(15, 31, 46, 0.03);
+        border-radius: 16px;
+        padding: 12px;
+        border: 1px solid rgba(15, 31, 46, 0.08);
+    }
+    .event-fill-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: var(--event-muted);
+    }
+    .event-fill-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(11, 92, 120, 0.12);
+        overflow: hidden;
+    }
+    .event-fill-bar span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #0b5c78, #117ea5);
+        border-radius: 999px;
+        animation: fillIn 0.8s ease forwards;
+    }
+    .event-weather-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    .event-weather-header h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+    }
+    .event-weather-range {
+        font-size: 12px;
+        color: var(--event-muted);
+    }
+    .event-weather-location {
+        display: grid;
+        gap: 4px;
+        padding: 8px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 31, 46, 0.12);
+        background: rgba(15, 31, 46, 0.04);
+        text-align: right;
+        font-size: 12px;
+    }
+    .event-weather-location span {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--event-muted);
+        font-size: 10px;
+    }
+    .event-weather-hero {
+        margin-top: 12px;
+        background: linear-gradient(135deg, #0b5c78, #0e7490 60%, #0f172a 120%);
+        color: #fff;
+        border-radius: 18px;
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+        box-shadow: 0 16px 28px rgba(9, 20, 45, 0.28);
+    }
+    .event-weather-hero__main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .event-weather-hero__icon {
+        font-size: 32px;
+    }
+    .event-weather-hero__temp {
+        font-size: 30px;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .event-weather-hero__label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+        opacity: 0.8;
+    }
+    .event-weather-hero__minmax {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    .event-weather-hero__stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 8px;
+    }
+    .event-weather-hero__stats span,
+    .event-weather-hero__insights span {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        opacity: 0.8;
+    }
+    .event-weather-hero__stats strong,
+    .event-weather-hero__insights strong {
+        font-size: 14px;
+    }
+    .event-weather-hero__insights {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .event-weather-hero__insights div {
+        background: rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 8px;
+        display: grid;
+        gap: 4px;
+    }
+    .event-weather-list {
+        margin-top: 14px;
+        display: grid;
+        gap: 10px;
+        max-height: 320px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    .event-weather-row {
+        display: grid;
+        grid-template-columns: 70px minmax(0, 1fr) 120px;
+        gap: 10px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid rgba(15, 31, 46, 0.08);
+        border-radius: 16px;
+        padding: 10px 12px;
+    }
+    .event-weather-row__date {
+        display: grid;
+        gap: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+        color: var(--event-muted);
+        font-weight: 700;
+    }
+    .event-weather-row__main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .event-weather-row__icon {
+        font-size: 20px;
+    }
+    .event-weather-row__label {
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .event-weather-row__temps {
+        font-size: 12px;
+        color: var(--event-muted);
+    }
+    .event-weather-row__meta {
+        display: grid;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--event-muted);
+        text-align: right;
+    }
+    .event-weather-empty {
+        color: var(--event-muted);
+        font-size: 13px;
+    }
+    @keyframes cardLift {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fillIn {
+        from { transform: scaleX(0); transform-origin: left; }
+        to { transform: scaleX(1); transform-origin: left; }
+    }
+    @media (max-width: 980px) {
+        .event-show-hero { flex-direction: column; align-items: flex-start; }
+        .event-show-grid { grid-template-columns: 1fr; }
+        .event-card--stats { position: static; }
+        .event-weather-header { flex-direction: column; align-items: flex-start; }
+        .event-weather-location { text-align: left; }
+        .event-weather-row {
+            grid-template-columns: 1fr;
+            text-align: left;
+        }
+        .event-weather-row__meta { text-align: left; }
+    }
+</style>
 {% endblock %}
 
 {% block javascripts %}

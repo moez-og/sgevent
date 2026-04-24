@@ -1,940 +1,323 @@
 {% extends 'front/base_front.html.twig' %}
 
-{% block title %}{{ 'nav.events'|trans }} | Fin Tokhroj{% endblock %}
+{% block title %}Événements | Fin Tokhroj{% endblock %}
 
 {% block stylesheets %}
-{{ parent() }}
-<style>
-/* ===== EVENT LISTING PAGE ===== */
-
-/* Filter card */
-.evl-filter {
-    margin-bottom: 20px;
-}
-.evl-filter-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 12px;
-    align-items: end;
-}
-@media (max-width: 768px) { .evl-filter-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 480px) { .evl-filter-grid { grid-template-columns: 1fr; } }
-.evl-filter-field { display: grid; gap: 5px; }
-.evl-filter-field label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--ft-muted, #5a6e88);
-}
-.evl-filter-field input,
-.evl-filter-field select {
-    width: 100%;
-    border: 1.5px solid var(--ft-border, rgba(20,61,113,.12));
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 14px;
-    font-family: inherit;
-    background: var(--ft-glass, rgba(255,255,255,.82));
-    color: var(--ft-text, #0f1d33);
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-}
-.evl-filter-field input:focus,
-.evl-filter-field select:focus {
-    border-color: var(--ft-secondary, #3fa8e0);
-    box-shadow: 0 0 0 3px rgba(63,168,224,.15);
-}
-.evl-filter-actions { display: flex; align-items: flex-end; }
-.evl-filter-buttons {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.evl-gemini-btn {
-    border: 1.5px solid rgba(63,168,224,.26);
-    background: linear-gradient(135deg, rgba(9,31,70,.94), rgba(63,168,224,.92));
-    color: #fff;
-    white-space: nowrap;
-}
-.evl-gemini-btn:hover { opacity: .92; }
-
-/* Results count */
-.evl-count {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ft-muted, #5a6e88);
-    margin-bottom: 14px;
-}
-
-/* ===== Cards grid ===== */
-.evl-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 22px;
-}
-
-/* ===== Card entrance animation ===== */
-@keyframes ev-in {
-    from { opacity: 0; transform: translateY(26px) scale(.98); }
-    to   { opacity: 1; transform: translateY(0)   scale(1);    }
-}
-
-/* ===== Event card ===== */
-.ev-card {
-    display: flex;
-    flex-direction: column;
-    border-radius: 20px;
-    overflow: hidden;
-    background: var(--ft-glass, rgba(255,255,255,.88));
-    backdrop-filter: blur(18px) saturate(1.6);
-    -webkit-backdrop-filter: blur(18px) saturate(1.6);
-    border: 1px solid var(--ft-border, rgba(20,61,113,.10));
-    box-shadow: 0 4px 18px rgba(9,31,70,.07);
-    transition:
-        transform .32s cubic-bezier(.34,1.56,.64,1),
-        box-shadow .28s ease;
-    animation: ev-in .45s ease-out both;
-    position: relative;
-    cursor: pointer;
-}
-/* Gradient top-border that reveals on hover */
-.ev-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    background: linear-gradient(90deg, #091f46 0%, #3fa8e0 55%, #d4aa23 100%);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform .32s cubic-bezier(.34,1.56,.64,1);
-    border-radius: 20px 20px 0 0;
-    z-index: 2;
-}
-.ev-card:hover {
-    transform: translateY(-7px);
-    box-shadow: 0 18px 44px rgba(9,31,70,.14);
-}
-.ev-card:hover::before { transform: scaleX(1); }
-.ev-card.is-ai-recommended {
-    border-color: rgba(63,168,224,.45);
-    box-shadow: 0 16px 38px rgba(63,168,224,.18);
-}
-.ev-card.is-ai-recommended::before { transform: scaleX(1); }
-
-/* ---- Image section ---- */
-.ev-card__img {
-    position: relative;
-    height: 195px;
-    overflow: hidden;
-    background: linear-gradient(135deg, #0e2d5e 0%, #1a4a8a 100%);
-    flex-shrink: 0;
-}
-.ev-card__img img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform .5s ease;
-}
-.ev-card:hover .ev-card__img img { transform: scale(1.06); }
-.ev-card__img-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(9,31,70,.62) 0%, transparent 52%);
-}
-/* No-image placeholder letter */
-.ev-card__letter {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 3.4rem; font-weight: 900;
-    font-family: 'Playfair Display', serif;
-    color: rgba(255,255,255,.32);
-    letter-spacing: -2px;
-}
-/* Date badge on image */
-.ev-card__date {
-    position: absolute; bottom: 12px; left: 12px;
-    background: rgba(255,255,255,.93);
-    backdrop-filter: blur(8px);
-    border-radius: 10px;
-    padding: 5px 10px;
-    line-height: 1.35;
-    z-index: 3;
-}
-.ev-card__date strong {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: #0e2d5e;
-}
-.ev-card__date span {
-    font-size: 11px;
-    color: #64748b;
-}
-/* Price badge on image */
-.ev-card__price {
-    position: absolute; top: 12px; right: 12px;
-    border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #fff;
-    z-index: 3;
-    background: #d4aa23;
-}
-.ev-card__price.free { background: #10b981; }
-.ev-card__ai-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 3;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    max-width: calc(100% - 90px);
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(9,31,70,.88);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    box-shadow: 0 12px 24px rgba(9,31,70,.22);
-}
-.ev-card__ai-badge[hidden] { display: none; }
-@media (max-width: 640px) {
-    .ev-card__ai-badge {
-        max-width: calc(100% - 70px);
-        font-size: 10px;
-        padding: 5px 10px;
-    }
-}
-
-/* ---- Card body ---- */
-.ev-card__body {
-    padding: 16px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 10px;
-}
-.ev-card__title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--ft-text, #0f1d33);
-    margin: 0;
-    line-height: 1.3;
-}
-.ev-card__loc {
-    font-size: 13px;
-    color: var(--ft-muted, #5a6e88);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin: 0;
-}
-
-/* ---- Status / type badges ---- */
-.ev-badges {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-.ev-badge {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
-.ev-badge--public   { background: #dbeafe; color: #1e40af; }
-.ev-badge--private  { background: #f3e8ff; color: #6b21a8; }
-.ev-badge--open     { background: #dcfce7; color: #166534; }
-.ev-badge--closed   { background: #fef3c7; color: #92400e; }
-.ev-badge--canceled { background: #fee2e2; color: #991b1b; }
-
-/* ---- Capacity bar ---- */
-.ev-cap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--ft-muted, #5a6e88);
-}
-.ev-cap-bar {
-    flex: 1;
-    height: 4px;
-    background: rgba(14,45,94,.10);
-    border-radius: 4px;
-    overflow: hidden;
-}
-.ev-cap-bar__fill {
-    height: 100%;
-    border-radius: 4px;
-    background: linear-gradient(90deg, #3fa8e0, #0e2d5e);
-    transition: width .6s ease;
-}
-
-/* ---- Empty state ---- */
-.evl-empty {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--ft-muted, #5a6e88);
-}
-.evl-empty-icon { font-size: 3.2rem; display: block; margin-bottom: 12px; }
-
-/* ===== AI Recommendations section ===== */
-.ai-section {
-    margin-bottom: 28px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(9,31,70,.06) 0%, rgba(63,168,224,.08) 100%);
-    border: 1.5px solid rgba(63,168,224,.22);
-    padding: 20px 22px 22px;
-    position: relative;
-    overflow: hidden;
-}
-.ai-section::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #091f46, #3fa8e0, #d4aa23);
-}
-.ai-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.ai-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--ft-text, #0f1d33);
-    font-family: 'Playfair Display', serif;
-}
-.ai-label-badge {
-    background: linear-gradient(135deg, #091f46, #3fa8e0);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
-.ai-status-msg {
-    font-size: 12px;
-    color: var(--ft-muted, #5a6e88);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.ai-spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(63,168,224,.3);
-    border-top-color: #3fa8e0;
-    border-radius: 50%;
-    animation: ai-spin .8s linear infinite;
-    display: inline-block;
-}
-@keyframes ai-spin { to { transform: rotate(360deg); } }
-
-/* AI mini-cards grid */
-.ai-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
-}
-.ai-card {
-    background: var(--ft-glass, rgba(255,255,255,.9));
-    border-radius: 16px;
-    border: 1px solid var(--ft-border, rgba(20,61,113,.1));
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    transition: transform .25s, box-shadow .25s;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    overflow: hidden;
-}
-.ai-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(9,31,70,.12);
-}
-.ai-card-image {
-    position: relative;
-    height: 150px;
-    background: linear-gradient(135deg, #0e2d5e 0%, #1a4a8a 100%);
-    overflow: hidden;
-}
-.ai-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-.ai-card-image-fallback {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: rgba(255,255,255,.35);
-}
-.ai-card-body {
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.ai-card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-}
-.ai-card-head {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.ai-card-name {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.ai-card-name-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: #3fa8e0;
-}
-.ai-card-title {
-    font-family: 'Playfair Display', serif;
-    font-size: .95rem;
-    font-weight: 700;
-    color: var(--ft-text, #0f1d33);
-    line-height: 1.3;
-    margin: 0;
-}
-.ai-card-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    width: fit-content;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: rgba(63,168,224,.12);
-    color: #0e4f7a;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-}
-.ai-score {
-    flex-shrink: 0;
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3fa8e0, #091f46);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1.1;
-    text-align: center;
-}
-.ai-card-reason {
-    font-size: 11.5px;
-    color: var(--ft-muted, #5a6e88);
-    line-height: 1.4;
-    padding: 6px 10px;
-    background: rgba(63,168,224,.08);
-    border-radius: 8px;
-    border-left: 3px solid #3fa8e0;
-}
-.ai-card-meta {
-    font-size: 11.5px;
-    color: var(--ft-muted, #5a6e88);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.ai-card-meta span { display: flex; align-items: center; gap: 3px; }
-.ai-card-cta {
-    display: inline-block;
-    margin-top: 2px;
-    padding: 7px 16px;
-    background: linear-gradient(90deg, #091f46, #3fa8e0);
-    color: #fff;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: center;
-    text-decoration: none;
-    transition: opacity .2s;
-}
-.ai-card-cta:hover { opacity: .85; color: #fff; }
-
-/* No interests state */
-.ai-no-interests {
-    text-align: center;
-    padding: 20px;
-    color: var(--ft-muted, #5a6e88);
-    font-size: 13px;
-}
-.ai-feedback {
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: rgba(63,168,224,.08);
-    border: 1px solid rgba(63,168,224,.18);
-    color: #0e2d5e;
-    font-size: 13px;
-    font-weight: 600;
-}
-.evl-gemini-btn[disabled] {
-    opacity: .72;
-    cursor: wait;
-}
-</style>
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
 {% endblock %}
 
 {% block front_content %}
 <section>
     {% set filters = filters|default({ q: '', type: '', prix: '' }) %}
-
     <div class="section-head">
         <div>
-            <h1 class="section-title">{{ 'front.events.upcoming'|trans }}</h1>
-            <p class="section-subtitle">{{ 'front.events.subtitle'|trans }}</p>
+            <h1 class="section-title">Événements à venir</h1>
+            <p class="section-subtitle">Découvrez et rejoignez les meilleurs événements</p>
         </div>
-        <a href="{{ path('app_home') }}" class="outline-btn">← {{ 'front.search.back_home'|trans }}</a>
+        <a href="{{ path('app_home') }}" class="outline-btn">Retour accueil</a>
     </div>
 
-    {# ===== Filter card ===== #}
-    <div class="listing-card evl-filter">
-        <div class="section-head" style="margin-bottom: 14px;">
-            <h2 class="section-title" style="font-size: 1rem; margin: 0;">🔍 {{ 'front.events.search_filters'|trans }}</h2>
-            <a href="{{ path('app_evenements') }}" class="outline-btn" style="font-size: 13px;">↺ {{ 'settings.reset'|trans }}</a>
+    {# ───────────── Bannière IA — Recommandations personnalisées ───────────── #}
+    {% if app.user %}
+        <div class="ai-reco-banner" role="region" aria-label="Recommandations IA">
+            <div class="ai-reco-banner__icon" aria-hidden="true">🤖</div>
+            <div class="ai-reco-banner__text">
+                <h3>Suggestions personnalisées pour vous</h3>
+                <p>Notre IA analyse vos inscriptions pour dénicher les événements qui vous correspondent.</p>
+            </div>
+            <button type="button" class="ai-reco-banner__cta" id="btnAiReco" aria-expanded="false" aria-controls="aiRecoPanel">
+                <span class="sparkle" aria-hidden="true">✨</span>
+                <span id="btnAiRecoLabel">Voir les suggestions</span>
+            </button>
+            <a href="{{ path('app_evenements_recommandations') }}" class="ai-reco-banner__cta" style="background: rgba(255,255,255,0.2); color: #fff;">
+                Page complète →
+            </a>
         </div>
-        <form method="get" class="evl-filter-grid">
-            <div class="evl-filter-field">
-                <label>{{ 'front.events.search'|trans }}</label>
-                <input type="text" name="q" value="{{ filters.q }}" placeholder="{{ 'front.events.title_or_place'|trans }}">
+
+        <div class="ai-reco-panel" id="aiRecoPanel" role="region" aria-live="polite">
+            <div class="ai-reco-panel__head">
+                <h4 class="ai-reco-panel__title">
+                    <span aria-hidden="true">🎯</span>
+                    Sélection basée sur vos intérêts
+                </h4>
+                <span class="ai-reco-panel__mode" id="aiRecoMode">Analyse…</span>
             </div>
-            <div class="evl-filter-field">
-                <label>{{ 'front.events.type'|trans }}</label>
-                <select name="type">
-                    <option value="">{{ 'front.events.all_types'|trans }}</option>
-                    <option value="PUBLIC"  {{ filters.type == 'PUBLIC'  ? 'selected' : '' }}>{{ 'front.events.public'|trans }}</option>
-                    <option value="PRIVE"   {{ filters.type == 'PRIVE'   ? 'selected' : '' }}>{{ 'front.events.private'|trans }}</option>
-                </select>
-            </div>
-            <div class="evl-filter-field">
-                <label>{{ 'front.events.price'|trans }}</label>
-                <select name="prix">
-                    <option value="">{{ 'front.events.all'|trans }}</option>
-                    <option value="gratuit" {{ filters.prix == 'gratuit' ? 'selected' : '' }}>{{ 'front.events.free'|trans }}</option>
-                    <option value="payant"  {{ filters.prix == 'payant'  ? 'selected' : '' }}>{{ 'front.events.paid'|trans }}</option>
-                </select>
-            </div>
-            <div class="evl-filter-field evl-filter-actions">
-                <div class="evl-filter-buttons">
-                    <button type="submit" class="cta-btn">{{ 'front.events.filter'|trans }}</button>
-                    <button type="button" class="outline-btn evl-gemini-btn" id="gemini-recommend-btn">Recommended</button>
+            <div class="ai-reco-chips" id="aiRecoChips"></div>
+            <div id="aiRecoList">
+                <div style="text-align: center; padding: 20px; color: var(--ev-muted);">
+                    Chargement des recommandations…
                 </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# ───────────── Filtres ───────────── #}
+    <div class="listing-card event-filter-card">
+        <div class="section-head" style="margin-bottom: 10px;">
+            <div>
+                <h2 class="section-title" style="font-size: 1.1rem;">Recherche et filtres</h2>
+                <p class="section-subtitle">Affiner les événements proposés.</p>
+            </div>
+            <a href="{{ path('app_evenements') }}" class="outline-btn">Réinitialiser</a>
+        </div>
+        <form method="get" class="event-filter-grid">
+            <div class="event-filter-field">
+                <label>Recherche</label>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Titre ou lieu">
+            </div>
+            <div class="event-filter-field">
+                <label>Type</label>
+                <select name="type">
+                    <option value="">Tous les types</option>
+                    <option value="PUBLIC" {{ filters.type == 'PUBLIC' ? 'selected' : '' }}>Public</option>
+                    <option value="PRIVE" {{ filters.type == 'PRIVE' ? 'selected' : '' }}>Privé</option>
+                </select>
+            </div>
+            <div class="event-filter-field">
+                <label>Prix</label>
+                <select name="prix">
+                    <option value="">Tous</option>
+                    <option value="gratuit" {{ filters.prix == 'gratuit' ? 'selected' : '' }}>Gratuit</option>
+                    <option value="payant" {{ filters.prix == 'payant' ? 'selected' : '' }}>Payant</option>
+                </select>
+            </div>
+            <div class="event-filter-field event-filter-actions">
+                <button type="submit" class="cta-btn">Filtrer</button>
             </div>
         </form>
     </div>
 
-    {# ===== AI Recommendations ===== #}
-    <div class="ai-section" id="ai-section" style="display:none;">
-        <div class="ai-section-header">
-            <div class="ai-label">
-                🤖 Recommandé pour vous
-                <span class="ai-label-badge">IA</span>
-            </div>
-            <div class="ai-status-msg" id="ai-status-msg">
-                <span class="ai-spinner" id="ai-spinner"></span>
-                <span id="ai-status-text">Analyse de vos intérêts…</span>
-            </div>
-        </div>
-        <div class="ai-feedback" id="ai-feedback" style="display:none;"></div>
-        <div class="ai-cards" id="ai-cards"></div>
-    </div>
-
-    {% if events|length > 0 %}
-        <p class="evl-count">{{ events|length }} événement{{ events|length > 1 ? 's' : '' }} trouvé{{ events|length > 1 ? 's' : '' }}</p>
-    {% endif %}
-
-    {# ===== Cards grid ===== #}
-    <div class="evl-grid">
+    {# ───────────── Grille d'événements ───────────── #}
+    <div class="ev-grid">
         {% for event in events %}
-            {% set dateDebut = event.dateDebut|default(null) %}
-            {% set dateFin   = event.dateFin|default(null) %}
-            {% set capacite  = event.capaciteMax|default(1) %}
-            {% set restants  = event.placesRestantes is defined ? event.placesRestantes : capacite %}
-            {% set fillPct   = capacite > 0 ? (((capacite - restants) / capacite) * 100)|round : 0 %}
+            {% set eventDateDebut = event.dateDebut|default(event.date_debut|default(null)) %}
+            {% set eventDateFin = event.dateFin|default(event.date_fin|default(null)) %}
+            {% set eventCapacite = event.capaciteMax|default(event.capacite_max|default(null)) %}
+            {% set placesRest = event.placesRestantes|default(eventCapacite ?? 0) %}
 
-            {% set rawImg = event.imageUrl|default('') %}
-            {% if rawImg and (rawImg starts with 'http://' or rawImg starts with 'https://' or rawImg starts with '/') %}
-                {% set imgSrc = rawImg %}
-            {% elseif rawImg and (rawImg starts with 'theme/' or rawImg starts with 'uploads/') %}
-                {% set imgSrc = asset(rawImg) %}
-            {% elseif rawImg %}
-                {% set imgSrc = asset('uploads/evenements/' ~ rawImg) %}
+            {% set rawImage = event.imageUrl|default(event.image_url|default('')) %}
+            {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+                {% set imageSrc = rawImage %}
+            {% elseif rawImage and (rawImage starts with '/theme/' or rawImage starts with '/uploads/') %}
+                {% set imageSrc = rawImage %}
+            {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+                {% set imageSrc = asset(rawImage) %}
+            {% elseif rawImage %}
+                {% set imageSrc = asset('uploads/evenements/' ~ rawImage) %}
             {% else %}
-                {% set imgSrc = '' %}
+                {% set imageSrc = asset('theme/images/logo.png') %}
             {% endif %}
 
-            <article class="ev-card"
-                     data-event-id="{{ event.id }}"
-                     style="animation-delay: {{ loop.index0 * 0.07 }}s;"
-                     onclick="location.href='{{ path('app_evenement_show', {id: event.id}) }}'">
-
-                {# ---- Image ---- #}
-                <div class="ev-card__img">
-                    {% if imgSrc %}
-                        <img src="{{ imgSrc }}" alt="{{ event.titre }}"
-                             onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
-                    {% else %}
-                        <div class="ev-card__letter">{{ event.titre|slice(0,1) }}</div>
-                    {% endif %}
-                    <div class="ev-card__img-overlay"></div>
-                    <span class="ev-card__ai-badge" hidden>{{ 'front.events.ai_recommended'|trans }}</span>
-
-                    {% if dateDebut %}
-                        <div class="ev-card__date">
-                            <strong>{{ dateDebut|date('d/m/Y') }}</strong>
-                            <span>{{ dateDebut|date('H:i') }}</span>
-                        </div>
-                    {% endif %}
-
-                    <div class="ev-card__price {{ event.prix == 0 ? 'free' : '' }}">
-                        {% if event.prix > 0 %}{{ event.prix }} TND{% else %}{{ 'front.events.free'|trans }}{% endif %}
+            <article class="ev-card" style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+                <div class="ev-card__cover">
+                    <img src="{{ imageSrc }}" alt="{{ event.titre }}" loading="lazy"
+                         onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                    <div class="ev-card__badges">
+                        {% if event.prix > 0 %}
+                            <span class="ev-badge is-paid">💰 {{ event.prix }} TND</span>
+                        {% else %}
+                            <span class="ev-badge is-free">🎉 Gratuit</span>
+                        {% endif %}
+                        {% if eventCapacite and placesRest <= (eventCapacite * 0.2) and placesRest > 0 %}
+                            <span class="ev-badge is-hot">🔥 Bientôt complet</span>
+                        {% elseif placesRest == 0 %}
+                            <span class="ev-badge" style="background: rgba(239,68,68,0.95); color: #fff;">❌ Complet</span>
+                        {% endif %}
                     </div>
                 </div>
 
-                {# ---- Body ---- #}
                 <div class="ev-card__body">
                     <h3 class="ev-card__title">{{ event.titre }}</h3>
+                    {% if event.description %}
+                        <p class="ev-card__lead">{{ event.description|striptags|slice(0, 120) }}{% if event.description|length > 120 %}…{% endif %}</p>
+                    {% endif %}
 
-                    <p class="ev-card__loc">
-                        📍
+                    <div class="ev-card__meta">
+                        <span>🗓 {{ eventDateDebut ? eventDateDebut|date('d/m/Y H:i') : 'Date à confirmer' }}</span>
                         {% if event.lieu is defined and event.lieu %}
-                            {{ event.lieu.nom }}{% if event.lieu.ville %} · {{ event.lieu.ville }}{% endif %}
-                        {% else %}
-                            {{ 'front.events.place_to_confirm'|trans }}
+                            <span>📍 {{ event.lieu.nom }}</span>
+                        {% elseif event.lieu_nom is defined and event.lieu_nom %}
+                            <span>📍 {{ event.lieu_nom }}</span>
                         {% endif %}
-                    </p>
-
-                    <div class="ev-badges">
-                        {% if event.type == 'PRIVE' %}
-                            <span class="ev-badge ev-badge--private">{{ 'front.events.private'|trans }}</span>
-                        {% else %}
-                            <span class="ev-badge ev-badge--public">{{ 'front.events.public'|trans }}</span>
-                        {% endif %}
-                        {% if event.statut == 'OUVERT' %}
-                            <span class="ev-badge ev-badge--open">Ouvert</span>
-                        {% elseif event.statut == 'FERME' %}
-                            <span class="ev-badge ev-badge--closed">Fermé</span>
-                        {% else %}
-                            <span class="ev-badge ev-badge--canceled">Annulé</span>
-                        {% endif %}
+                        <span>👥 {{ placesRest }} place{{ placesRest > 1 ? 's' : '' }}</span>
                     </div>
+                </div>
 
-                    <div class="ev-cap">
-                        <span>👥 {{ restants }}/{{ capacite }}</span>
-                        <div class="ev-cap-bar">
-                            <div class="ev-cap-bar__fill" style="width: {{ fillPct }}%;"></div>
-                        </div>
-                    </div>
-
-                    <a href="{{ path('app_evenement_show', {id: event.id}) }}"
-                       class="cta-btn"
-                       style="display: flex; justify-content: center; margin-top: auto;"
-                       onclick="event.stopPropagation();">
-                        {{ 'front.events.join'|trans }}
+                <div class="ev-card__foot">
+                    <a href="{{ path('app_evenement_show', {id: event.id}) }}" class="ev-card__cta">
+                        Voir les détails
+                        <span aria-hidden="true">→</span>
                     </a>
                 </div>
             </article>
-
         {% else %}
-            <div class="evl-empty">
-                <span class="evl-empty-icon">🎭</span>
-                <p>{{ 'front.events.none_available'|trans }}</p>
+            <div class="ev-empty" style="grid-column: 1 / -1;">
+                <span class="ev-empty__emoji" aria-hidden="true">📭</span>
+                Aucun événement disponible pour le moment.
+                {% if filters.q or filters.type or filters.prix %}
+                    <br><a href="{{ path('app_evenements') }}" style="color: var(--ev-accent); font-weight: 700;">Réinitialiser les filtres</a>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
 </section>
-{% endblock %}
 
-{% block javascripts %}
-{{ parent() }}
+{% if app.user %}
 <script>
 (function () {
-    const STORAGE_KEY = 'ftk_event_interests';
-    const AI_ENDPOINT = '{{ path('app_evenements_ai_recommend') }}';
-    const RECOMMENDED_NAME_LABEL = '{{ 'front.events.recommended_name'|trans|e('js') }}';
-    const EVENT_IMAGE_BASE = '{{ asset('uploads/evenements/') }}';
-    const recommendBtn = document.getElementById('gemini-recommend-btn');
-    const section = document.getElementById('ai-section');
-    const cards = document.getElementById('ai-cards');
-    const spinner = document.getElementById('ai-spinner');
-    const txt = document.getElementById('ai-status-text');
-    const feedback = document.getElementById('ai-feedback');
-    const eventCards = Array.from(document.querySelectorAll('.ev-card[data-event-id]'));
+    const btn = document.getElementById('btnAiReco');
+    const btnLabel = document.getElementById('btnAiRecoLabel');
+    const panel = document.getElementById('aiRecoPanel');
+    const listEl = document.getElementById('aiRecoList');
+    const modeEl = document.getElementById('aiRecoMode');
+    const chipsEl = document.getElementById('aiRecoChips');
+    if (!btn || !panel) return;
 
-    /* ── Read / update interests in localStorage ─────────────────── */
-    function getInterests() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-        catch { return {}; }
-    }
-    function saveInterests(obj) {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch {}
+    let loaded = false;
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
     }
 
-    function resolveImageUrl(raw) {
-        const value = String(raw || '').trim();
-        if (!value) {
-            return '';
+    function weatherIconSvg(label) {
+        const l = (label || '').toLowerCase();
+        if (l.includes('pluie') || l.includes('averse')) {
+            return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 13a5 5 0 0 0-10 0H5a7 7 0 0 1 14 0zM8 16l-1 3m5-3l-1 3m5-3l-1 3"/></svg>';
         }
-        if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) {
-            return value;
+        if (l.includes('orage')) {
+            return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 10-14h-7z"/></svg>';
         }
-        if (value.startsWith('theme/') || value.startsWith('uploads/')) {
-            return '/' + value;
+        if (l.includes('nuage') || l.includes('couvert')) {
+            return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19a4 4 0 0 1 0-8 6 6 0 0 1 11.6-1A4 4 0 0 1 18 19z"/></svg>';
         }
-
-        return EVENT_IMAGE_BASE.replace(/\/$/, '') + '/' + value.replace(/^\/+/, '');
+        if (l.includes('neige')) {
+            return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/><path d="M12 2v20M2 12h20"/></svg>';
+        }
+        return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
     }
 
-    function escapeHtml(value) {
-        return String(value || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
+    function renderRecommendations(data) {
+        const modeTxt = {
+            'gemini':  { label: 'IA Gemini',   cls: 'is-gemini'  },
+            'local':   { label: 'Algorithme',   cls: ''            },
+            'popular': { label: 'Populaires',   cls: 'is-popular' },
+        }[data.mode] || { label: 'Suggestion', cls: '' };
+        modeEl.textContent = modeTxt.label;
+        modeEl.className = 'ai-reco-panel__mode ' + modeTxt.cls;
 
-    function setFeedback(message, visible = true) {
-        if (!feedback) {
+        chipsEl.innerHTML = '';
+        (data.interests || []).slice(0, 8).forEach(kw => {
+            const chip = document.createElement('span');
+            chip.className = 'ai-reco-chip';
+            chip.textContent = '#' + kw;
+            chipsEl.appendChild(chip);
+        });
+        if (data.analysis) {
+            const note = document.createElement('span');
+            note.className = 'ai-reco-chip';
+            note.style.background = 'rgba(15,31,46,0.06)';
+            note.style.color = 'var(--ev-muted)';
+            note.textContent = data.analysis;
+            chipsEl.appendChild(note);
+        }
+
+        if (!data.events || data.events.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:24px; color:var(--ev-muted);">Aucune recommandation disponible. Inscrivez-vous à des événements pour personnaliser vos suggestions !</div>';
             return;
         }
-
-        feedback.textContent = message;
-        feedback.style.display = visible ? 'block' : 'none';
-    }
-
-    /* Track the active filters as interests */
-    (function trackFilters() {
-        const params = new URLSearchParams(window.location.search);
-        const interests = getInterests();
-        const type = params.get('type');
-        const prix = params.get('prix');
-        const q    = (params.get('q') || '').trim();
-
-        if (type) {
-            interests.types_vus = [...new Set([type, ...(interests.types_vus || [])])].slice(0, 5);
-        }
-        if (prix) interests.prix_preference = prix;
-        if (q)    {
-            interests.recherches = [...new Set([q, ...(interests.recherches || [])])].slice(0, 8);
-        }
-        saveInterests(interests);
-    })();
-
-    /* ── Render a recommendation card ───────────────────────────── */
-    function buildCard(rec) {
-        const scoreLabel = rec.score + '%';
-        const priceLabel = rec.prix === 0 || rec.prix === '0' ? 'Gratuit' : rec.prix + ' TND';
-        const datePart   = rec.date  ? '<span>📅 ' + rec.date  + '</span>' : '';
-        const lieuPart   = rec.lieu  ? '<span>📍 ' + rec.lieu  + '</span>' : '';
-        const url        = '/evenements/' + rec.id;
-        const imageSrc   = resolveImageUrl(rec.image || '');
-        const fallbackLetter = escapeHtml((rec.titre || '?').trim().charAt(0) || '?');
-        const imageHtml  = imageSrc
-            ? `<img src="${imageSrc}" alt="${escapeHtml(rec.titre || '')}" onerror="this.onerror=null;this.closest('.ai-card-image').innerHTML='<div class=&quot;ai-card-image-fallback&quot;>${fallbackLetter}</div>';">`
-            : `<div class="ai-card-image-fallback">${fallbackLetter}</div>`;
-
-        return `
-        <a class="ai-card" href="${url}">
-            <div class="ai-card-image">
-                ${imageHtml}
-            </div>
-            <div class="ai-card-body">
-            <div class="ai-card-top">
-                <div class="ai-card-head">
-                    <span class="ai-card-badge">Gemini Pick</span>
-                    <div class="ai-card-name">
-                        <span class="ai-card-name-label">${RECOMMENDED_NAME_LABEL}</span>
-                        <h3 class="ai-card-title">${escapeHtml(rec.titre || '')}</h3>
-                    </div>
-                </div>
-                <div class="ai-score">${scoreLabel}</div>
-            </div>
-            <div class="ai-card-reason">💡 ${rec.reason}</div>
-            <div class="ai-card-meta">
-                <span>🎫 ${priceLabel}</span>
-                ${datePart}
-                ${lieuPart}
-            </div>
-            <span class="ai-card-cta">Voir l'événement →</span>
-            </div>
-        </a>`;
-    }
-
-    /* ── Fetch AI recommendations ────────────────────────────────── */
-    async function loadRecommendations(forceOpen = false) {
-        const interests = getInterests();
-        section.style.display = '';
-        cards.innerHTML = '';
-        spinner.style.display = 'inline-block';
-        txt.textContent = 'Gemini analyse vos centres d\'interet et vos inscriptions...';
-
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const url = AI_ENDPOINT
-                + '?interests=' + encodeURIComponent(JSON.stringify(interests))
-                + '&q=' + encodeURIComponent(params.get('q') || '')
-                + '&type=' + encodeURIComponent(params.get('type') || '')
-                + '&prix=' + encodeURIComponent(params.get('prix') || '');
-            const res = await fetch(url);
-            const data = await res.json();
-            const recs = (data.recommendations || []).slice(0, 3);
-
-            spinner.style.display = 'none';
-
-            if (recs.length === 0) {
-                txt.textContent = 'Aucune recommandation personnalisée pour l\'instant.';
-                return;
+        const html = data.events.map(ev => {
+            const img = ev.image_url || "{{ asset('theme/images/logo.png') }}";
+            let wx = '';
+            if (ev.weather && ev.weather.label) {
+                wx = '<span class="wx-chip">' + weatherIconSvg(ev.weather.label) +
+                     (ev.weather.temp !== null ? ev.weather.temp + '° ' : '') +
+                     escapeHtml(ev.weather.label) + '</span>';
             }
-
-            txt.textContent = recs.length + ' événement' + (recs.length > 1 ? 's' : '') + ' sélectionné' + (recs.length > 1 ? 's' : '') + ' pour vous';
-            cards.innerHTML = recs.map(buildCard).join('');
-        } catch {
-            section.style.display = 'none';
-        }
+            return '' +
+                '<a class="ai-reco-row" href="' + escapeHtml(ev.url) + '">' +
+                  '<div class="ai-reco-row__img">' +
+                    '<img src="' + escapeHtml(img) + '" alt="" loading="lazy" ' +
+                       'onerror="this.onerror=null;this.src=\'{{ asset('theme/images/logo.png') }}\';">' +
+                  '</div>' +
+                  '<div class="ai-reco-row__body">' +
+                    '<h4>' + escapeHtml(ev.titre) + '</h4>' +
+                    '<p>' +
+                      '<span>🗓 ' + escapeHtml(ev.date_debut_fr || '') + '</span>' +
+                      (ev.lieu ? '<span>📍 ' + escapeHtml(ev.lieu) + '</span>' : '') +
+                      (ev.prix > 0 ? '<span>💰 ' + ev.prix + ' TND</span>' : '<span>🎉 Gratuit</span>') +
+                      wx +
+                    '</p>' +
+                  '</div>' +
+                  '<span class="ai-reco-row__cta">Voir →</span>' +
+                '</a>';
+        }).join('');
+        listEl.innerHTML = html;
     }
 
-    async function loadRecommendations(forceOpen = false) {
-        const interests = getInterests();
-
-        section.style.display = '';
-        cards.innerHTML = '';
-        clearRecommendedCards();
-        setFeedback('Chargement des evenements recommandes...');
-        spinner.style.display = 'inline-block';
-        txt.textContent = 'Gemini analyse vos centres d\'interet et vos inscriptions...';
-        if (recommendBtn) {
-            recommendBtn.disabled = true;
-            recommendBtn.textContent = 'Chargement...';
-        }
-
+    async function loadRecommendations() {
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--ev-muted);"><span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(11,92,120,0.2); border-top-color:var(--ev-accent); border-radius:50%; animation:aiSpin 0.7s linear infinite; vertical-align:middle; margin-right:8px;"></span>L\'IA analyse vos préférences…</div>';
         try {
-            const params = new URLSearchParams(window.location.search);
-            const url = AI_ENDPOINT
-                + '?interests=' + encodeURIComponent(JSON.stringify(interests))
-                + '&q=' + encodeURIComponent(params.get('q') || '')
-                + '&type=' + encodeURIComponent(params.get('type') || '')
-                + '&prix=' + encodeURIComponent(params.get('prix') || '');
-            const res = await fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            const res = await fetch('{{ path('app_evenements_recommandations_json') }}?limit=6', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' },
             });
-            if (!res.ok) {
-                throw new Error('Recommendation request failed');
-            }
-
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            const recs = (data.recommendations || []).slice(0, 3);
-
-            spinner.style.display = 'none';
-
-            if (recs.length === 0) {
-                txt.textContent = 'Aucune recommandation Gemini pour le moment.';
-                cards.innerHTML = '<div class="ai-no-interests">Gemini n\'a pas trouve d\'evenement plus pertinent avec vos centres d\'interet et votre historique.</div>';
-                setFeedback('Aucun evenement recommande n\'a ete trouve avec les criteres actuels.');
-                return;
-            }
-
-            txt.textContent = recs.length + ' evenement' + (recs.length > 1 ? 's' : '') + ' recommande' + (recs.length > 1 ? 's' : '') + ' par Gemini';
-            cards.innerHTML = recs.map(buildCard).join('');
-            markRecommendedCards(recs);
-            setFeedback(recs.length + ' evenement' + (recs.length > 1 ? 's' : '') + ' recommande' + (recs.length > 1 ? 's' : '') + ' affiche' + (recs.length > 1 ? 's' : '') + '.');
-
-            if (forceOpen) {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } catch {
-            clearRecommendedCards();
-            spinner.style.display = 'none';
-            cards.innerHTML = '<div class="ai-no-interests">Impossible de charger les recommandations pour le moment.</div>';
-            txt.textContent = 'Impossible de charger les recommandations Gemini.';
-            setFeedback('La recommandation n\'a pas pu etre chargee.');
-        } finally {
-            if (recommendBtn) {
-                recommendBtn.disabled = false;
-                recommendBtn.textContent = 'Recommended';
-            }
+            renderRecommendations(data);
+            loaded = true;
+        } catch (e) {
+            listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#b91c1c;">❌ Impossible de charger les suggestions. Veuillez réessayer.</div>';
         }
     }
 
-    function clearRecommendedCards() {
-        eventCards.forEach((card) => {
-            card.classList.remove('is-ai-recommended');
-            const badge = card.querySelector('.ev-card__ai-badge');
-            if (badge) {
-                badge.hidden = true;
-            }
-        });
-    }
-
-    function markRecommendedCards(recommendations) {
-        const recommendedIds = new Set(
-            recommendations
-                .map((rec) => String(rec.id || ''))
-                .filter(Boolean)
-        );
-
-        eventCards.forEach((card) => {
-            const isRecommended = recommendedIds.has(card.dataset.eventId || '');
-            card.classList.toggle('is-ai-recommended', isRecommended);
-
-            const badge = card.querySelector('.ev-card__ai-badge');
-            if (badge) {
-                badge.hidden = !isRecommended;
-            }
-        });
-    }
-
-    if (txt) {
-        txt.textContent = 'Cliquez sur Gemini pour afficher vos suggestions.';
-    }
-    setFeedback('', false);
-
-    if (recommendBtn) {
-        recommendBtn.addEventListener('click', function () {
-            loadRecommendations(true);
-        });
-    }
+    btn.addEventListener('click', async () => {
+        const isOpen = panel.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', String(isOpen));
+        btnLabel.textContent = isOpen ? 'Masquer les suggestions' : 'Voir les suggestions';
+        if (isOpen && !loaded) {
+            await loadRecommendations();
+        }
+        if (isOpen) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
 })();
 </script>
+{% endif %}
+
+<style>
+    .event-filter-card { margin-bottom: 18px; }
+    .event-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .event-filter-field { display: grid; gap: 6px; }
+    .event-filter-field label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+    .event-filter-field input,
+    .event-filter-field select {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 14px;
+        background: #fff;
+        color: #0f172a;
+        outline: none;
+        transition: border-color .25s, box-shadow .25s;
+    }
+    .event-filter-field input:focus,
+    .event-filter-field select:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+    .event-filter-actions { display: flex; align-items: end; }
+</style>
 {% endblock %}

@@ -4,6 +4,10 @@ namespace App\Service;
 
 use App\Repository\EvenementRepository;
 
+/**
+ * Orchestrateur de sync Notion ↔ Symfony.
+ * Délègue le travail réel à NotionService.
+ */
 class NotionSyncService
 {
     public function __construct(
@@ -11,26 +15,32 @@ class NotionSyncService
         private EvenementRepository $repository,
     ) {}
 
+    /**
+     * Sync complet : tous les événements → Notion.
+     * Crée, met à jour, supprime les orphelins.
+     *
+     * @return array{created: int, updated: int, deleted: int, failed: int, errors: string[], total: int}
+     */
     public function sync(): array
     {
-        $result = [
-            'created_events' => 0,
-            'linked_pages'   => 0,
-            'created_pages'  => 0,
-            'updated_pages'  => 0,
-        ];
+        $evenements = $this->repository->findAll();
+        return $this->notionService->syncAll($evenements);
+    }
 
-        foreach ($this->repository->findAll() as $evenement) {
-            try {
-                $synced = $this->notionService->syncEvenement($evenement);
-                if ($synced) {
-                    $result['updated_pages']++;
-                }
-            } catch (\Throwable) {
-                // silently skip failed sync for individual events
-            }
-        }
+    /**
+     * Teste la connexion Notion.
+     * @return array{ok: bool, message: string, properties: string[]}
+     */
+    public function testConnection(): array
+    {
+        return $this->notionService->testConnection();
+    }
 
-        return $result;
+    /**
+     * Le service est-il configuré ?
+     */
+    public function isConfigured(): bool
+    {
+        return $this->notionService->isConfigured();
     }
 }

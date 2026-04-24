@@ -67,26 +67,10 @@ class EvenementController extends AbstractController
     }
 
     #[Route('/calendar', name: 'app_admin_evenements_calendar', methods: ['GET'])]
-    public function calendar(NotionSyncService $syncService): Response
+    public function calendar(): Response
     {
-        $status = 'success';
-        $message = 'Synchronisation Notion terminee.';
-
-        try {
-            $result = $syncService->sync();
-            $message = sprintf(
-                'Synchronisation terminee. Evenements crees: %d, pages liees: %d, pages creees: %d, pages mises a jour: %d.',
-                $result['created_events'], $result['linked_pages'], $result['created_pages'], $result['updated_pages']
-            );
-        } catch (\Throwable $e) {
-            $status = 'error';
-            $message = 'Synchronisation echouee: ' . $e->getMessage();
-        }
-
         return $this->render('admin/evenement/calendar.html.twig', [
             'active' => 'evenements',
-            'sync_status' => $status,
-            'sync_message' => $message,
         ]);
     }
 
@@ -109,14 +93,59 @@ class EvenementController extends AbstractController
                 'url' => $this->generateUrl('app_admin_evenement_show', ['id' => $event->getId()]),
                 'classNames' => [$this->mapStatusClass($status)],
                 'extendedProps' => [
-                    'lieu' => $event->getLieu()?->getNom(),
+                    'lieu' => $event->getLieu()?->getNom() ?? 'Non défini',
                     'prix' => $event->getPrix(),
                     'type' => $event->getType(),
+                    'capacite' => $event->getCapaciteMax(),
+                    'places_restantes' => $event->getPlacesRestantes(),
+                    'statut' => $event->getStatut(),
+                    'description' => mb_substr($event->getDescription() ?? '', 0, 200),
+                    'image' => $event->getImageUrl(),
                 ],
             ];
         }
 
         return $this->json(['ok' => true, 'events' => $payload]);
+    }
+
+    /**
+     * Test de connexion Notion (AJAX).
+     */
+    #[Route('/notion-test', name: 'app_admin_evenements_notion_test', methods: ['POST'])]
+    public function notionTest(Request $request, NotionSyncService $syncService): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('notion_sync', (string) $request->request->get('_token'))) {
+            return $this->json(['ok' => false, 'message' => 'Token CSRF invalide.']);
+        }
+
+        $result = $syncService->testConnection();
+        return $this->json($result);
+    }
+
+    /**
+     * Sync Notion complète (AJAX avec retour JSON détaillé).
+     */
+    #[Route('/notion-sync-json', name: 'app_admin_evenements_notion_sync_json', methods: ['POST'])]
+    public function notionSyncJson(Request $request, NotionSyncService $syncService): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('notion_sync', (string) $request->request->get('_token'))) {
+            return $this->json(['ok' => false, 'message' => 'Token CSRF invalide.']);
+        }
+
+        try {
+            $result = $syncService->sync();
+            return $this->json([
+                'ok' => true,
+                'created' => $result['created'],
+                'updated' => $result['updated'],
+                'deleted' => $result['deleted'],
+                'failed' => $result['failed'],
+                'total' => $result['total'],
+                'errors' => array_slice($result['errors'], 0, 10),
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json(['ok' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     #[Route('/notion-sync', name: 'app_admin_evenements_notion_sync', methods: ['POST'])]
@@ -130,14 +159,14 @@ class EvenementController extends AbstractController
         try {
             $result = $syncService->sync();
             $this->addFlash('success', sprintf(
-                'Sync Notion termine. Evenements crees: %d, pages liees: %d, pages creees: %d, pages mises a jour: %d.',
-                $result['created_events'], $result['linked_pages'], $result['created_pages'], $result['updated_pages']
+                'Sync Notion terminée — %d créé(s), %d mis à jour, %d supprimé(s), %d échec(s).',
+                $result['created'], $result['updated'], $result['deleted'], $result['failed']
             ));
         } catch (\Throwable $e) {
-            $this->addFlash('error', 'Sync Notion echoue: ' . $e->getMessage());
+            $this->addFlash('error', 'Sync Notion échouée: ' . $e->getMessage());
         }
 
-        return $this->redirectToRoute('app_admin_evenements');
+        return $this->redirectToRoute('app_admin_evenements_calendar');
     }
 
     #[Route('/{id<\\d+>}', name: 'app_admin_evenement_show', methods: ['GET'])]

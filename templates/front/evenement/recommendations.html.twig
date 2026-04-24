@@ -1,0 +1,126 @@
+{% extends 'front/base_front.html.twig' %}
+
+{% block title %}Recommandations | Fin Tokhroj{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
+{% endblock %}
+
+{% block front_content %}
+<section>
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">
+                <span style="background: linear-gradient(135deg, #0b5c78, #3fa8e0, #d4aa23); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                    Sélection faite pour vous
+                </span>
+            </h1>
+            <p class="section-subtitle">
+                {% if mode == 'gemini' %}
+                    Analyse IA par Gemini de vos centres d'intérêt.
+                {% elseif mode == 'popular' %}
+                    Pas encore d'historique — voici les événements populaires du moment.
+                {% else %}
+                    Suggestions calculées à partir de vos inscriptions passées.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{{ path('app_evenements') }}" class="outline-btn">← Tous les événements</a>
+    </div>
+
+    {# ──────────── Bandeau analyse ──────────── #}
+    {% if interests_analysis or interests_map|length > 0 %}
+        <div class="ai-reco-banner" style="margin-top: 0;">
+            <div class="ai-reco-banner__icon" aria-hidden="true">
+                {% if mode == 'gemini' %}🤖{% elseif mode == 'popular' %}🔥{% else %}🎯{% endif %}
+            </div>
+            <div class="ai-reco-banner__text">
+                <h3>
+                    {% if mode == 'gemini' %}Analyse IA par Google Gemini
+                    {% elseif mode == 'popular' %}Événements tendance
+                    {% else %}Centres d'intérêt détectés
+                    {% endif %}
+                </h3>
+                {% if interests_analysis %}
+                    <p>{{ interests_analysis }}</p>
+                {% endif %}
+                {% if interests_map|length > 0 and mode != 'popular' %}
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+                        {% for kw, weight in interests_map %}
+                            <span style="padding: 4px 12px; background: rgba(255,255,255,0.22); border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.3);">
+                                #{{ kw }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ──────────── Grille de recommandations ──────────── #}
+    <div class="ev-grid">
+        {% for event in events %}
+            {% set rawImage = event.imageUrl|default('') %}
+            {% if rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://') %}
+                {% set imageSrc = rawImage %}
+            {% elseif rawImage and (rawImage starts with '/theme/' or rawImage starts with '/uploads/') %}
+                {% set imageSrc = rawImage %}
+            {% elseif rawImage and (rawImage starts with 'theme/' or rawImage starts with 'uploads/') %}
+                {% set imageSrc = asset(rawImage) %}
+            {% elseif rawImage %}
+                {% set imageSrc = asset('uploads/evenements/' ~ rawImage) %}
+            {% else %}
+                {% set imageSrc = asset('theme/images/logo.png') %}
+            {% endif %}
+
+            <article class="ev-card" style="animation-delay: {{ loop.index0 * 0.06 }}s;">
+                <div class="ev-card__cover">
+                    <img src="{{ imageSrc }}" alt="{{ event.titre }}" loading="lazy"
+                         onerror="this.onerror=null;this.src='{{ asset('theme/images/logo.png') }}';">
+                    <div class="ev-card__badges">
+                        <span class="ev-badge" style="background: linear-gradient(135deg, #6366f1, #ec4899); color: #fff;">
+                            ⭐ Top {{ loop.index }}
+                        </span>
+                        {% if event.prix > 0 %}
+                            <span class="ev-badge is-paid">💰 {{ event.prix }} TND</span>
+                        {% else %}
+                            <span class="ev-badge is-free">🎉 Gratuit</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ev-card__body">
+                    <h3 class="ev-card__title">{{ event.titre }}</h3>
+                    {% if event.description %}
+                        <p class="ev-card__lead">{{ event.description|striptags|slice(0, 140) }}{% if event.description|length > 140 %}…{% endif %}</p>
+                    {% endif %}
+
+                    <div class="ev-card__meta">
+                        <span>🗓 {{ event.dateDebut|date('d/m/Y H:i') }}</span>
+                        {% if event.lieu %}<span>📍 {{ event.lieu.nom }}</span>{% endif %}
+                        <span>👥 {{ event.placesRestantes }} places</span>
+                        <span>🏷 {{ event.type }}</span>
+                    </div>
+                </div>
+
+                <div class="ev-card__foot">
+                    <a href="{{ path('app_evenement_show', {id: event.id}) }}" class="ev-card__cta">
+                        Participer
+                        <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+            </article>
+        {% else %}
+            <div class="ev-empty" style="grid-column: 1 / -1;">
+                <span class="ev-empty__emoji" aria-hidden="true">🤔</span>
+                Pas encore de recommandations disponibles.
+                <br>
+                <a href="{{ path('app_evenements') }}" style="color: var(--ev-accent); font-weight: 700; margin-top: 8px; display: inline-block;">
+                    Inscrivez-vous à des événements pour améliorer nos suggestions →
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

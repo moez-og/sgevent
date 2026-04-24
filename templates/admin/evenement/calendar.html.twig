@@ -1,0 +1,700 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Calendrier des Événements - Admin{% endblock %}
+{% block admin_page_title %}Calendrier{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('theme/css/evenement-enhance.css') }}?v=v2">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-container cal-shell">
+    {# ───── Header ───── #}
+    <div class="section-head">
+        <div>
+            <h1 class="section-title">Calendrier des Événements</h1>
+            <p class="section-subtitle">Vue calendrier — Synchronisation Notion Cloud</p>
+        </div>
+        <div class="cal-actions">
+            <a href="{{ path('app_admin_evenements') }}" class="outline-btn">← Retour liste</a>
+        </div>
+    </div>
+
+    {# ───── Notion Sync Panel ───── #}
+    <div class="cal-notion-panel" id="notionPanel">
+        <div class="cal-notion-header">
+            <div class="cal-notion-logo">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L18.287 2.18c-.42-.326-.98-.7-2.055-.607L3.01 2.71c-.467.047-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.84-.046.933-.56.933-1.167V6.354c0-.606-.233-.933-.746-.886l-15.177.886c-.56.047-.747.327-.747.934zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.607.327-1.167.514-1.634.514-.747 0-.933-.234-1.494-.934l-4.577-7.186v6.952l1.4.327s0 .84-1.167.84l-3.22.187c-.093-.187 0-.653.327-.727l.84-.233V9.854L7.822 9.62c-.094-.42.14-1.027.793-1.073l3.454-.234 4.763 7.28V9.107l-1.167-.14c-.093-.513.28-.886.747-.933zM2.64 1.179l13.588-1c1.68-.14 2.1.093 2.8.606l3.874 2.708c.467.326.607.746.607 1.26l-.047 14.63c0 .84-.28 1.307-1.26 1.4L7.392 21.78c-.747.046-1.12-.093-1.494-.56L2.452 17.26c-.42-.56-.607-.98-.607-1.493V2.578c0-.654.28-1.213 .794-1.4z"/></svg>
+                <span>Notion Sync</span>
+            </div>
+            <div class="cal-notion-status" id="notionStatus">
+                <span class="cal-status-dot" id="notionDot"></span>
+                <span id="notionStatusText">Non vérifié</span>
+            </div>
+        </div>
+        <div class="cal-notion-body">
+            <p class="cal-notion-desc">Synchronisez vos événements avec votre base Notion pour un suivi cloud en temps réel.</p>
+            <div class="cal-notion-btns">
+                <button type="button" class="cal-notion-btn cal-notion-btn--test" id="btnNotionTest" title="Tester la connexion Notion">
+                    <span class="cal-notion-btn__icon">🔗</span>
+                    <span class="cal-notion-btn__label">Tester</span>
+                </button>
+                <button type="button" class="cal-notion-btn cal-notion-btn--sync" id="btnNotionSync" title="Synchroniser tous les événements">
+                    <span class="cal-notion-btn__icon" id="syncIcon">☁️</span>
+                    <span class="cal-notion-btn__label" id="syncLabel">Synchroniser</span>
+                </button>
+            </div>
+        </div>
+        {# Résultat de sync (injecté par JS) #}
+        <div class="cal-notion-result" id="notionResult" style="display: none;"></div>
+    </div>
+
+    {# ───── Calendar Container ───── #}
+    <div class="cal-card">
+        <div class="cal-card-head">
+            <div>
+                <h2 class="section-title" style="font-size: 1.15rem;">Vue calendrier</h2>
+                <p class="section-subtitle">Cliquez sur un événement pour voir les détails. Glissez pour changer de mois.</p>
+            </div>
+            <div class="cal-legend">
+                <span class="cal-legend-item"><span class="cal-legend-dot" style="background: rgba(16,185,129,0.7);"></span> Ouvert</span>
+                <span class="cal-legend-item"><span class="cal-legend-dot" style="background: rgba(245,158,11,0.7);"></span> Fermé</span>
+                <span class="cal-legend-item"><span class="cal-legend-dot" style="background: rgba(239,68,68,0.7);"></span> Annulé</span>
+            </div>
+        </div>
+        <div id="event-calendar" class="cal-fc"></div>
+    </div>
+
+    {# ───── Event Detail Popup (injecté par JS quand on clique un event) ───── #}
+    <div class="cal-popup-overlay" id="calPopupOverlay" style="display: none;">
+        <div class="cal-popup" id="calPopup">
+            <button class="cal-popup-close" id="calPopupClose" aria-label="Fermer">×</button>
+            <div class="cal-popup-img" id="calPopupImg"></div>
+            <div class="cal-popup-body">
+                <h3 id="calPopupTitle">--</h3>
+                <div class="cal-popup-meta" id="calPopupMeta"></div>
+                <p class="cal-popup-desc" id="calPopupDesc"></p>
+                <a href="#" class="cta-btn cal-popup-cta" id="calPopupLink">Voir la fiche complète →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ───── FullCalendar CDN ───── #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+.cal-shell {
+    font-family: 'Manrope', sans-serif;
+    color: #0f1f2e;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+.cal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ═══ NOTION PANEL ═══ */
+.cal-notion-panel {
+    margin-bottom: 20px;
+    background: linear-gradient(140deg, #ffffff 0%, #f8fbff 70%);
+    border: 1px solid rgba(11,92,120,0.16);
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(15,31,46,0.08);
+    padding: 20px 22px;
+    animation: calSlideIn .5s cubic-bezier(.25,1,.4,1.1) both;
+}
+.cal-notion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.cal-notion-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 15px;
+    color: #0f1f2e;
+}
+.cal-notion-logo svg { color: #0f1f2e; }
+.cal-notion-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(15,31,46,0.06);
+    color: #56657a;
+    letter-spacing: 0.04em;
+    transition: all .3s;
+}
+.cal-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    transition: background .3s;
+}
+.cal-notion-status.is-ok { background: rgba(16,185,129,0.12); color: #0f766e; }
+.cal-notion-status.is-ok .cal-status-dot { background: #10b981; animation: calPulse 2s infinite; }
+.cal-notion-status.is-error { background: rgba(239,68,68,0.12); color: #b91c1c; }
+.cal-notion-status.is-error .cal-status-dot { background: #ef4444; }
+.cal-notion-status.is-syncing { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+.cal-notion-status.is-syncing .cal-status-dot { background: #3b82f6; animation: calSpin .8s linear infinite; }
+
+.cal-notion-desc {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: #56657a;
+    line-height: 1.6;
+}
+.cal-notion-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.cal-notion-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform .25s, box-shadow .25s, opacity .25s;
+    font-family: inherit;
+}
+.cal-notion-btn:hover { transform: translateY(-2px); }
+.cal-notion-btn:active { transform: scale(.97); }
+.cal-notion-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+.cal-notion-btn--test {
+    background: rgba(15,31,46,0.08);
+    color: #0f1f2e;
+    box-shadow: 0 6px 16px rgba(15,31,46,0.08);
+}
+.cal-notion-btn--sync {
+    background: linear-gradient(135deg, #0b5c78, #117ea5);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(11,92,120,0.3);
+}
+.cal-notion-btn--sync:hover { box-shadow: 0 14px 32px rgba(11,92,120,0.4); }
+
+.cal-notion-result {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    animation: calSlideIn .35s ease both;
+}
+.cal-notion-result.is-success {
+    background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #166534;
+}
+.cal-notion-result.is-error {
+    background: linear-gradient(180deg, #fef2f2, #fecaca);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #991b1b;
+}
+.cal-notion-result__title {
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: 6px;
+}
+.cal-notion-result__stats {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.cal-notion-result__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* ═══ CALENDAR CARD ═══ */
+.cal-card {
+    background: linear-gradient(140deg, #ffffff, #f6fbff 70%);
+    border: 1px solid rgba(11,92,120,0.14);
+    border-radius: 24px;
+    box-shadow: 0 24px 48px rgba(15,31,46,0.1);
+    padding: 24px;
+    animation: calSlideIn .55s cubic-bezier(.25,1,.4,1.1) both;
+    animation-delay: .1s;
+}
+.cal-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.cal-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.cal-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #56657a;
+}
+.cal-legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+}
+
+/* FullCalendar overrides */
+.cal-fc { min-height: 500px; }
+.cal-fc .fc {
+    --fc-border-color: rgba(15,31,46,0.08);
+    --fc-today-bg-color: rgba(63,168,224,0.08);
+    --fc-neutral-bg-color: transparent;
+    font-family: 'Manrope', sans-serif;
+}
+.cal-fc .fc-toolbar-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f1f2e;
+}
+.cal-fc .fc-button {
+    background: linear-gradient(135deg, #0b5c78, #117ea5);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 12px rgba(11,92,120,0.2);
+}
+.cal-fc .fc-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(11,92,120,0.3);
+}
+.cal-fc .fc-button:active { transform: scale(.97); }
+.cal-fc .fc-button-active {
+    background: linear-gradient(135deg, #064E5C, #0b5c78) !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+.cal-fc .fc-daygrid-day-number {
+    font-weight: 700;
+    font-size: 13px;
+    color: #0f1f2e;
+    padding: 6px 10px;
+}
+.cal-fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    background: linear-gradient(135deg, #0b5c78, #117ea5);
+    color: #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+}
+.cal-fc .fc-col-header-cell-cushion {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #56657a;
+    padding: 10px 0;
+}
+.cal-fc .fc-daygrid-event {
+    border: none;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    margin-bottom: 2px;
+}
+.cal-fc .fc-daygrid-event:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(15,31,46,0.15);
+}
+.cal-fc .fc-timegrid-event {
+    border: none;
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border-left: 3px solid rgba(255,255,255,0.5);
+}
+.cal-fc .event-status-open {
+    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.35));
+    color: #065f46;
+}
+.cal-fc .event-status-closed {
+    background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.35));
+    color: #78350f;
+}
+.cal-fc .event-status-cancelled {
+    background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.3));
+    color: #991b1b;
+}
+.cal-fc .event-status-default {
+    background: rgba(11,92,120,0.12);
+    color: #0b5c78;
+}
+
+/* ═══ EVENT POPUP ═══ */
+.cal-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,31,46,0.45);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    animation: calFadeIn .25s ease both;
+}
+.cal-popup {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 40px 80px rgba(15,31,46,0.25);
+    max-width: 480px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    animation: calPopIn .35s cubic-bezier(.25,1,.4,1.1) both;
+}
+.cal-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 10;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    font-size: 20px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 12px rgba(15,31,46,0.15);
+    transition: transform .2s;
+}
+.cal-popup-close:hover { transform: scale(1.1); }
+.cal-popup-img {
+    height: 180px;
+    background: linear-gradient(135deg, #dbe9f5, #b7d2eb);
+    overflow: hidden;
+}
+.cal-popup-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+.cal-popup-body {
+    padding: 20px 22px 22px;
+    display: grid;
+    gap: 12px;
+}
+.cal-popup-body h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    margin: 0;
+    font-weight: 700;
+}
+.cal-popup-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+}
+.cal-popup-meta span {
+    padding: 4px 10px;
+    background: rgba(11,92,120,0.08);
+    border-radius: 8px;
+    font-weight: 600;
+    color: #0b5c78;
+}
+.cal-popup-desc {
+    margin: 0;
+    font-size: 13px;
+    color: #56657a;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.cal-popup-cta {
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* ═══ Animations ═══ */
+@keyframes calSlideIn {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes calFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes calPopIn {
+    from { transform: scale(.92) translateY(12px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes calPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: .6; }
+}
+@keyframes calSpin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .cal-notion-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .cal-card-head { flex-direction: column; }
+    .cal-popup { max-width: 100%; border-radius: 20px; }
+}
+</style>
+
+<script>
+(function () {
+    const csrfToken = '{{ csrf_token('notion_sync') }}';
+
+    /* ═══ Notion status helpers ═══ */
+    const statusEl = document.getElementById('notionStatus');
+    const statusText = document.getElementById('notionStatusText');
+    const statusDot = document.getElementById('notionDot');
+    const resultEl = document.getElementById('notionResult');
+
+    function setNotionStatus(state, text) {
+        statusEl.className = 'cal-notion-status ' + (state === 'ok' ? 'is-ok' : state === 'error' ? 'is-error' : state === 'syncing' ? 'is-syncing' : '');
+        statusText.textContent = text;
+    }
+
+    function showResult(isSuccess, html) {
+        resultEl.style.display = 'block';
+        resultEl.className = 'cal-notion-result ' + (isSuccess ? 'is-success' : 'is-error');
+        resultEl.innerHTML = html;
+        resultEl.style.animation = 'none';
+        requestAnimationFrame(() => { resultEl.style.animation = 'calSlideIn .35s ease both'; });
+    }
+
+    function escHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+
+    /* ═══ TEST CONNEXION ═══ */
+    const btnTest = document.getElementById('btnNotionTest');
+    if (btnTest) {
+        btnTest.addEventListener('click', async () => {
+            btnTest.disabled = true;
+            setNotionStatus('syncing', 'Test en cours…');
+            try {
+                const fd = new FormData();
+                fd.append('_token', csrfToken);
+                const res = await fetch('{{ path('app_admin_evenements_notion_test') }}', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.ok) {
+                    setNotionStatus('ok', '✅ Connecté');
+                    showResult(true,
+                        '<div class="cal-notion-result__title">Connexion Notion réussie</div>' +
+                        '<p>' + escHtml(data.message) + '</p>' +
+                        (data.properties && data.properties.length > 0
+                            ? '<p style="font-size:11px; opacity:.7;">Propriétés : ' + data.properties.map(escHtml).join(', ') + '</p>'
+                            : '')
+                    );
+                } else {
+                    setNotionStatus('error', '❌ Échec');
+                    showResult(false, '<div class="cal-notion-result__title">Connexion échouée</div><p>' + escHtml(data.message) + '</p>');
+                }
+            } catch (e) {
+                setNotionStatus('error', '❌ Erreur réseau');
+                showResult(false, '<div class="cal-notion-result__title">Erreur réseau</div><p>' + escHtml(e.message) + '</p>');
+            } finally {
+                btnTest.disabled = false;
+            }
+        });
+    }
+
+    /* ═══ SYNC ═══ */
+    const btnSync = document.getElementById('btnNotionSync');
+    const syncIcon = document.getElementById('syncIcon');
+    const syncLabel = document.getElementById('syncLabel');
+    if (btnSync) {
+        btnSync.addEventListener('click', async () => {
+            btnSync.disabled = true;
+            if (btnTest) btnTest.disabled = true;
+            syncIcon.textContent = '⏳';
+            syncLabel.textContent = 'Synchronisation…';
+            setNotionStatus('syncing', 'Synchronisation en cours…');
+
+            try {
+                const fd = new FormData();
+                fd.append('_token', csrfToken);
+                const res = await fetch('{{ path('app_admin_evenements_notion_sync_json') }}', { method: 'POST', body: fd });
+                const data = await res.json();
+
+                if (data.ok) {
+                    setNotionStatus('ok', '✅ Sync terminée');
+                    let statsHtml = '<div class="cal-notion-result__stats">';
+                    if (data.created > 0) statsHtml += '<span class="cal-notion-result__stat">✅ ' + data.created + ' créé(s)</span>';
+                    if (data.updated > 0) statsHtml += '<span class="cal-notion-result__stat">✏️ ' + data.updated + ' mis à jour</span>';
+                    if (data.deleted > 0) statsHtml += '<span class="cal-notion-result__stat">🗑️ ' + data.deleted + ' supprimé(s)</span>';
+                    if (data.failed > 0)  statsHtml += '<span class="cal-notion-result__stat" style="color:#b91c1c;">❌ ' + data.failed + ' échec(s)</span>';
+                    if (data.created === 0 && data.updated === 0 && data.deleted === 0 && data.failed === 0) {
+                        statsHtml += '<span class="cal-notion-result__stat">✅ Tout est à jour</span>';
+                    }
+                    statsHtml += '</div>';
+
+                    let errHtml = '';
+                    if (data.errors && data.errors.length > 0) {
+                        errHtml = '<div style="margin-top:8px; font-size:12px; opacity:.8;">' +
+                            data.errors.map(e => '• ' + escHtml(e)).join('<br>') + '</div>';
+                    }
+
+                    showResult(data.failed === 0,
+                        '<div class="cal-notion-result__title">Synchronisation terminée (' + data.total + ' événement(s))</div>' +
+                        statsHtml + errHtml +
+                        '<p style="margin-top:8px; font-size:12px;">📋 Retrouvez vos événements sur <a href="https://notion.so" target="_blank" style="color:inherit; text-decoration:underline;">notion.so</a></p>'
+                    );
+                } else {
+                    setNotionStatus('error', '❌ Échec');
+                    showResult(false, '<div class="cal-notion-result__title">Synchronisation échouée</div><p>' + escHtml(data.message) + '</p>');
+                }
+            } catch (e) {
+                setNotionStatus('error', '❌ Erreur');
+                showResult(false, '<div class="cal-notion-result__title">Erreur réseau</div><p>' + escHtml(e.message) + '</p>');
+            } finally {
+                btnSync.disabled = false;
+                if (btnTest) btnTest.disabled = false;
+                syncIcon.textContent = '☁️';
+                syncLabel.textContent = 'Synchroniser';
+            }
+        });
+    }
+
+    /* ═══ EVENT DETAIL POPUP ═══ */
+    const overlay = document.getElementById('calPopupOverlay');
+    const popup = document.getElementById('calPopup');
+    const popupClose = document.getElementById('calPopupClose');
+    const popupImg = document.getElementById('calPopupImg');
+    const popupTitle = document.getElementById('calPopupTitle');
+    const popupMeta = document.getElementById('calPopupMeta');
+    const popupDesc = document.getElementById('calPopupDesc');
+    const popupLink = document.getElementById('calPopupLink');
+
+    function showEventPopup(info) {
+        const ext = info.event.extendedProps || {};
+        popupTitle.textContent = info.event.title || '--';
+        popupDesc.textContent = ext.description || 'Aucune description.';
+        popupLink.href = info.event.url || '#';
+
+        const img = ext.image;
+        if (img && img !== '') {
+            const src = img.startsWith('http') || img.startsWith('/') ? img : '/' + img.replace(/^\//, '');
+            popupImg.innerHTML = '<img src="' + escHtml(src) + '" alt="" onerror="this.parentNode.innerHTML=\'\';">';
+        } else {
+            popupImg.innerHTML = '';
+        }
+
+        let metaHtml = '';
+        const start = info.event.start;
+        if (start) {
+            const d = new Date(start);
+            metaHtml += '<span>🗓 ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</span>';
+        }
+        if (ext.lieu) metaHtml += '<span>📍 ' + escHtml(ext.lieu) + '</span>';
+        if (ext.prix !== undefined) metaHtml += '<span>💰 ' + (ext.prix > 0 ? ext.prix + ' TND' : 'Gratuit') + '</span>';
+        if (ext.statut) metaHtml += '<span>📊 ' + escHtml(ext.statut) + '</span>';
+        if (ext.type) metaHtml += '<span>🏷 ' + escHtml(ext.type) + '</span>';
+        if (ext.places_restantes !== undefined) metaHtml += '<span>👥 ' + ext.places_restantes + ' places</span>';
+        popupMeta.innerHTML = metaHtml;
+
+        overlay.style.display = 'grid';
+        // Prevent calendar navigation
+        if (info.jsEvent) info.jsEvent.preventDefault();
+        return false;
+    }
+
+    function hidePopup() {
+        overlay.style.display = 'none';
+    }
+
+    if (popupClose) popupClose.addEventListener('click', hidePopup);
+    if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) hidePopup(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hidePopup(); });
+
+    /* ═══ FULLCALENDAR INIT ═══ */
+    const container = document.getElementById('event-calendar');
+    if (!container || !window.FullCalendar) return;
+
+    fetch('{{ path('app_admin_evenements_calendar_data') }}')
+        .then(res => res.json())
+        .then(payload => {
+            const events = payload.events || [];
+            const calendar = new FullCalendar.Calendar(container, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                locale: 'fr',
+                firstDay: 1,
+                nowIndicator: true,
+                navLinks: true,
+                editable: false,
+                selectable: false,
+                dayMaxEvents: 3,
+                moreLinkClick: 'popover',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listMonth'
+                },
+                buttonText: {
+                    today: "Aujourd'hui",
+                    month: 'Mois',
+                    week: 'Semaine',
+                    list: 'Liste',
+                },
+                events: events,
+                eventClick: function (info) {
+                    showEventPopup(info);
+                    return false;
+                },
+                eventDidMount: function (info) {
+                    // Tooltip natif
+                    const ext = info.event.extendedProps || {};
+                    const title = info.event.title;
+                    const lieu = ext.lieu || '';
+                    const prix = ext.prix !== undefined ? (ext.prix > 0 ? ext.prix + ' TND' : 'Gratuit') : '';
+                    info.el.title = [title, lieu, prix].filter(Boolean).join(' • ');
+                },
+            });
+            calendar.render();
+        })
+        .catch(() => {
+            container.innerHTML = '<div style="padding:40px; text-align:center; color:#56657a;">❌ Impossible de charger les événements.</div>';
+        });
+})();
+</script>
+{% endblock %}
