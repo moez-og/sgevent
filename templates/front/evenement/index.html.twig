@@ -594,7 +594,7 @@
             {% set fillPct   = capacite > 0 ? (((capacite - restants) / capacite) * 100)|round : 0 %}
 
             {% set rawImg = event.imageUrl|default('') %}
-            {% if rawImg and (rawImg starts with 'http://' or rawImg starts with 'https://') %}
+            {% if rawImg and (rawImg starts with 'http://' or rawImg starts with 'https://' or rawImg starts with '/') %}
                 {% set imgSrc = rawImg %}
             {% elseif rawImg and (rawImg starts with 'theme/' or rawImg starts with 'uploads/') %}
                 {% set imgSrc = asset(rawImg) %}

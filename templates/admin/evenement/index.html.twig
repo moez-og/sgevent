@@ -203,6 +203,9 @@
                             <span class="event-detail-label">Prix</span>
                             <span id="event-detail-price" class="event-detail-value">--</span>
                         </div>
+                            <button type="button" class="wx-carousel__arrow" id="weather-card-next" aria-label="Jour suivant">›</button>
+                        </div>
+                        <div class="wx-carousel__counter" id="weather-card-counter">-- / --</div>
                     </div>
 
                     <div class="event-detail-weather">
@@ -227,6 +230,9 @@
                             </div>
                         </div>
                         <div class="event-detail-weather__temp" id="event-detail-weather-temp">--</div>
+                        <div class="wx-carousel">
+                            <button type="button" class="wx-carousel__arrow" id="weather-card-prev" aria-label="Jour precedent">‹</button>
+                            <div class="wx-carousel__viewport">
 
                         {# ───── Cartes météo quotidiennes (style image ref) ───── #}
                         <div id="event-detail-weather-cards" class="wx-cards-strip" aria-label="Prévisions météo">
@@ -234,6 +240,10 @@
                         </div>
                     </div>
 
+                            <button type="button" class="wx-carousel__arrow" id="weather-card-next" aria-label="Jour suivant">›</button>
+                        </div>
+                        <div class="wx-carousel__counter" id="weather-card-counter">-- / --</div>
+                    </div>
                     <div class="event-detail-actions">
                         <a id="event-detail-link" href="#" class="cta-btn">Voir la fiche</a>
                         <span class="event-detail-hint">Les actions CRUD restent disponibles dans la liste.</span>
@@ -601,6 +611,123 @@
         font-size: 12px;
         color: var(--event-muted);
     }
+    .wx-carousel {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) 28px;
+        align-items: center;
+        gap: 8px;
+    }
+    .wx-carousel__viewport {
+        overflow: hidden;
+    }
+    .wx-carousel__arrow {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 1px solid rgba(11, 92, 120, 0.16);
+        background: rgba(255,255,255,.9);
+        color: var(--event-accent);
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        font-weight: 800;
+        cursor: pointer;
+        padding: 0;
+    }
+    .wx-carousel__arrow:disabled {
+        opacity: .35;
+        cursor: not-allowed;
+    }
+    .wx-carousel__counter {
+        text-align: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--event-muted);
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .wx-cards-strip {
+        width: 100%;
+    }
+    .wx-card {
+        width: 100%;
+        max-width: 160px;
+        margin: 0 auto;
+        min-height: 180px;
+        border-radius: 18px;
+        padding: 12px 10px;
+        color: #fff;
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        text-align: center;
+        box-shadow: 0 12px 24px rgba(15, 31, 46, 0.14);
+    }
+    .wx-card__date {
+        font-size: 10px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .92;
+    }
+    .wx-card__icon {
+        width: 42px;
+        height: 42px;
+    }
+    .wx-card__icon svg {
+        width: 100%;
+        height: 100%;
+    }
+    .wx-card__temp {
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .wx-card__label {
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .wx-card__meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        font-size: 10px;
+        opacity: .95;
+    }
+    .wx-card__dots {
+        display: flex;
+        gap: 4px;
+    }
+    .wx-card__dots span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.35);
+    }
+    .wx-card__dots span.active {
+        background: rgba(255,255,255,.92);
+    }
+    .wx-card.is-skeleton {
+        background: linear-gradient(135deg, rgba(148, 163, 184, .35), rgba(203, 213, 225, .5));
+        min-height: 180px;
+    }
+    .wx-card.is-skeleton div {
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        background: rgba(255,255,255,.35);
+    }
+    .wx-card.grad-sunny { background: linear-gradient(180deg, #46b9f2, #1f6fd6); }
+    .wx-card.grad-partly-sunny { background: linear-gradient(180deg, #62c6ff, #5c7cfa); }
+    .wx-card.grad-cloudy { background: linear-gradient(180deg, #8fb3d9, #607d9f); }
+    .wx-card.grad-rain,
+    .wx-card.grad-showers,
+    .wx-card.grad-drizzle { background: linear-gradient(180deg, #5f86b3, #2c4f7c); }
+    .wx-card.grad-thunderstorm { background: linear-gradient(180deg, #5b6482, #272b45); }
+    .wx-card.grad-snow,
+    .wx-card.grad-fog { background: linear-gradient(180deg, #a5b9cc, #73879a); }
+    .wx-card.grad-night,
+    .wx-card.grad-unknown { background: linear-gradient(180deg, #58708e, #32475f); }
 
     /* ── Arrow navigation ───────────────────────────────────────── */
     .event-list-nav {
@@ -705,9 +832,14 @@
         const weatherParticipation = document.getElementById('event-detail-weather-participation');
         const weatherTemp = document.getElementById('event-detail-weather-temp');
         const weatherCardsEl = document.getElementById('event-detail-weather-cards');
+        const weatherCardPrev = document.getElementById('weather-card-prev');
+        const weatherCardNext = document.getElementById('weather-card-next');
+        const weatherCardCounter = document.getElementById('weather-card-counter');
 
         const summaryCache = new Map();
         const cardsCache = new Map();
+        let currentWeatherCards = [];
+        let currentWeatherCardIndex = 0;
 
         /* ══════════════  Weather icons (SVG) ══════════════ */
         const WX_ICONS = {
@@ -770,17 +902,55 @@
         /* ══════════════  Weather cards (nouveau - style image ref) ══════════════ */
         function renderSkeletonCards() {
             if (!weatherCardsEl) return;
-            let html = '';
-            for (let i = 0; i < 4; i++) {
-                html += '<div class="wx-card is-skeleton"><div></div></div>';
-            }
-            weatherCardsEl.innerHTML = html;
+            currentWeatherCards = [];
+            currentWeatherCardIndex = 0;
+            weatherCardsEl.innerHTML = '<div class="wx-card is-skeleton"><div></div></div>';
+            updateWeatherCardNav();
         }
 
         function escapeHtml(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({
                 '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
             })[c]);
+        }
+
+        function updateWeatherCardNav() {
+            const total = currentWeatherCards.length;
+            if (weatherCardCounter) {
+                weatherCardCounter.textContent = total > 0 ? (currentWeatherCardIndex + 1) + ' / ' + total : '-- / --';
+            }
+            if (weatherCardPrev) weatherCardPrev.disabled = total <= 1 || currentWeatherCardIndex <= 0;
+            if (weatherCardNext) weatherCardNext.disabled = total <= 1 || currentWeatherCardIndex >= total - 1;
+        }
+
+        function renderCurrentWeatherCard() {
+            if (!weatherCardsEl) return;
+            if (currentWeatherCards.length === 0) {
+                weatherCardsEl.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--event-muted); font-size: 12px; width:100%;">MÃ©tÃ©o indisponible pour cet Ã©vÃ©nement.</div>';
+                updateWeatherCardNav();
+                return;
+            }
+
+            currentWeatherCardIndex = Math.max(0, Math.min(currentWeatherCards.length - 1, currentWeatherCardIndex));
+            const card = currentWeatherCards[currentWeatherCardIndex];
+            const tempTxt = card.temp !== null ? (card.temp + 'Â°') : '--';
+            const gradCls = 'grad-' + (card.gradient || 'unknown');
+            const html = '' +
+                '<div class="wx-card ' + gradCls + '">' +
+                  '<div class="wx-card__date">' + escapeHtml(card.date_fr || card.date || '') + '</div>' +
+                  '<div class="wx-card__icon" aria-hidden="true">' + wxIcon(card.icon_slug) + '</div>' +
+                  '<div class="wx-card__temp">' + tempTxt + '</div>' +
+                  '<div class="wx-card__label">' + escapeHtml(card.label || '') + '</div>' +
+                  '<div class="wx-card__meta">' +
+                    (card.precip_prob !== null ? '<span>💧 ' + card.precip_prob + '%</span>' : '') +
+                    (card.wind_max !== null ? '<span>💨 ' + Math.round(card.wind_max) + '</span>' : '') +
+                  '</div>' +
+                  '<div class="wx-card__dots" aria-hidden="true">' +
+                    currentWeatherCards.map((_, idx) => '<span class="' + (idx === currentWeatherCardIndex ? 'active' : '') + '"></span>').join('') +
+                  '</div>' +
+                '</div>';
+            weatherCardsEl.innerHTML = html;
+            updateWeatherCardNav();
         }
 
         function renderWeatherCards(data) {
